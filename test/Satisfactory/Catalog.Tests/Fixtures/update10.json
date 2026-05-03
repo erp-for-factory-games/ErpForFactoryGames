@@ -1,0 +1,67 @@
+[
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGItemDescriptor'",
+    "Classes": [
+      { "ClassName": "Desc_OreIron_C", "mDisplayName": "Iron Ore", "mForm": "RF_SOLID" },
+      { "ClassName": "Desc_IronIngot_C", "mDisplayName": "Iron Ingot", "mForm": "RF_SOLID" },
+      { "ClassName": "Desc_IronPlate_C", "mDisplayName": "Iron Plate", "mForm": "RF_SOLID" },
+      { "ClassName": "Desc_IronRod_C", "mDisplayName": "Iron Rod", "mForm": "RF_SOLID" }
+    ]
+  },
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGResourceDescriptor'",
+    "Classes": [
+      { "ClassName": "Desc_RawResourceIron_C", "mDisplayName": "Raw Iron Resource Marker" }
+    ]
+  },
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGBuildableManufacturer'",
+    "Classes": [
+      { "ClassName": "Build_SmelterMk1_C", "mDisplayName": "Smelter", "mPowerConsumption": "4.000000", "mPowerConsumptionExponent": "1.600000" },
+      { "ClassName": "Build_ConstructorMk1_C", "mDisplayName": "Constructor", "mPowerConsumption": "4.000000" }
+    ]
+  },
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGBuildableManufacturerVariablePower'",
+    "Classes": [
+      { "ClassName": "Build_HadronCollider_C", "mDisplayName": "Particle Accelerator", "mPowerConsumption": "0.000000" }
+    ]
+  },
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGRecipe'",
+    "Classes": [
+      {
+        "ClassName": "Recipe_IngotIron_C",
+        "mDisplayName": "Iron Ingot",
+        "mIngredients": "((ItemClass=\"/Script/Engine.BlueprintGeneratedClass'/Game/FactoryGame/Resource/RawResources/OreIron/Desc_OreIron.Desc_OreIron_C'\",Amount=1))",
+        "mProduct":     "((ItemClass=\"/Script/Engine.BlueprintGeneratedClass'/Game/FactoryGame/Resource/Parts/IronIngot/Desc_IronIngot.Desc_IronIngot_C'\",Amount=1))",
+        "mManufactoringDuration": "2.000000",
+        "mProducedIn": "(\"/Game/FactoryGame/Buildable/Factory/SmelterMk1/Build_SmelterMk1.Build_SmelterMk1_C\",\"/Game/FactoryGame/Buildable/-Shared/WorkBench/BP_WorkBenchComponent.BP_WorkBenchComponent_C\")"
+      },
+      {
+        "ClassName": "Recipe_Alternate_PureIronIngot_C",
+        "mDisplayName": "Alternate: Pure Iron Ingot",
+        "mIngredients": "((ItemClass=\"/Game/.../Desc_OreIron.Desc_OreIron_C\",Amount=7),(ItemClass=\"/Game/.../Desc_Water.Desc_Water_C\",Amount=4))",
+        "mProduct":     "((ItemClass=\"/Game/.../Desc_IronIngot.Desc_IronIngot_C\",Amount=13))",
+        "mManufactoringDuration": "12.000000",
+        "mProducedIn": "(\"/Game/FactoryGame/Buildable/Factory/SmelterMk1/Build_SmelterMk1.Build_SmelterMk1_C\")"
+      },
+      {
+        "ClassName": "Recipe_IronPlate_C",
+        "mDisplayName": "Iron Plate",
+        "mIngredients": "((ItemClass=\"/Game/.../Desc_IronIngot.Desc_IronIngot_C\",Amount=3))",
+        "mProduct":     "((ItemClass=\"/Game/.../Desc_IronPlate.Desc_IronPlate_C\",Amount=2))",
+        "mManufactoringDuration": "6.000000",
+        "mProducedIn": "(\"/Game/FactoryGame/Buildable/Factory/ConstructorMk1/Build_ConstructorMk1.Build_ConstructorMk1_C\")"
+      },
+      {
+        "ClassName": "Recipe_HandSpaghettiSauce_C",
+        "mDisplayName": "Hand-crafted only",
+        "mIngredients": "((ItemClass=\"/Game/.../Desc_IronPlate.Desc_IronPlate_C\",Amount=1))",
+        "mProduct":     "((ItemClass=\"/Game/.../Desc_IronRod.Desc_IronRod_C\",Amount=1))",
+        "mManufactoringDuration": "1.000000",
+        "mProducedIn": "(\"/Game/FactoryGame/Buildable/-Shared/WorkBench/BP_WorkBenchComponent.BP_WorkBenchComponent_C\")"
+      }
+    ]
+  }
+]

@@ -8,7 +8,7 @@ public sealed record PlanProductionQuery(
 
 public static class PlanProductionHandler
 {
-    public static ProductionPlan Handle(PlanProductionQuery query, IRecipeCatalog catalog)
+    public static ProductionPlan Handle(PlanProductionQuery query, ICatalogProvider catalog)
     {
         var remainingAvailable = query.Available.ToDictionary(
             a => a.Item,
@@ -38,7 +38,7 @@ public static class PlanProductionHandler
     private static void Expand(
         ItemId item,
         decimal demandPerMinute,
-        IRecipeCatalog catalog,
+        ICatalogProvider catalog,
         Dictionary<ItemId, decimal> available,
         Dictionary<RecipeId, RecipeAggregate> steps,
         Dictionary<ItemId, decimal> rawConsumed,
@@ -57,7 +57,7 @@ public static class PlanProductionHandler
         }
 
         // 2) Find a recipe that produces it.
-        var recipe = catalog.FindProducerOf(item);
+        var recipe = catalog.FindDefaultProducerOf(item);
         if (recipe is null)
         {
             // No recipe and no source — record the gap.

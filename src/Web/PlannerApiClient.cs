@@ -13,6 +13,21 @@ public class PlannerApiClient(HttpClient httpClient)
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<PlanResponse>(ct);
     }
+
+    public async Task<CatalogueStatusView?> GetCatalogueStatusAsync(CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<CatalogueStatusView>("/catalogue/status", ct);
+
+    public async Task<CatalogueConfigureResult> ConfigureCatalogueAsync(string docsPath, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("/catalogue/configure", new { docsPath }, ct);
+        if (response.IsSuccessStatusCode)
+        {
+            var status = await response.Content.ReadFromJsonAsync<CatalogueStatusView>(ct);
+            return new CatalogueConfigureResult(true, status, null);
+        }
+        var error = await response.Content.ReadAsStringAsync(ct);
+        return new CatalogueConfigureResult(false, null, error);
+    }
 }
 
 public sealed record CatalogItem(string Id, string Name);
@@ -35,3 +50,14 @@ public sealed record PlanResponse(
     IReadOnlyList<StepView> Steps,
     IReadOnlyList<AmountView> RawInputsConsumed,
     IReadOnlyList<AmountView> MissingInputs);
+
+public sealed record CatalogueStatusView(
+    bool IsLoaded,
+    string? Source,
+    int ItemCount,
+    int BuildingCount,
+    int RecipeCount,
+    int AlternateRecipeCount,
+    IReadOnlyList<string> Warnings);
+
+public sealed record CatalogueConfigureResult(bool Success, CatalogueStatusView? Status, string? Error);

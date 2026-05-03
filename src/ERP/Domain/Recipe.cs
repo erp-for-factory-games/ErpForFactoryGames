@@ -6,4 +6,5 @@ public sealed record Recipe(
     BuildingId Building,
     IReadOnlyList<ItemAmount> Inputs,
     IReadOnlyList<ItemAmount> Outputs,
-    TimeSpan Duration);
+    TimeSpan Duration,
+    bool IsAlternate = false);

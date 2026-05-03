@@ -1,0 +1,29 @@
+[
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGItemDescriptor'",
+    "Classes": [
+      { "ClassName": "Desc_Good_C", "mDisplayName": "Good Item" },
+      { "mDisplayName": "Missing class name — should be skipped with a warning" },
+      { "ClassName": "Desc_NoDisplayName_C" }
+    ]
+  },
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGSomethingWeDontCareAbout'",
+    "Classes": [
+      { "ClassName": "Foo_C" }
+    ]
+  },
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGRecipe'",
+    "Classes": [
+      {
+        "ClassName": "Recipe_BadAmount_C",
+        "mDisplayName": "Bad Amount",
+        "mIngredients": "((ItemClass=\"/Game/.../Desc_Good.Desc_Good_C\",Amount=not-a-number))",
+        "mProduct":     "((ItemClass=\"/Game/.../Desc_NoDisplayName.Desc_NoDisplayName_C\",Amount=1))",
+        "mManufactoringDuration": "1.000000",
+        "mProducedIn": "(\"/Game/.../Build_NotAKnownBuilding.Build_NotAKnownBuilding_C\")"
+      }
+    ]
+  }
+]

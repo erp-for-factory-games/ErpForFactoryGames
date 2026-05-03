@@ -1,0 +1,118 @@
+@page "/settings"
+@rendermode InteractiveServer
+@inject PlannerApiClient Api
+
+<PageTitle>Settings</PageTitle>
+
+<h1>Settings</h1>
+
+<h2>Game catalogue</h2>
+
+@if (status is null)
+{
+    <p><em>Loading status...</em></p>
+}
+else
+{
+    <div class="@StatusAlertClass">
+        <strong>@StatusHeadline</strong>
+        @if (!string.IsNullOrEmpty(status.Source))
+        {
+            <div class="small">Source: <code>@status.Source</code></div>
+        }
+        <div class="small">@status.ItemCount items · @status.BuildingCount buildings · @status.RecipeCount recipes (@status.AlternateRecipeCount alternates)</div>
+    </div>
+
+    @if (status.Warnings is { Count: > 0 })
+    {
+        <details class="mt-2">
+            <summary>@status.Warnings.Count warning(s) during parse</summary>
+            <ul class="small">
+                @foreach (var w in status.Warnings.Take(50))
+                {
+                    <li>@w</li>
+                }
+                @if (status.Warnings.Count > 50)
+                {
+                    <li><em>(@(status.Warnings.Count - 50) more not shown)</em></li>
+                }
+            </ul>
+        </details>
+    }
+}
+
+<div class="mt-4">
+    <label class="form-label">Path to <code>Docs.json</code></label>
+    <input type="text" class="form-control" @bind="pathInput" placeholder="C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources\Docs\Docs.json" />
+    <div class="form-text">
+        Resolution order at startup: <code>ERP_SATISFACTORY_DOCS_PATH</code> env var → user-saved (this form) → <code>appsettings.json</code> → Steam auto-detect.
+    </div>
+    <button class="btn btn-primary mt-2" type="button" @onclick="Apply" disabled="@(string.IsNullOrWhiteSpace(pathInput) || isApplying)">
+        @(isApplying ? "Applying..." : "Apply")
+    </button>
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <span class="@MessageClass ms-3">@message</span>
+    }
+</div>
+
+@code {
+    private CatalogueStatusView? status;
+    private string? pathInput;
+    private string? message;
+    private bool messageIsError;
+    private bool isApplying;
+
+    private string StatusAlertClass => status is null
+        ? "alert alert-secondary"
+        : status.IsLoaded ? "alert alert-success"
+        : "alert alert-warning";
+
+    private string StatusHeadline => status is null
+        ? ""
+        : status.IsLoaded ? "Catalogue loaded."
+        : "No catalogue loaded. Configure your Docs.json path below.";
+
+    private string MessageClass => messageIsError ? "text-danger" : "text-success";
+
+    protected override async Task OnInitializedAsync()
+    {
+        status = await Api.GetCatalogueStatusAsync();
+        if (status is { IsLoaded: true, Source: { } source } && source != "(empty)")
+        {
+            pathInput = source;
+        }
+    }
+
+    private async Task Apply()
+    {
+        if (string.IsNullOrWhiteSpace(pathInput)) return;
+
+        isApplying = true;
+        message = null;
+        try
+        {
+            var result = await Api.ConfigureCatalogueAsync(pathInput!);
+            if (result.Success && result.Status is not null)
+            {
+                status = result.Status;
+                message = $"Loaded {result.Status.ItemCount} items / {result.Status.RecipeCount} recipes.";
+                messageIsError = false;
+            }
+            else
+            {
+                message = result.Error ?? "Failed to load Docs.json.";
+                messageIsError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            isApplying = false;
+        }
+    }
+}

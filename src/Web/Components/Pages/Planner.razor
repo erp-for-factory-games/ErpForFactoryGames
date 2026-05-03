@@ -8,6 +8,13 @@
 
 <p>Pick what you have on hand (sources) and what you want to produce (sinks). The planner expands recipes backwards and tells you how many buildings of each type you need.</p>
 
+@if (status is { IsLoaded: false })
+{
+    <div class="alert alert-warning">
+        No catalogue loaded yet. <a href="settings">Point the app at your <code>Docs.json</code> in Settings</a> before planning.
+    </div>
+}
+
 @if (items is null)
 {
     <p><em>Loading catalogue...</em></p>
@@ -128,6 +135,7 @@ else
 
 @code {
     private CatalogItem[]? items;
+    private CatalogueStatusView? status;
     private List<Row> sources = [new()];
     private List<Row> sinks = [new()];
     private PlanResponse? plan;
@@ -136,6 +144,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        status = await Api.GetCatalogueStatusAsync();
         items = await Api.GetItemsAsync();
     }
 

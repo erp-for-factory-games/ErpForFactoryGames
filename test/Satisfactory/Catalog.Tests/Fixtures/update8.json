@@ -1,0 +1,38 @@
+[
+  {
+    "NativeClass": "Class'/Script/FactoryGame.FGItemDescriptor'",
+    "Classes": [
+      { "ClassName": "Desc_OreCopper_C", "mDisplayName": "Copper Ore", "mForm": "RF_SOLID" },
+      { "ClassName": "Desc_CopperIngot_C", "mDisplayName": "Copper Ingot", "mForm": "RF_SOLID" },
+      { "ClassName": "Desc_Wire_C", "mDisplayName": "Wire", "mForm": "RF_SOLID" }
+    ]
+  },
+  {
+    "NativeClass": "Class'/Script/FactoryGame.FGBuildableManufacturer'",
+    "Classes": [
+      { "ClassName": "Build_SmelterMk1_C", "mDisplayName": "Smelter", "mPowerConsumption": "4.000000" },
+      { "ClassName": "Build_ConstructorMk1_C", "mDisplayName": "Constructor", "mPowerConsumption": "4.000000" }
+    ]
+  },
+  {
+    "NativeClass": "Class'/Script/FactoryGame.FGRecipe'",
+    "Classes": [
+      {
+        "ClassName": "Recipe_IngotCopper_C",
+        "mDisplayName": "Copper Ingot",
+        "mIngredients": "((ItemClass=\"/Game/.../Desc_OreCopper.Desc_OreCopper_C\",Amount=1))",
+        "mProduct":     "((ItemClass=\"/Game/.../Desc_CopperIngot.Desc_CopperIngot_C\",Amount=1))",
+        "mManufactoringDuration": "2.000000",
+        "mProducedIn": "(\"/Game/FactoryGame/Buildable/Factory/SmelterMk1/Build_SmelterMk1.Build_SmelterMk1_C\")"
+      },
+      {
+        "ClassName": "Recipe_Wire_C",
+        "mDisplayName": "Wire",
+        "mIngredients": "((ItemClass=\"/Game/.../Desc_CopperIngot.Desc_CopperIngot_C\",Amount=1))",
+        "mProduct":     "((ItemClass=\"/Game/.../Desc_Wire.Desc_Wire_C\",Amount=2))",
+        "mManufactoringDuration": "4.000000",
+        "mProducedIn": "(\"/Game/FactoryGame/Buildable/Factory/ConstructorMk1/Build_ConstructorMk1.Build_ConstructorMk1_C\")"
+      }
+    ]
+  }
+]
