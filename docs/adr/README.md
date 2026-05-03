@@ -28,3 +28,4 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0005](0005-use-cqrs.md) | Use CQRS in the application layer | Accepted |
 | [0006](0006-use-wolverine-as-mediator.md) | Use Wolverine as the in-process mediator | Accepted |
 | [0007](0007-track-backlog-on-github.md) | Track backlog on GitHub (epics = milestones, stories = issues) | Accepted |
+| [0008](0008-use-playwright-for-ui-tests.md) | Use Playwright for UI tests | Accepted |

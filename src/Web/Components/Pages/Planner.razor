@@ -1,0 +1,181 @@
+@page "/planner"
+@rendermode InteractiveServer
+@inject PlannerApiClient Api
+
+<PageTitle>Planner</PageTitle>
+
+<h1>Production Planner</h1>
+
+<p>Pick what you have on hand (sources) and what you want to produce (sinks). The planner expands recipes backwards and tells you how many buildings of each type you need.</p>
+
+@if (items is null)
+{
+    <p><em>Loading catalogue...</em></p>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-md-6">
+            <h3>Sources <small class="text-muted">(items/min available)</small></h3>
+            @foreach (var row in sources)
+            {
+                <div class="d-flex gap-2 mb-2">
+                    <select class="form-select" @bind="row.ItemId">
+                        <option value="">-- pick item --</option>
+                        @foreach (var item in items)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                    <input type="number" class="form-control" min="0" step="1" placeholder="items / min"
+                           @bind="row.ItemsPerMinute" />
+                    <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveSource(row)">&times;</button>
+                </div>
+            }
+            <button class="btn btn-outline-secondary" type="button" @onclick="AddSource">+ Add source</button>
+        </div>
+
+        <div class="col-md-6">
+            <h3>Sinks <small class="text-muted">(items/min wanted)</small></h3>
+            @foreach (var row in sinks)
+            {
+                <div class="d-flex gap-2 mb-2">
+                    <select class="form-select" @bind="row.ItemId">
+                        <option value="">-- pick item --</option>
+                        @foreach (var item in items)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                    <input type="number" class="form-control" min="0" step="1" placeholder="items / min"
+                           @bind="row.ItemsPerMinute" />
+                    <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveSink(row)">&times;</button>
+                </div>
+            }
+            <button class="btn btn-outline-secondary" type="button" @onclick="AddSink">+ Add sink</button>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button class="btn btn-primary" type="button" @onclick="Compute" disabled="@isComputing">
+            @(isComputing ? "Computing..." : "Compute plan")
+        </button>
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <span class="text-danger ms-3">@error</span>
+        }
+    </div>
+}
+
+@if (plan is not null)
+{
+    <hr />
+    <h2>Plan @(plan.IsFeasible ? "✓ feasible" : "⚠ missing inputs")</h2>
+
+    @if (plan.Steps.Count == 0)
+    {
+        <p><em>No production steps required (everything covered by sources, or no targets given).</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Recipe</th>
+                    <th>Building</th>
+                    <th class="text-end">Buildings</th>
+                    <th>Inputs / min</th>
+                    <th>Outputs / min</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var step in plan.Steps)
+                {
+                    <tr>
+                        <td>@step.RecipeName</td>
+                        <td>@step.BuildingId</td>
+                        <td class="text-end">@step.BuildingCount</td>
+                        <td>@string.Join(", ", step.Inputs.Select(i => $"{i.ItemsPerMinute} {i.ItemName}"))</td>
+                        <td>@string.Join(", ", step.Outputs.Select(o => $"{o.ItemsPerMinute} {o.ItemName}"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (plan.RawInputsConsumed.Count > 0)
+    {
+        <h3>Raw inputs consumed (from sources)</h3>
+        <ul>
+            @foreach (var amount in plan.RawInputsConsumed)
+            {
+                <li>@amount.ItemsPerMinute @amount.ItemName / min</li>
+            }
+        </ul>
+    }
+
+    @if (plan.MissingInputs.Count > 0)
+    {
+        <h3 class="text-danger">Missing inputs</h3>
+        <ul class="text-danger">
+            @foreach (var amount in plan.MissingInputs)
+            {
+                <li>@amount.ItemsPerMinute @amount.ItemName / min — no recipe and no source</li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    private CatalogItem[]? items;
+    private List<Row> sources = [new()];
+    private List<Row> sinks = [new()];
+    private PlanResponse? plan;
+    private string? error;
+    private bool isComputing;
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = await Api.GetItemsAsync();
+    }
+
+    private void AddSource() => sources.Add(new());
+    private void RemoveSource(Row row) => sources.Remove(row);
+    private void AddSink() => sinks.Add(new());
+    private void RemoveSink(Row row) => sinks.Remove(row);
+
+    private async Task Compute()
+    {
+        error = null;
+        plan = null;
+        isComputing = true;
+        try
+        {
+            var request = new PlanRequest(
+                Targets:   sinks  .Where(r => !string.IsNullOrEmpty(r.ItemId)).Select(r => new TargetInput(r.ItemId!, r.ItemsPerMinute)).ToList(),
+                Available: sources.Where(r => !string.IsNullOrEmpty(r.ItemId)).Select(r => new AvailabilityInput(r.ItemId!, r.ItemsPerMinute)).ToList());
+
+            if (request.Targets.Count == 0)
+            {
+                error = "Add at least one sink.";
+                return;
+            }
+
+            plan = await Api.ComputePlanAsync(request);
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isComputing = false;
+        }
+    }
+
+    private sealed class Row
+    {
+        public string? ItemId { get; set; }
+        public decimal ItemsPerMinute { get; set; }
+    }
+}
