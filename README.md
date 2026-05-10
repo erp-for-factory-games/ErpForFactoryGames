@@ -42,9 +42,12 @@ Restart the app to pick up a new game version (no live reload yet).
 
 **Supported game versions:** the parser is regression-tested against fixtures
 shaped like Update 8 and 1.0. Future versions should still parse — unknown
-fields are ignored, and the parser warns rather than crashes on malformed entries.
-If a new version is rejected, capture a minimal fixture from it and add a test
-case under `test/Satisfactory/Catalog.Tests/Fixtures/`.
+fields are ignored and the parser warns rather than crashes on malformed entries.
+If a new version renames every native class we know about (`FGItemDescriptor`,
+`FGBuildableManufacturer`, `FGRecipe`), the parser fails loudly with a clear
+error rather than silently returning an empty catalogue. When that happens,
+capture a minimal fixture and add a test case under
+`test/Satisfactory/Catalog.Tests/Fixtures/`.
 
 ## Architecture
 

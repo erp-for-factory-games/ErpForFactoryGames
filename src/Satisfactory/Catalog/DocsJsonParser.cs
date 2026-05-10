@@ -110,10 +110,13 @@ public static class DocsJsonParser
         var buildings = new List<Building>();
         var recipeBlocks = new List<JsonElement>();
         var warnings = new List<string>();
+        var totalBlocks = 0;
+        var recognizedBlocks = 0;
 
         // First pass: items + buildings. Recipes are deferred so we can resolve building references.
         foreach (var block in root.EnumerateArray())
         {
+            totalBlocks++;
             if (!block.TryGetProperty("NativeClass", out var nativeClassEl) ||
                 !block.TryGetProperty("Classes", out var classesEl) ||
                 classesEl.ValueKind != JsonValueKind.Array)
@@ -126,6 +129,7 @@ public static class DocsJsonParser
 
             if (ItemNativeClasses.Contains(typeName))
             {
+                recognizedBlocks++;
                 var isRaw = RawResourceNativeClasses.Contains(typeName);
                 foreach (var entry in classesEl.EnumerateArray())
                 {
@@ -139,6 +143,7 @@ public static class DocsJsonParser
             }
             else if (BuildingNativeClasses.Contains(typeName))
             {
+                recognizedBlocks++;
                 foreach (var entry in classesEl.EnumerateArray())
                 {
                     if (TryParseBuilding(entry, warnings) is { } building)
@@ -147,8 +152,21 @@ public static class DocsJsonParser
             }
             else if (RecipeNativeClasses.Contains(typeName))
             {
+                recognizedBlocks++;
                 recipeBlocks.Add(classesEl);
             }
+        }
+
+        // If we saw blocks but recognized none of them, the file shape is wrong
+        // OR the game has renamed every native class we know about. Either way,
+        // the planner can't use this catalogue — fail loudly instead of silently
+        // returning an empty result.
+        if (totalBlocks > 0 && recognizedBlocks == 0)
+        {
+            throw new FormatException(
+                $"Docs.json has {totalBlocks} block(s) but none of their NativeClass entries " +
+                "match a known FGItemDescriptor / FGBuildableManufacturer / FGRecipe class. " +
+                "This usually means an unsupported game version — capture a fixture and add a test.");
         }
 
         // Second pass: recipes (now that we know the buildings).

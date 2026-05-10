@@ -1,0 +1,21 @@
+[
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGItemDescriptorV2'",
+    "Classes": [
+      { "ClassName": "Desc_IronOre_C", "mDisplayName": "Iron Ore" }
+    ]
+  },
+  {
+    "NativeClass": "/Script/CoreUObject.Class'/Script/FactoryGame.FGRecipeV2'",
+    "Classes": [
+      {
+        "ClassName": "Recipe_IngotIron_C",
+        "mDisplayName": "Iron Ingot",
+        "mIngredients": "((ItemClass=\"/Game/.../Desc_IronOre.Desc_IronOre_C\",Amount=1))",
+        "mProduct":     "((ItemClass=\"/Game/.../Desc_IronIngot.Desc_IronIngot_C\",Amount=1))",
+        "mManufactoringDuration": "2.000000",
+        "mProducedIn": "(\"/Game/.../Build_SmelterMk1.Build_SmelterMk1_C\")"
+      }
+    ]
+  }
+]

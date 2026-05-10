@@ -93,6 +93,17 @@ public class DocsJsonParserTests
     }
 
     [Fact]
+    public void Throws_When_All_NativeClasses_Are_Unrecognised()
+    {
+        // Simulates a future game version where every NativeClass we know about has
+        // been renamed (FGItemDescriptor → FGItemDescriptorV2, FGRecipe → FGRecipeV2, …).
+        // The parser must fail loudly rather than silently produce an empty catalogue.
+        var ex = Assert.Throws<FormatException>(
+            () => DocsJsonParser.Parse(ReadFixture("unsupported_version.json")));
+        Assert.Contains("unsupported game version", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Reads_Utf16_Bom_Encoded_Stream()
     {
         // Satisfactory ships Docs.json as UTF-16 LE on Windows.
