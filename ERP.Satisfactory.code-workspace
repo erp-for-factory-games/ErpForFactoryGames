@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "SatisfactorySaveNet",
+			"path": "vendor/SatisfactorySaveNet"
+		}
+	],
+	"settings": {}
+}

@@ -25,5 +25,9 @@
       "WebFetch(domain:satisfactory.wiki.gg)",
       "WebFetch(domain:satisfactorygame.com)"
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "pwsh -NoProfile -Command '$input | & (Get-ChildItem $HOME/.claude/plugins/cache/myfoodbag/mfb-statusline/*/statusline-command.ps1 | Select-Object -Last 1)'"
   }
 }
