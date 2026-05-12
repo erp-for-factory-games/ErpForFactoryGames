@@ -35,6 +35,18 @@ public class PlannerApiClient(HttpClient httpClient)
     public async Task<DetectedSaveViewModel[]> GetDetectedSavesAsync(CancellationToken ct = default) =>
         await httpClient.GetFromJsonAsync<DetectedSaveViewModel[]>("/factory/saves", ct) ?? [];
 
+    /// <summary>
+    /// Raw GeoJSON FeatureCollection for the map page. JS consumes it
+    /// directly; no .NET DTO mirror needed (the shape is owned by the GeoJSON
+    /// spec, not our domain).
+    /// </summary>
+    public async Task<System.Text.Json.JsonElement?> GetFactoryStateGeoJsonAsync(CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync("/factory/state.geojson", ct);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(ct);
+    }
+
     public async Task<FactoryIngestResult> IngestSaveAsync(string savePath, CancellationToken ct = default)
     {
         var response = await httpClient.PostAsJsonAsync("/factory/ingest", new { savePath }, ct);

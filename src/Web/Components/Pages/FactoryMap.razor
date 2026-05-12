@@ -1,0 +1,230 @@
+@page "/factory/map"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+@inject PlannerApiClient Api
+@implements IAsyncDisposable
+
+<PageTitle>Factory map</PageTitle>
+
+<h1>Factory map</h1>
+
+@if (errorMessage is not null)
+{
+    <div class="alert alert-danger">
+        <span class="led led-error" aria-hidden="true"></span>
+        <strong>Map unavailable.</strong>
+        <div class="small">@errorMessage</div>
+    </div>
+}
+else if (loadedSummary is null)
+{
+    <p><em>Loading factory state…</em></p>
+}
+
+<div class="factory-map-shell">
+    <div class="map-legend">
+        <h5>Layers</h5>
+        @if (layers is { Length: > 0 })
+        {
+            <ul class="layer-list">
+                @foreach (var layer in layers)
+                {
+                    var layerCopy = layer;
+                    <li>
+                        <label class="layer-toggle">
+                            <input type="checkbox" checked="@layerCopy.Visible"
+                                @onchange="(e) => OnLayerToggled(layerCopy.Category, (bool)e.Value!)" />
+                            <span class="layer-swatch" style="background-color:@layerCopy.Color"></span>
+                            <span class="layer-name">@layerCopy.Label</span>
+                            <span class="layer-count">@layerCopy.Count</span>
+                        </label>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted small mb-0">No data — ingest a save first.</p>
+        }
+    </div>
+    <div id="factory-map-canvas" @ref="mapElement" class="map-canvas"></div>
+</div>
+
+<style>
+    .factory-map-shell {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    .map-canvas {
+        height: 78vh;
+        background-color: #0F0F14;
+        border: 1px solid var(--fx-border);
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden;
+    }
+    .map-legend {
+        background-color: var(--fx-bg-panel);
+        border: 1px solid var(--fx-border);
+        border-radius: 4px;
+        padding: 0.75rem 0.85rem;
+        font-size: 0.85rem;
+    }
+    .map-legend h5 {
+        font-size: 0.78rem;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem;
+        color: var(--fx-text-muted);
+    }
+    .layer-list { list-style: none; padding: 0; margin: 0; }
+    .layer-list li { margin-bottom: 0.3rem; }
+    .layer-toggle {
+        display: grid;
+        grid-template-columns: 16px 14px 1fr auto;
+        align-items: center;
+        gap: 0.4rem;
+        cursor: pointer;
+        padding: 0.15rem 0.2rem;
+        border-radius: 3px;
+    }
+    .layer-toggle:hover { background-color: rgba(250, 149, 73, 0.06); }
+    .layer-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .layer-name {
+        font-family: 'Bahnschrift', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.78rem;
+    }
+    .layer-count {
+        font-family: 'Cascadia Mono', 'Consolas', monospace;
+        font-size: 0.78rem;
+        color: var(--fx-text-muted);
+    }
+    /* Leaflet popups + tooltips themed. */
+    :global(.leaflet-popup-content-wrapper),
+    :global(.leaflet-tooltip) {
+        background-color: var(--fx-bg-panel);
+        color: var(--fx-text);
+        border: 1px solid var(--fx-border);
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+    :global(.leaflet-popup-tip),
+    :global(.leaflet-tooltip:before) {
+        background-color: var(--fx-bg-panel);
+        border: 1px solid var(--fx-border);
+    }
+    :global(.fx-map-tooltip) {
+        font-family: 'Bahnschrift', sans-serif;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.2rem 0.45rem;
+    }
+    :global(.fx-popup-title) {
+        font-family: 'Bahnschrift', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.72rem;
+        color: var(--fx-orange);
+        margin-bottom: 0.15rem;
+    }
+    :global(.fx-popup-kind) {
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+    }
+    :global(.fx-popup-row) {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.6rem;
+        font-size: 0.78rem;
+    }
+    :global(.fx-popup-row span:first-child) {
+        color: var(--fx-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.7rem;
+    }
+    :global(.leaflet-control-zoom a) {
+        background-color: var(--fx-bg-panel) !important;
+        color: var(--fx-text) !important;
+        border-color: var(--fx-border) !important;
+    }
+    :global(.leaflet-control-zoom a:hover) {
+        background-color: var(--fx-bg-elevated) !important;
+        color: var(--fx-orange) !important;
+    }
+</style>
+
+@code {
+    private ElementReference mapElement;
+    private IJSObjectReference? mapModule;
+    private LayerInfo[]? layers;
+    private string? loadedSummary;
+    private string? errorMessage;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            var geojson = await Api.GetFactoryStateGeoJsonAsync();
+            if (geojson is null)
+            {
+                errorMessage = "Couldn't fetch factory state. Ingest a save first?";
+                StateHasChanged();
+                return;
+            }
+
+            mapModule = await JS.InvokeAsync<IJSObjectReference>("import", "/js/factory-map.js");
+            var rawLayers = await mapModule.InvokeAsync<LayerInfo[]>("initialize", mapElement, geojson);
+
+            layers = rawLayers.Select(l => l with { Visible = true }).ToArray();
+            var total = layers.Sum(l => l.Count);
+            loadedSummary = $"{total:N0} features across {layers.Length} layers";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnLayerToggled(string category, bool visible)
+    {
+        if (mapModule is null) return;
+        await mapModule.InvokeVoidAsync("setLayerVisible", category, visible);
+        if (layers is null) return;
+        for (var i = 0; i < layers.Length; i++)
+        {
+            if (layers[i].Category == category)
+                layers[i] = layers[i] with { Visible = visible };
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (mapModule is not null)
+        {
+            try
+            {
+                await mapModule.InvokeVoidAsync("dispose");
+                await mapModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { /* circuit closed */ }
+            catch (Exception) { /* best-effort cleanup */ }
+        }
+    }
+
+    private record LayerInfo(string Category, string Label, string Color, int Count, bool Visible = false);
+}

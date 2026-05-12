@@ -59,6 +59,9 @@ app.MapPost("/catalogue/configure", (ConfigureCatalogueRequest request, ICatalog
 
 app.MapGet("/factory/state", (IFactoryStateProvider provider) => FactoryStateView.From(provider));
 
+app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider) =>
+    Results.Json(FactoryStateGeoJson.From(provider), contentType: "application/geo+json"));
+
 app.MapGet("/factory/saves", () =>
     SaveFileResolver.EnumerateDetectedSaves()
         .Select(f => new DetectedSaveView(f.FullName, f.Name, f.LastWriteTimeUtc, f.Length))
@@ -184,6 +187,91 @@ public sealed record FactoryStateView(
                 .ToList(),
             ResourceNodeCount: state.ResourceNodes.Count,
             Warnings: state.Warnings);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GeoJSON projection for the map page (ADR-0013).
+// FeatureCollection with one Feature per parsed entity. Coordinates are raw
+// Unreal world X/Y in centimetres — the JS layer (using Leaflet's CRS.Simple)
+// handles axis orientation + zoom bounds.
+// ---------------------------------------------------------------------------
+
+public sealed record GeoPoint(string Type, double[] Coordinates)
+{
+    public static GeoPoint From(Position p) => new("Point", [p.X, p.Y]);
+}
+
+public sealed record GeoFeature(
+    string Type,
+    GeoPoint Geometry,
+    Dictionary<string, object?> Properties)
+{
+    public static GeoFeature Make(string category, string kind, Position position, Dictionary<string, object?>? extra = null)
+    {
+        var props = new Dictionary<string, object?>
+        {
+            ["category"] = category,
+            ["kind"] = kind,
+            ["z"] = position.Z,
+        };
+        if (extra is not null)
+            foreach (var kv in extra) props[kv.Key] = kv.Value;
+        return new GeoFeature("Feature", GeoPoint.From(position), props);
+    }
+}
+
+public sealed record FactoryStateGeoJson(
+    string Type,
+    IReadOnlyList<GeoFeature> Features,
+    Dictionary<string, object?> Metadata)
+{
+    public static FactoryStateGeoJson From(IFactoryStateProvider provider)
+    {
+        var s = provider.Current;
+        var features = new List<GeoFeature>();
+
+        foreach (var n in s.ResourceNodes)
+            features.Add(GeoFeature.Make("resource-node", n.Reference, n.Position, new()
+            {
+                ["purity"] = n.Purity.ToString(),
+                ["resource"] = n.Resource?.Value,
+            }));
+
+        foreach (var m in s.Miners)
+            features.Add(GeoFeature.Make("miner", m.Reference, m.Position, new()
+            {
+                ["tier"] = m.Tier.ToString(),
+                ["resourceNode"] = m.ResourceNodeReference,
+            }));
+
+        foreach (var b in s.Buildings)
+            features.Add(GeoFeature.Make("building", b.Building.Value, b.Position, new()
+            {
+                ["recipe"] = b.Recipe?.Value,
+            }));
+
+        foreach (var belt in s.Belts)
+            features.Add(GeoFeature.Make("belt", belt.Reference, belt.Position, new()
+            {
+                ["tier"] = belt.Tier.ToString(),
+            }));
+
+        foreach (var g in s.Generators)
+            features.Add(GeoFeature.Make("generator", g.Reference, g.Position, new()
+            {
+                ["genKind"] = g.Kind.ToString(),
+            }));
+
+        var meta = new Dictionary<string, object?>
+        {
+            ["isLoaded"] = provider.IsLoaded,
+            ["source"] = provider.Source,
+            ["sessionName"] = provider.IsLoaded ? s.Save.SessionName : null,
+            ["featureCount"] = features.Count,
+        };
+
+        return new FactoryStateGeoJson("FeatureCollection", features, meta);
     }
 }
 
