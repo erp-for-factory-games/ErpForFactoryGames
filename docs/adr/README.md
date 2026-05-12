@@ -35,3 +35,4 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0012](0012-live-factory-state-via-node-sidecar.md) | Live factory state ingestion via Node sidecar | Superseded by [0014](0014-pure-csharp-save-ingestion-via-fork.md) |
 | [0013](0013-map-visualiser-approach.md) | Map visualiser approach | Proposed |
 | [0014](0014-pure-csharp-save-ingestion-via-fork.md) | Pure-C# .sav ingestion via SatisfactorySaveNet fork | Accepted |
+| [0015](0015-map-backdrops-fair-use.md) | Map backdrops sourced from wiki under fair use | Accepted (amends [0013](0013-map-visualiser-approach.md)) |

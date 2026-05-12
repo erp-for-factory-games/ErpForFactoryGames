@@ -1,6 +1,7 @@
 @page "/settings"
 @rendermode InteractiveServer
 @inject PlannerApiClient Api
+@inject IJSRuntime JS
 
 <PageTitle>Settings</PageTitle>
 
@@ -58,12 +59,38 @@ else
     }
 </div>
 
+<h2 class="mt-5">Factory map</h2>
+<div class="mt-3">
+    <label class="form-label">Backdrop</label>
+    <select class="form-select" @bind="mapBackdrop" @bind:after="OnMapBackdropChanged">
+        <option value="terrain">Terrain (wiki)</option>
+        <option value="biome">Biome (wiki)</option>
+        <option value="water">Water (wiki)</option>
+        <option value="procedural">Procedural (from save data)</option>
+        <option value="none">None (dark canvas)</option>
+    </select>
+    <div class="form-text">
+        Three of these backdrops are sourced from the
+        <a href="https://satisfactory.wiki.gg/" target="_blank" rel="noreferrer">Satisfactory Fandom wiki</a>
+        under fair-use terms for non-commercial fan tools — see
+        <a href="https://github.com/ChrisonSimtian/ERP.Satisfactory/blob/main/docs/adr/0015-map-backdrops-fair-use.md"
+            target="_blank" rel="noreferrer">ADR-0015</a>.
+        The "procedural" option generates a topographic surface from your save's resource-node Z samples (no Coffee Stain assets).
+        @if (!string.IsNullOrEmpty(mapMessage))
+        {
+            <span class="text-success ms-2">@mapMessage</span>
+        }
+    </div>
+</div>
+
 @code {
     private CatalogueStatusView? status;
     private string? pathInput;
     private string? message;
     private bool messageIsError;
     private bool isApplying;
+    private string mapBackdrop = "terrain";
+    private string? mapMessage;
 
     private string StatusAlertClass => status is null
         ? "alert alert-secondary"
@@ -83,6 +110,37 @@ else
         if (status is { IsLoaded: true, Source: { } source } && source != "(empty)")
         {
             pathInput = source;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", "erp-map-backdrop");
+            if (!string.IsNullOrEmpty(stored))
+            {
+                mapBackdrop = stored;
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            // localStorage unavailable — keep default.
+        }
+    }
+
+    private async Task OnMapBackdropChanged()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "erp-map-backdrop", mapBackdrop);
+            mapMessage = "Saved. Reload the map page to apply.";
+        }
+        catch (Exception ex)
+        {
+            mapMessage = "Couldn't save: " + ex.Message;
         }
     }
 
