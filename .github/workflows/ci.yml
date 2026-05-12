@@ -121,3 +121,37 @@ jobs:
           files: test-results/**/*.trx
           check_name: Test results
           comment_mode: changes in failures
+
+  # ---------------------------------------------------------------------------
+  # Release — auto-creates a GitHub release on every successful push to main.
+  # Version is computed by Nerdbank.GitVersioning from version.json + git
+  # height. Skipped on PR runs (only runs after a PR merges into main).
+  # ---------------------------------------------------------------------------
+  release:
+    name: Release
+    needs: [lint, build-and-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 15
+    permissions:
+      contents: write    # create tags + releases
+
+    steps:
+      - name: Checkout (full history for NB.GV)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize vendored SatisfactorySaveNet submodule
+        run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          global-json-file: global.json
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./build.sh Release

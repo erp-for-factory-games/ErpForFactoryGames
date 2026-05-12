@@ -30,6 +30,8 @@ class Build : NukeBuild
     [Solution(GenerateProjects = true)]
     readonly Solution Solution = null!;
 
+    GitHubActions GitHubActions => GitHubActions.Instance;
+
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
     AbsolutePath TestResultsDirectory => ArtifactsDirectory / "test-results";
 
@@ -82,4 +84,51 @@ class Build : NukeBuild
                 .AddLoggers("console;verbosity=normal"));
             Log.Information("TRX results written to {Dir}", TestResultsDirectory);
         });
+
+    Target ComputeVersion => _ => _
+        .Description("Reads the Nerdbank.GitVersioning version (SemVer2) and prints it.")
+        .Executes(() =>
+        {
+            var version = ReadNbgvVersion();
+            Log.Information("Computed version: {Version}", version);
+        });
+
+    Target Release => _ => _
+        .Description("Creates a GitHub release for the current commit. Auto-runs on push to main.")
+        .DependsOn(Test)
+        .OnlyWhenStatic(() => IsServerBuild
+                              && GitHubActions is not null
+                              && GitHubActions.Ref == "refs/heads/main"
+                              && GitHubActions.EventName == "push")
+        .Executes(() =>
+        {
+            var version = ReadNbgvVersion();
+            var tag = $"v{version}";
+            var sha = GitHubActions!.Sha;
+            Log.Information("Creating GitHub release {Tag} for {Sha}", tag, sha);
+
+            // `gh release create` with --generate-notes auto-builds the
+            // notes from commits since the previous tag. --target pins
+            // the release to the exact commit we tested.
+            var process = ProcessTasks.StartProcess(
+                "gh",
+                $"release create {tag} --title \"Release {tag}\" --generate-notes --target {sha}",
+                workingDirectory: RootDirectory);
+            process.AssertZeroExitCode();
+        });
+
+    /// <summary>
+    /// Reads the SemVer2 version from `dotnet nbgv` (a local tool restored
+    /// from .config/dotnet-tools.json). Returns e.g. "0.1.5" or "0.1.5+abcd".
+    /// </summary>
+    static string ReadNbgvVersion()
+    {
+        // Tool restore is idempotent — safe to call every time.
+        DotNet("tool restore", workingDirectory: RootDirectory, logOutput: false);
+
+        var result = DotNet("nbgv get-version -v SemVer2",
+            workingDirectory: RootDirectory,
+            logOutput: false);
+        return result.Single().Text.Trim();
+    }
 }
