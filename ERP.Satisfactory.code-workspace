@@ -4,6 +4,10 @@
 			"path": "."
 		},
 		{
+			"name": "Satisfactory",
+			"path": ".satisfactory"
+		},
+		{
 			"name": "SatisfactorySaveNet",
 			"path": "vendor/SatisfactorySaveNet"
 		}
