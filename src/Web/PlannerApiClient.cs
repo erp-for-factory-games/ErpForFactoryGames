@@ -101,12 +101,20 @@ public sealed record SaveMetadataViewModel(
 
 public sealed record CountViewModel(string Key, int Count);
 
+public sealed record BuildingGroupViewModel(
+    string Building,
+    string? Recipe,
+    string? RecipeName,
+    int Count);
+
 public sealed record FactoryStateViewModel(
     bool IsLoaded,
     string? Source,
     SaveMetadataViewModel? Save,
     IReadOnlyList<CountViewModel> Miners,
-    IReadOnlyList<CountViewModel> Buildings,
+    int MinersBoundToNode,
+    IReadOnlyList<BuildingGroupViewModel> Buildings,
+    int BuildingsWithRecipe,
     IReadOnlyList<CountViewModel> Belts,
     IReadOnlyList<CountViewModel> Generators,
     int ResourceNodeCount,

@@ -36,6 +36,12 @@ else
             <div class="col-md-6">
                 <h5>Miners <span class="text-muted small">by tier</span></h5>
                 @CountTable(state.Miners, "No miners.")
+                @if (state.Miners.Count > 0)
+                {
+                    <p class="small text-muted mt-1">
+                        @state.MinersBoundToNode / @state.Miners.Sum(m => m.Count) bound to a resource node.
+                    </p>
+                }
             </div>
             <div class="col-md-6">
                 <h5>Belts <span class="text-muted small">by tier</span></h5>
@@ -56,10 +62,12 @@ else
 
         <div class="row mt-3">
             <div class="col-12">
-                <h5>Production buildings <span class="text-muted small">by type</span></h5>
-                @CountTable(state.Buildings, "No production buildings.")
+                <h5>Production buildings <span class="text-muted small">by type × recipe</span></h5>
+                @BuildingTable(state.Buildings, "No production buildings.")
                 <p class="small text-muted mt-1">
-                    Clock speed and bound recipe are not yet extracted — tracked as a follow-up to milestone #12.
+                    @state.BuildingsWithRecipe / @state.Buildings.Sum(b => b.Count) bound to a recipe.
+                    Clock speed comes through as 100% for default-clocked machines (the game only serializes
+                    overclocked values).
                 </p>
             </div>
         </div>
@@ -196,9 +204,10 @@ else
             if (result.Success && result.State is not null)
             {
                 state = result.State;
+                var totalMiners = result.State.Miners.Sum(m => m.Count);
                 var totalBuildings = result.State.Buildings.Sum(b => b.Count);
-                message = $"Loaded {result.State.Miners.Sum(m => m.Count)} miners, "
-                    + $"{totalBuildings} buildings, {result.State.Belts.Sum(b => b.Count)} belts.";
+                var totalBelts = result.State.Belts.Sum(b => b.Count);
+                message = $"Loaded {totalMiners} miners, {totalBuildings} buildings, {totalBelts} belts.";
                 messageIsError = false;
             }
             else
@@ -238,6 +247,49 @@ else
                 {
                     <tr>
                         <td><code>@row.Key</code></td>
+                        <td class="text-end">@row.Count.ToString("N0")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    };
+
+    private static RenderFragment BuildingTable(IReadOnlyList<BuildingGroupViewModel> rows, string emptyLabel) => __builder =>
+    {
+        if (rows.Count == 0)
+        {
+            <p class="text-muted small mb-0">@emptyLabel</p>
+            return;
+        }
+
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Building</th>
+                    <th scope="col">Recipe</th>
+                    <th scope="col" class="text-end">Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    <tr>
+                        <td><code>@row.Building</code></td>
+                        <td>
+                            @if (row.RecipeName is not null)
+                            {
+                                <span>@row.RecipeName</span>
+                                <small class="text-muted ms-1">(<code>@row.Recipe</code>)</small>
+                            }
+                            else if (row.Recipe is not null)
+                            {
+                                <code>@row.Recipe</code>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">— idle —</span>
+                            }
+                        </td>
                         <td class="text-end">@row.Count.ToString("N0")</td>
                     </tr>
                 }

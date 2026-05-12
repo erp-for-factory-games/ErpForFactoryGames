@@ -4,7 +4,7 @@ namespace Satisfactory.Save.Tests;
 
 /// <summary>
 /// End-to-end parity check: parse a real v1.2 save and confirm the adapter's
-/// counts line up with the human-curated stocktake. Gated on the
+/// shape lines up with what's actually in the file. Gated on the
 /// <c>ERP_SATISFACTORY_SAVE_PATH</c> env var or auto-detect — passes silently
 /// when no save is available so CI doesn't fail on developers without one.
 /// When the env var points at a directory the resolver picks the most-recent
@@ -30,10 +30,21 @@ public class SaveFileReaderParityTests
         Assert.NotEqual(0, state.Save.SaveVersion);
         Assert.NotEqual(0, state.Save.BuildVersion);
         Assert.NotEmpty(state.Save.SessionName);
-
-        // We expect some world content in any real save — at least one
-        // resource node. Asserting specific miner/smelter counts would pin
-        // this test to one particular save snapshot.
         Assert.NotEmpty(state.ResourceNodes);
+
+        // #35 — deep-parsed fields. Conditional because the Pedestal test
+        // fixture has resource nodes but no miners / no buildings.
+        if (state.Miners.Count > 0)
+        {
+            Assert.Contains(state.Miners, m => !string.IsNullOrEmpty(m.ResourceNodeReference));
+        }
+
+        if (state.Buildings.Count > 0)
+        {
+            Assert.Contains(state.Buildings, b => b.Recipe is not null);
+            // All buildings default to 1.0 clock speed (only overclocked ones
+            // serialize a value); assert default clock is plausible.
+            Assert.All(state.Buildings, b => Assert.InRange(b.ClockSpeed, 0.01m, 2.5m));
+        }
     }
 }

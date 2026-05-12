@@ -252,10 +252,16 @@ function popupHtml(feature) {
         `<div class="fx-popup-title">${escapeHtml(p.category)}</div>`,
         `<div class="fx-popup-kind">${escapeHtml(shortName(p.kind))}</div>`,
     ];
-    const skip = new Set(['category', 'kind']);
+    // For production buildings, surface the human-readable recipe name first.
+    if (p.recipeName) {
+        rows.push(`<div class="fx-popup-row"><span>recipe</span><span>${escapeHtml(p.recipeName)}</span></div>`);
+    }
+    const skip = new Set(['category', 'kind', 'recipeName']);
     for (const [k, v] of Object.entries(p)) {
         if (skip.has(k) || v == null) continue;
-        rows.push(`<div class="fx-popup-row"><span>${escapeHtml(k)}</span><code>${escapeHtml(String(v))}</code></div>`);
+        // Shorten verbose object-ref paths (e.g. resourceNode) to the trailing segment.
+        const display = typeof v === 'string' && v.includes('.') ? shortName(v) : String(v);
+        rows.push(`<div class="fx-popup-row"><span>${escapeHtml(k)}</span><code>${escapeHtml(display)}</code></div>`);
     }
     return `<div class="fx-popup">${rows.join('')}</div>`;
 }

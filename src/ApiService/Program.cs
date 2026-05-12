@@ -57,10 +57,11 @@ app.MapPost("/catalogue/configure", (ConfigureCatalogueRequest request, ICatalog
     }
 });
 
-app.MapGet("/factory/state", (IFactoryStateProvider provider) => FactoryStateView.From(provider));
+app.MapGet("/factory/state", (IFactoryStateProvider provider, ICatalogProvider catalog) =>
+    FactoryStateView.From(provider, catalog));
 
-app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider) =>
-    Results.Json(FactoryStateGeoJson.From(provider), contentType: "application/geo+json"));
+app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider, ICatalogProvider catalog) =>
+    Results.Json(FactoryStateGeoJson.From(provider, catalog), contentType: "application/geo+json"));
 
 app.MapGet("/factory/saves", () =>
     SaveFileResolver.EnumerateDetectedSaves()
@@ -68,7 +69,8 @@ app.MapGet("/factory/saves", () =>
         .ToList());
 
 app.MapPost("/factory/ingest", async (
-    IngestSaveRequest request, IMessageBus bus, IFactoryStateProvider provider, ILoggerFactory loggerFactory) =>
+    IngestSaveRequest request, IMessageBus bus, IFactoryStateProvider provider,
+    ICatalogProvider catalog, ILoggerFactory loggerFactory) =>
 {
     if (string.IsNullOrWhiteSpace(request.SavePath))
         return Results.BadRequest(new { error = "SavePath is required." });
@@ -80,7 +82,7 @@ app.MapPost("/factory/ingest", async (
         sw.Stop();
         loggerFactory.CreateLogger("FactoryIngestEndpoint")
             .LogInformation("Ingested save in {Elapsed}ms", sw.ElapsedMilliseconds);
-        return Results.Ok(FactoryStateView.From(provider));
+        return Results.Ok(FactoryStateView.From(provider, catalog));
     }
     catch (FileNotFoundException ex)
     {
@@ -138,18 +140,27 @@ public sealed record SaveMetadataView(
 
 public sealed record CountView(string Key, int Count);
 
+/// <summary>One row in the "buildings by type × recipe" table on /factory/ingest.</summary>
+public sealed record BuildingGroupView(
+    string Building,
+    string? Recipe,
+    string? RecipeName,
+    int Count);
+
 public sealed record FactoryStateView(
     bool IsLoaded,
     string? Source,
     SaveMetadataView? Save,
     IReadOnlyList<CountView> Miners,
-    IReadOnlyList<CountView> Buildings,
+    int MinersBoundToNode,
+    IReadOnlyList<BuildingGroupView> Buildings,
+    int BuildingsWithRecipe,
     IReadOnlyList<CountView> Belts,
     IReadOnlyList<CountView> Generators,
     int ResourceNodeCount,
     IReadOnlyList<string> Warnings)
 {
-    public static FactoryStateView From(IFactoryStateProvider provider)
+    public static FactoryStateView From(IFactoryStateProvider provider, ICatalogProvider catalog)
     {
         var state = provider.Current;
         var meta = provider.IsLoaded
@@ -170,11 +181,20 @@ public sealed record FactoryStateView(
                 .Select(g => new CountView(g.Key, g.Count()))
                 .OrderBy(c => c.Key, StringComparer.Ordinal)
                 .ToList(),
+            MinersBoundToNode: state.Miners.Count(m => !string.IsNullOrEmpty(m.ResourceNodeReference)),
             Buildings: state.Buildings
-                .GroupBy(b => b.Building.Value)
-                .Select(g => new CountView(g.Key, g.Count()))
-                .OrderByDescending(c => c.Count)
+                .GroupBy(b => (Building: b.Building.Value, Recipe: b.Recipe?.Value))
+                .Select(g => new BuildingGroupView(
+                    Building: g.Key.Building,
+                    Recipe: g.Key.Recipe,
+                    RecipeName: g.Key.Recipe is { Length: > 0 } r
+                        ? catalog.FindRecipe(new RecipeId(r))?.Name
+                        : null,
+                    Count: g.Count()))
+                .OrderBy(b => b.Building, StringComparer.Ordinal)
+                .ThenByDescending(b => b.Count)
                 .ToList(),
+            BuildingsWithRecipe: state.Buildings.Count(b => b.Recipe is not null),
             Belts: state.Belts
                 .GroupBy(b => b.Tier.ToString())
                 .Select(g => new CountView(g.Key, g.Count()))
@@ -226,7 +246,7 @@ public sealed record FactoryStateGeoJson(
     IReadOnlyList<GeoFeature> Features,
     Dictionary<string, object?> Metadata)
 {
-    public static FactoryStateGeoJson From(IFactoryStateProvider provider)
+    public static FactoryStateGeoJson From(IFactoryStateProvider provider, ICatalogProvider catalog)
     {
         var s = provider.Current;
         var features = new List<GeoFeature>();
@@ -249,6 +269,10 @@ public sealed record FactoryStateGeoJson(
             features.Add(GeoFeature.Make("building", b.Building.Value, b.Position, new()
             {
                 ["recipe"] = b.Recipe?.Value,
+                ["recipeName"] = b.Recipe is { Value: { Length: > 0 } } id
+                    ? catalog.FindRecipe(id)?.Name
+                    : null,
+                ["clockSpeed"] = b.ClockSpeed,
             }));
 
         foreach (var belt in s.Belts)
