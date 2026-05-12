@@ -1,0 +1,45 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/ApiService/ApiService.csproj" />
+    <Project Path="src/AppHost/AppHost.csproj" />
+    <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
+    <Project Path="src/Web/Web.csproj" />
+  </Folder>
+  <Folder Name="/src/ERP/" />
+  <Folder Name="/src/ERP/Application/">
+    <Project Path="src/ERP/Application/ERP.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/ERP/Domain/">
+    <Project Path="src/ERP/Domain/ERP.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/ERP/Infrastructure/">
+    <Project Path="src/ERP/Infrastructure/ERP.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Satisfactory/" />
+  <Folder Name="/src/Satisfactory/Catalog/">
+    <Project Path="src/Satisfactory/Catalog/Satisfactory.Catalog.csproj" />
+  </Folder>
+  <Folder Name="/src/Satisfactory/Save/">
+    <Project Path="src/Satisfactory/Save/Satisfactory.Save.csproj" />
+  </Folder>
+  <Folder Name="/test/" />
+  <Folder Name="/test/ERP/" />
+  <Folder Name="/test/ERP/Application.Tests/">
+    <Project Path="test/ERP/Application.Tests/ERP.Application.Tests.csproj" />
+  </Folder>
+  <Folder Name="/test/ERP/Domain.Tests/">
+    <Project Path="test/ERP/Domain.Tests/ERP.Domain.Tests.csproj" />
+  </Folder>
+  <Folder Name="/test/Satisfactory/" />
+  <Folder Name="/test/Satisfactory/Catalog.Tests/">
+    <Project Path="test/Satisfactory/Catalog.Tests/Satisfactory.Catalog.Tests.csproj" />
+  </Folder>
+  <Folder Name="/test/Satisfactory/Save.Tests/">
+    <Project Path="test/Satisfactory/Save.Tests/Satisfactory.Save.Tests.csproj" />
+  </Folder>
+</Solution>
