@@ -13,5 +13,6 @@ if ! command -v dotnet >/dev/null 2>&1; then
     exit 1
 fi
 
-dotnet build "$BUILD_PROJECT_FILE" /nodeReuse:false /p:UseSharedCompilation=false -nologo -clp:NoSummary --verbosity quiet
+# Use `-` switches (not `/`) so Git Bash on Windows doesn't path-translate them.
+dotnet build "$BUILD_PROJECT_FILE" -nodeReuse:false -p:UseSharedCompilation=false -nologo -clp:NoSummary --verbosity quiet
 dotnet run --project "$BUILD_PROJECT_FILE" --no-build -- "$@"

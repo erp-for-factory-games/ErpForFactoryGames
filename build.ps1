@@ -23,5 +23,5 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-ExecSafe { dotnet build $BuildProjectFile /nodeReuse:false /p:UseSharedCompilation=false -nologo -clp:NoSummary --verbosity quiet }
+ExecSafe { dotnet build $BuildProjectFile -nodeReuse:false -p:UseSharedCompilation=false -nologo -clp:NoSummary --verbosity quiet }
 ExecSafe { dotnet run --project $BuildProjectFile --no-build -- $BuildArguments }
