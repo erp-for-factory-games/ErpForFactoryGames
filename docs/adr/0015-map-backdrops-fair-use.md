@@ -72,3 +72,13 @@ don't apply.
 - Adding a fourth map (e.g. resource-overlay, infrastructure) is a
   data drop + one entry in the `MAP_BACKDROPS` table in
   `factory-map.js` and one radio option in Settings.
+
+## Update — procedural backdrop removed (2026-05-13)
+
+The procedural option referenced above was shipped and then removed
+shortly after. The IDW Z-sample heightfield produced a recognisably
+"blurry blob" result that no user would prefer over a wiki map, and
+maintaining ~200 lines of interpolation + colormap + hillshading code
+for an unused fallback wasn't worth it. The three wiki backdrops plus
+"none" remain. If a procedural option is wanted again later, the prior
+implementation lives in git history at commit `0368b2d`.

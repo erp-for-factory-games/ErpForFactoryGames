@@ -66,16 +66,14 @@ else
         <option value="terrain">Terrain (wiki)</option>
         <option value="biome">Biome (wiki)</option>
         <option value="water">Water (wiki)</option>
-        <option value="procedural">Procedural (from save data)</option>
         <option value="none">None (dark canvas)</option>
     </select>
     <div class="form-text">
-        Three of these backdrops are sourced from the
+        Backdrops are sourced from the
         <a href="https://satisfactory.wiki.gg/" target="_blank" rel="noreferrer">Satisfactory Fandom wiki</a>
         under fair-use terms for non-commercial fan tools — see
         <a href="https://github.com/ChrisonSimtian/ERP.Satisfactory/blob/main/docs/adr/0015-map-backdrops-fair-use.md"
             target="_blank" rel="noreferrer">ADR-0015</a>.
-        The "procedural" option generates a topographic surface from your save's resource-node Z samples (no Coffee Stain assets).
         @if (!string.IsNullOrEmpty(mapMessage))
         {
             <span class="text-success ms-2">@mapMessage</span>
