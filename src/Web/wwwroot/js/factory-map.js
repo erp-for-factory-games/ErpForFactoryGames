@@ -21,6 +21,17 @@ const STYLE = {
     'generator':     { color: '#E5604A', radius: 6,   opacity: 1.0,  label: 'Generators' },
 };
 
+// Resource-node sub-styles by BP kind. Geysers stand out in blue (water /
+// geothermal) and deposits/fracking get distinct hues so they're not lost in
+// the mining-node sea.
+const NODE_KIND_STYLE = {
+    'MiningNode':         { color: '#FFC53D', radius: 3.5, opacity: 0.85 },
+    'Geyser':             { color: '#5FB0C9', radius: 5,   opacity: 1.0  },
+    'Deposit':            { color: '#9A9AA0', radius: 2.2, opacity: 0.6  },
+    'FrackingCore':       { color: '#B388EB', radius: 5,   opacity: 1.0  },
+    'FrackingSatellite':  { color: '#7E5DC5', radius: 4,   opacity: 0.9  },
+};
+
 export async function initialize(element, featureCollection) {
     await ensureLeafletLoaded();
     if (map) {
@@ -145,7 +156,15 @@ function buildCategoryLayers(featureCollection) {
     for (const feature of featureCollection.features) {
         const [x, y] = feature.geometry.coordinates;
         const cat = feature.properties.category;
-        const style = STYLE[cat] ?? { color: '#FFFFFF', radius: 4, opacity: 1 };
+        let style = STYLE[cat] ?? { color: '#FFFFFF', radius: 4, opacity: 1 };
+
+        // Resource nodes get per-kind sub-styling.
+        if (cat === 'resource-node') {
+            const kind = feature.properties.nodeKind;
+            const sub = NODE_KIND_STYLE[kind];
+            if (sub) style = { ...style, ...sub };
+        }
+
         const target = layers[cat] ?? (layers[cat] = L.layerGroup());
 
         const marker = L.circleMarker(unrealToLatLng(x, y), {

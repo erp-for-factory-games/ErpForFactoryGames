@@ -66,6 +66,20 @@ internal static class BuildingIdentifiers
             "BP_FrackingSatellite_C";
 
     /// <summary>
+    /// Sub-classifies a resource-node actor by BP type. Each enum value maps
+    /// to a different rendering / colour bucket on the map.
+    /// </summary>
+    public static ResourceNodeKind ResourceNodeKind(string typePath) => ShortName(typePath) switch
+    {
+        "BP_ResourceNode_C" => ERP.Domain.ResourceNodeKind.MiningNode,
+        "BP_ResourceNodeGeyser_C" => ERP.Domain.ResourceNodeKind.Geyser,
+        "BP_ResourceDeposit_C" => ERP.Domain.ResourceNodeKind.Deposit,
+        "BP_FrackingCore_C" => ERP.Domain.ResourceNodeKind.FrackingCore,
+        "BP_FrackingSatellite_C" => ERP.Domain.ResourceNodeKind.FrackingSatellite,
+        _ => ERP.Domain.ResourceNodeKind.Unknown,
+    };
+
+    /// <summary>
     /// Returns the trailing class identifier from a full TypePath. The save
     /// parser surfaces TypePaths as the path to the BP class, so the last
     /// segment after <c>'.'</c> (e.g. <c>Build_MinerMk1_C</c>) is the

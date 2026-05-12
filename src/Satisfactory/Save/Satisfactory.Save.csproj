@@ -12,4 +12,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Bundle the resource-node lookup table inside the assembly. -->
+    <EmbeddedResource Include="Data\known-resource-nodes.json" />
+  </ItemGroup>
+
 </Project>

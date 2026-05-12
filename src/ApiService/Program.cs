@@ -254,8 +254,12 @@ public sealed record FactoryStateGeoJson(
         foreach (var n in s.ResourceNodes)
             features.Add(GeoFeature.Make("resource-node", n.Reference, n.Position, new()
             {
+                ["nodeKind"] = n.Kind.ToString(),
                 ["purity"] = n.Purity.ToString(),
                 ["resource"] = n.Resource?.Value,
+                ["resourceName"] = n.Resource is { Value: { Length: > 0 } } id
+                    ? catalog.FindItem(id)?.Name
+                    : null,
             }));
 
         foreach (var m in s.Miners)

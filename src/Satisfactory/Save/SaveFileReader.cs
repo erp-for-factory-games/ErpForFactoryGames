@@ -11,6 +11,15 @@ namespace Satisfactory.Save;
 /// </summary>
 public sealed class SaveFileReader
 {
+    private readonly KnownResourceNodes _knownNodes;
+
+    public SaveFileReader() : this(KnownResourceNodes.LoadEmbedded()) { }
+
+    public SaveFileReader(KnownResourceNodes knownNodes)
+    {
+        _knownNodes = knownNodes;
+    }
+
     public LiveFactoryState Read(string savePath)
     {
         var save = SaveFileSerializer.Instance.Deserialize(savePath);
@@ -76,15 +85,36 @@ public sealed class SaveFileReader
             }
             else if (BuildingIdentifiers.IsResourceNode(typePath))
             {
-                // Resource class (e.g. Desc_OreIron_C) and purity are *blueprint
-                // class defaults* on the resource-node actor — they're not
-                // instance-serialized into the save. Surfacing them requires a
-                // separate catalogue/blueprint lookup keyed by node coordinates
-                // (deferred — out of scope for the v1.2 .sav parser).
-                resourceNodes.Add(new ResourceNode(reference, Resource: null, NodePurity.Unknown, position));
+                resourceNodes.Add(BuildResourceNode(typePath, reference, position));
             }
         }
 
         return new LiveFactoryState(metadata, resourceNodes, miners, buildings, belts, generators, warnings);
+    }
+
+    private ResourceNode BuildResourceNode(string typePath, string reference, Position position)
+    {
+        var kind = BuildingIdentifiers.ResourceNodeKind(typePath);
+
+        // Geysers are always geothermal (Pure) — known purely from BP type.
+        if (kind == ERP.Domain.ResourceNodeKind.Geyser)
+        {
+            return new ResourceNode(reference, kind, Resource: null, NodePurity.Pure, position);
+        }
+
+        // Mining nodes / fracking sites need a coordinate lookup against the
+        // bundled known-nodes dataset. Falls back to Unknown if no match.
+        if (kind is ERP.Domain.ResourceNodeKind.MiningNode
+                 or ERP.Domain.ResourceNodeKind.FrackingCore
+                 or ERP.Domain.ResourceNodeKind.FrackingSatellite)
+        {
+            var known = _knownNodes.Lookup(position);
+            if (known is not null)
+            {
+                return new ResourceNode(reference, kind, new ItemId(known.Resource), known.Purity, position);
+            }
+        }
+
+        return new ResourceNode(reference, kind, Resource: null, NodePurity.Unknown, position);
     }
 }
