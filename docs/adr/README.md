@@ -32,5 +32,6 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0009](0009-runtime-ingestion-of-game-catalogue.md) | Runtime ingestion of game catalogue from Docs.json | Accepted |
 | [0010](0010-game-agnostic-catalogue-contract.md) | Game-agnostic catalogue contract in the Application layer | Accepted |
 | [0011](0011-catalogue-source-path-configuration.md) | Catalogue source path configuration | Accepted |
-| [0012](0012-live-factory-state-via-node-sidecar.md) | Live factory state ingestion via Node sidecar | Proposed |
+| [0012](0012-live-factory-state-via-node-sidecar.md) | Live factory state ingestion via Node sidecar | Superseded by [0014](0014-pure-csharp-save-ingestion-via-fork.md) |
 | [0013](0013-map-visualiser-approach.md) | Map visualiser approach | Proposed |
+| [0014](0014-pure-csharp-save-ingestion-via-fork.md) | Pure-C# .sav ingestion via SatisfactorySaveNet fork | Accepted |

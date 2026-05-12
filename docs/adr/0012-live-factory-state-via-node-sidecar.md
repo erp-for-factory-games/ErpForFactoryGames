@@ -1,8 +1,16 @@
 # 0012. Live factory state ingestion via Node sidecar
 
-- Status: Proposed
+- Status: Superseded by [0014](0014-pure-csharp-save-ingestion-via-fork.md)
 - Date: 2026-05-11
 - Deciders: Chris
+
+> **Superseded 2026-05-12.** The blocker that drove this ADR — `SatisfactorySaveNet`
+> failing on v1.2 saves — has been resolved by patching the library on a fork
+> ([`ChrisonSimtian/SatisfactorySaveNet`](https://github.com/ChrisonSimtian/SatisfactorySaveNet),
+> branch `fix/v1.2-toc-data-blob`, vendored at `vendor/SatisfactorySaveNet/`).
+> A pure-C# adapter is now the chosen path. See
+> [ADR 0014](0014-pure-csharp-save-ingestion-via-fork.md). The Node sidecar
+> described below was not built.
 
 ## Context
 
