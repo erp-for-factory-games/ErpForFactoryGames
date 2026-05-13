@@ -11,64 +11,80 @@
 
 @if (status is null)
 {
-    <p><em>Loading status...</em></p>
+    <MudText><em>Loading status...</em></MudText>
 }
 else
 {
-    <div class="@StatusAlertClass">
-        <strong>@StatusHeadline</strong>
+    <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined" Class="mb-3">
+        <MudText Typo="Typo.subtitle2"><strong>@StatusHeadline</strong></MudText>
         @if (!string.IsNullOrEmpty(status.Source))
         {
-            <div class="small">Source: <code>@status.Source</code></div>
+            <MudText Typo="Typo.caption">Source: <code>@status.Source</code></MudText>
         }
-        <div class="small">@status.ItemCount items · @status.BuildingCount buildings · @status.RecipeCount recipes (@status.AlternateRecipeCount alternates)</div>
-    </div>
+        <MudText Typo="Typo.caption">
+            @status.ItemCount items · @status.BuildingCount buildings · @status.RecipeCount recipes
+            (@status.AlternateRecipeCount alternates)
+        </MudText>
+    </MudAlert>
 
     @if (status.Warnings is { Count: > 0 })
     {
-        <details class="mt-2">
-            <summary>@status.Warnings.Count warning(s) during parse</summary>
-            <ul class="small">
-                @foreach (var w in status.Warnings.Take(50))
-                {
-                    <li>@w</li>
-                }
-                @if (status.Warnings.Count > 50)
-                {
-                    <li><em>(@(status.Warnings.Count - 50) more not shown)</em></li>
-                }
-            </ul>
-        </details>
+        <MudExpansionPanels Elevation="0" Class="mb-3">
+            <MudExpansionPanel Text="@($"{status.Warnings.Count} warning(s) during parse")" Dense="true">
+                <ul class="small">
+                    @foreach (var w in status.Warnings.Take(50))
+                    {
+                        <li>@w</li>
+                    }
+                    @if (status.Warnings.Count > 50)
+                    {
+                        <li><em>(@(status.Warnings.Count - 50) more not shown)</em></li>
+                    }
+                </ul>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
     }
 }
 
 <div class="mt-4">
-    <label class="form-label">Path to the Satisfactory <code>Docs</code> directory or a specific locale file</label>
-    <input type="text" class="form-control" @bind="pathInput" placeholder="C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources\Docs" />
-    <div class="form-text">
+    <MudTextField @bind-Value="pathInput"
+                  Label="Path to the Satisfactory Docs directory or a specific locale file"
+                  Placeholder="C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources\Docs"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  HelperTextOnFocus="false"
+                  Class="mb-1" />
+    <MudText Typo="Typo.caption" Class="d-block mb-2">
         Either point at the <code>Docs</code> folder (we'll pick <code>en-US.json</code> automatically) or pass a specific
         <code>&lt;locale&gt;.json</code> file. Resolution order at startup:
-        <code>ERP_SATISFACTORY_DOCS_PATH</code> env var → user-saved (this form) → <code>appsettings.json</code> → Steam auto-detect.
-    </div>
-    <button class="btn btn-primary mt-2" type="button" @onclick="Apply" disabled="@(string.IsNullOrWhiteSpace(pathInput) || isApplying)">
+        <code>ERP_SATISFACTORY_DOCS_PATH</code> env var → user-saved (this form) → <code>appsettings.json</code> →
+        Steam auto-detect.
+    </MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply"
+               Disabled="@(string.IsNullOrWhiteSpace(pathInput) || isApplying)">
         @(isApplying ? "Applying..." : "Apply")
-    </button>
+    </MudButton>
     @if (!string.IsNullOrEmpty(message))
     {
-        <span class="@MessageClass ms-3">@message</span>
+        <MudText HtmlTag="span" Color="@(messageIsError ? Color.Error : Color.Success)" Class="ms-3">@message</MudText>
     }
 </div>
 
 <h2 class="mt-5">Factory map</h2>
 <div class="mt-3">
-    <label class="form-label">Backdrop</label>
-    <select class="form-select" @bind="mapBackdrop" @bind:after="OnMapBackdropChanged">
-        <option value="terrain">Terrain (wiki)</option>
-        <option value="biome">Biome (wiki)</option>
-        <option value="water">Water (wiki)</option>
-        <option value="none">None (dark canvas)</option>
-    </select>
-    <div class="form-text">
+    <MudSelect T="string" Value="mapBackdrop" ValueChanged="OnMapBackdropChanged"
+               Label="Backdrop"
+               Variant="Variant.Outlined"
+               Margin="Margin.Dense"
+               Dense="true"
+               Class="mb-1"
+               Style="max-width: 360px;">
+        <MudSelectItem Value="@("terrain")">Terrain (wiki)</MudSelectItem>
+        <MudSelectItem Value="@("biome")">Biome (wiki)</MudSelectItem>
+        <MudSelectItem Value="@("water")">Water (wiki)</MudSelectItem>
+        <MudSelectItem Value="@("none")">None (dark canvas)</MudSelectItem>
+    </MudSelect>
+    <MudText Typo="Typo.caption" Class="d-block">
         Backdrops are sourced from the
         <a href="https://satisfactory.wiki.gg/" target="_blank" rel="noreferrer">Satisfactory Fandom wiki</a>
         under fair-use terms for non-commercial fan tools — see
@@ -76,9 +92,9 @@ else
             target="_blank" rel="noreferrer">ADR-0015</a>.
         @if (!string.IsNullOrEmpty(mapMessage))
         {
-            <span class="text-success ms-2">@mapMessage</span>
+            <MudText HtmlTag="span" Color="Color.Success" Class="ms-2">@mapMessage</MudText>
         }
-    </div>
+    </MudText>
 </div>
 
 @code {
@@ -90,17 +106,14 @@ else
     private string mapBackdrop = "terrain";
     private string? mapMessage;
 
-    private string StatusAlertClass => status is null
-        ? "alert alert-secondary"
-        : status.IsLoaded ? "alert alert-success"
-        : "alert alert-warning";
+    private Severity StatusSeverity => status is null
+        ? Severity.Info
+        : status.IsLoaded ? Severity.Success : Severity.Warning;
 
     private string StatusHeadline => status is null
         ? ""
         : status.IsLoaded ? "Catalogue loaded."
         : "No catalogue loaded. Configure your Docs.json path below.";
-
-    private string MessageClass => messageIsError ? "text-danger" : "text-success";
 
     protected override async Task OnInitializedAsync()
     {
@@ -129,8 +142,9 @@ else
         }
     }
 
-    private async Task OnMapBackdropChanged()
+    private async Task OnMapBackdropChanged(string value)
     {
+        mapBackdrop = value;
         try
         {
             await JS.InvokeVoidAsync("localStorage.setItem", "erp-map-backdrop", mapBackdrop);
