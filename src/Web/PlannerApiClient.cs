@@ -85,6 +85,7 @@ public sealed record StepView(
     string RecipeId,
     string RecipeName,
     string BuildingId,
+    string BuildingName,
     decimal BuildingCount,
     IReadOnlyList<AmountView> Inputs,
     IReadOnlyList<AmountView> Outputs);

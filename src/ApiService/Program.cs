@@ -354,6 +354,7 @@ public sealed record StepDto(
     string RecipeId,
     string RecipeName,
     string BuildingId,
+    string BuildingName,
     decimal BuildingCount,
     IReadOnlyList<AmountDto> Inputs,
     IReadOnlyList<AmountDto> Outputs);
@@ -375,6 +376,7 @@ public sealed record PlanDto(
                 s.Recipe.Id.Value,
                 s.Recipe.Name,
                 s.Recipe.Building.Value,
+                catalog.FindBuilding(s.Recipe.Building)?.Name ?? s.Recipe.Building.Value,
                 Math.Round(s.BuildingCount, 4),
                 s.InputsPerMinute.Select(ToAmount).ToList(),
                 s.OutputsPerMinute.Select(ToAmount).ToList())).ToList(),

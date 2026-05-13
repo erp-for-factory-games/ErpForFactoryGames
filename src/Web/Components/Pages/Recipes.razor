@@ -59,14 +59,14 @@ else
             <PropertyColumn Property="r => r.BuildingName" Title="Building" Grouping="false" />
             <TemplateColumn Title="Inputs / min" Sortable="false" Filterable="false">
                 <CellTemplate>
-                    <div class="recipe-amounts">
+                    <div class="fx-amount-list">
                         @foreach (var a in context.Item.InputsPerMinute)
                         {
-                            <span class="recipe-amount" title="@a.ItemName">
+                            <span class="fx-amount" title="@a.ItemName">
                                 <img src="/assets/icons/items/@(a.ItemId).png"
                                      onerror="this.style.visibility='hidden'"
                                      alt="" />
-                                <span class="recipe-amount-text">@FormatRate(a.ItemsPerMinute) @a.ItemName</span>
+                                <span class="fx-amount-text">@FormatRate(a.ItemsPerMinute) @a.ItemName</span>
                             </span>
                         }
                     </div>
@@ -74,14 +74,14 @@ else
             </TemplateColumn>
             <TemplateColumn Title="Outputs / min" Sortable="false" Filterable="false">
                 <CellTemplate>
-                    <div class="recipe-amounts">
+                    <div class="fx-amount-list">
                         @foreach (var a in context.Item.OutputsPerMinute)
                         {
-                            <span class="recipe-amount" title="@a.ItemName">
+                            <span class="fx-amount" title="@a.ItemName">
                                 <img src="/assets/icons/items/@(a.ItemId).png"
                                      onerror="this.style.visibility='hidden'"
                                      alt="" />
-                                <span class="recipe-amount-text">@FormatRate(a.ItemsPerMinute) @a.ItemName</span>
+                                <span class="fx-amount-text">@FormatRate(a.ItemsPerMinute) @a.ItemName</span>
                             </span>
                         }
                     </div>

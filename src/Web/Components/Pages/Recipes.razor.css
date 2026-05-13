@@ -1,33 +1,5 @@
 /* =========================================================================
-   Recipes page — input/output chip cells inside MudDataGrid.
-
-   Items are rendered as flex chips so multi-ingredient recipes wrap onto
-   multiple lines inside the cell instead of overflowing horizontally.
+   Recipes page — page-specific styles. Input/output chip styling lives in
+   the shared fx-amount-* classes in wwwroot/app.css (used here, on the
+   planner page, and anywhere else the UI lists "N × item").
    ========================================================================= */
-
-.recipe-amounts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem 0.6rem;
-    align-items: center;
-}
-
-.recipe-amount {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    white-space: nowrap;
-    font-size: 0.85rem;
-    line-height: 1.2;
-}
-
-.recipe-amount img {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-    flex: 0 0 20px;
-}
-
-.recipe-amount-text {
-    color: var(--fx-text);
-}

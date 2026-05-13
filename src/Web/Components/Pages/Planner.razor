@@ -113,7 +113,17 @@ else
 @if (plan is not null)
 {
     <hr />
-    <h2>Plan @(plan.IsFeasible ? "✓ feasible" : "⚠ missing inputs")</h2>
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <h2 class="mb-0">Plan</h2>
+        @if (plan.IsFeasible)
+        {
+            <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.CheckCircle">Feasible</MudChip>
+        }
+        else
+        {
+            <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Warning">Missing inputs</MudChip>
+        }
+    </div>
 
     @if (plan.Steps.Count == 0)
     {
@@ -121,51 +131,82 @@ else
     }
     else
     {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Recipe</th>
-                    <th>Building</th>
-                    <th class="text-end">Buildings</th>
-                    <th>Inputs / min</th>
-                    <th>Outputs / min</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var step in plan.Steps)
-                {
-                    <tr>
-                        <td>@step.RecipeName</td>
-                        <td>@step.BuildingId</td>
-                        <td class="text-end">@step.BuildingCount</td>
-                        <td>@string.Join(", ", step.Inputs.Select(i => $"{i.ItemsPerMinute} {i.ItemName}"))</td>
-                        <td>@string.Join(", ", step.Outputs.Select(o => $"{o.ItemsPerMinute} {o.ItemName}"))</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <MudDataGrid T="StepView"
+                     Items="plan.Steps"
+                     Hover="true"
+                     Striped="true"
+                     Dense="true"
+                     SortMode="SortMode.Multiple"
+                     Class="fx-plan-grid">
+            <Columns>
+                <PropertyColumn Property="s => s.RecipeName" Title="Recipe" />
+                <PropertyColumn Property="s => s.BuildingName" Title="Building" />
+                <PropertyColumn Property="s => s.BuildingCount" Title="Buildings" Format="0.##" CellStyle="text-align: right;" HeaderStyle="text-align: right;" />
+                <TemplateColumn Title="Inputs / min" Sortable="false" Filterable="false">
+                    <CellTemplate>
+                        <div class="fx-amount-list">
+                            @foreach (var a in context.Item.Inputs)
+                            {
+                                <span class="fx-amount" title="@a.ItemName">
+                                    <img src="/assets/icons/items/@(a.ItemId).png"
+                                         onerror="this.style.visibility='hidden'"
+                                         alt="" />
+                                    <span class="fx-amount-text">@FormatRate(a.ItemsPerMinute) @a.ItemName</span>
+                                </span>
+                            }
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Outputs / min" Sortable="false" Filterable="false">
+                    <CellTemplate>
+                        <div class="fx-amount-list">
+                            @foreach (var a in context.Item.Outputs)
+                            {
+                                <span class="fx-amount" title="@a.ItemName">
+                                    <img src="/assets/icons/items/@(a.ItemId).png"
+                                         onerror="this.style.visibility='hidden'"
+                                         alt="" />
+                                    <span class="fx-amount-text">@FormatRate(a.ItemsPerMinute) @a.ItemName</span>
+                                </span>
+                            }
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
     }
 
     @if (plan.RawInputsConsumed.Count > 0)
     {
-        <h3>Raw inputs consumed (from sources)</h3>
-        <ul>
+        <h3 class="mt-4">Raw inputs consumed (from sources)</h3>
+        <div class="fx-amount-list">
             @foreach (var amount in plan.RawInputsConsumed)
             {
-                <li>@amount.ItemsPerMinute @amount.ItemName / min</li>
+                <span class="fx-amount" title="@amount.ItemName">
+                    <img src="/assets/icons/items/@(amount.ItemId).png"
+                         onerror="this.style.visibility='hidden'"
+                         alt="" />
+                    <span class="fx-amount-text">@FormatRate(amount.ItemsPerMinute) @amount.ItemName / min</span>
+                </span>
             }
-        </ul>
+        </div>
     }
 
     @if (plan.MissingInputs.Count > 0)
     {
-        <h3 class="text-danger">Missing inputs</h3>
-        <ul class="text-danger">
+        <h3 class="mt-4 text-danger">Missing inputs</h3>
+        <p class="text-muted mb-2"><small>No recipe and no source available.</small></p>
+        <div class="fx-amount-list">
             @foreach (var amount in plan.MissingInputs)
             {
-                <li>@amount.ItemsPerMinute @amount.ItemName / min — no recipe and no source</li>
+                <span class="fx-amount fx-amount-missing" title="@amount.ItemName">
+                    <img src="/assets/icons/items/@(amount.ItemId).png"
+                         onerror="this.style.visibility='hidden'"
+                         alt="" />
+                    <span class="fx-amount-text">@FormatRate(amount.ItemsPerMinute) @amount.ItemName / min</span>
+                </span>
             }
-        </ul>
+        </div>
     }
 }
 
@@ -217,6 +258,9 @@ else
             isComputing = false;
         }
     }
+
+    private static string FormatRate(decimal rate) =>
+        rate == Math.Floor(rate) ? rate.ToString("0") : rate.ToString("0.##");
 
     private Task<IEnumerable<CatalogItem>> SearchItems(string? value, CancellationToken ct)
     {
