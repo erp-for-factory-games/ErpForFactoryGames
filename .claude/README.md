@@ -9,8 +9,8 @@ Project-specific guidance and tooling for Claude Code in this repo.
 - [`agents/`](agents/) — custom subagents available via the Agent tool.
   - [`ada.md`](agents/ada.md) — **ADA**, the in-game assistant. Game knowledge
     (recipes, ratios, milestone unlocks, building specs, layout tips) plus
-    live save-game sync into `.satisfactory/stocktake.md` via the parser at
-    [`tools/etothepii-test/`](../tools/etothepii-test/README.md). Not for code work.
+    live save-game sync into `.satisfactory/stocktake.md` via the pure-C# CLI
+    at [`tools/Stocktake/`](../tools/Stocktake/). Not for code work.
 
 ## Adding things later
 

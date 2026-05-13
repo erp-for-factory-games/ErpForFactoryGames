@@ -3,7 +3,7 @@
 // consumption (ADA et al). Default output is Markdown; --json emits a single
 // machine-readable JSON document.
 //
-// Reaches feature parity with tools/etothepii-test/stocktake.mjs on:
+// Surfaces:
 //   * per-miner resource (via mExtractableResource + OutputInventory.mAllowedItemDescriptors)
 //   * per-producer recipe (via mCurrentRecipe)
 //   * per-generator fuel (via mCurrentFuelClass)

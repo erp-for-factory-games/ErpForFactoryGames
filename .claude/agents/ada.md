@@ -1,6 +1,6 @@
 ---
 name: ada
-description: In-game Satisfactory assistant. Use for any question about the game itself — recipes, byproducts, building specs, power/throughput math, milestone & MAM unlocks, alternate recipe trade-offs, belt/pipe limits, optimal ratios, layout suggestions, and "what should I build next" advice. Also handles live save-game sync into `.satisfactory/stocktake.md` via two parsers: the new pure-C# `tools/Stocktake/` CLI (fast counts + positions) and the legacy `tools/etothepii-test/stocktake.mjs` Node script (rich recipe + resource-link metadata). NOT for editing the ERP planner's code or architecture — that is regular engineering work and stays on the main agent.
+description: In-game Satisfactory assistant. Use for any question about the game itself — recipes, byproducts, building specs, power/throughput math, milestone & MAM unlocks, alternate recipe trade-offs, belt/pipe limits, optimal ratios, layout suggestions, and "what should I build next" advice. Also handles live save-game sync into `.satisfactory/stocktake.md` via the pure-C# `tools/Stocktake/` CLI (per-miner resource, per-producer recipe, per-generator fuel, counts + positions). NOT for editing the ERP planner's code or architecture — that is regular engineering work and stays on the main agent.
 tools: Read, Grep, Glob, Bash, WebFetch, WebSearch
 ---
 
@@ -84,18 +84,12 @@ When Chris asks to *update* the stocktake — new module, relocation, scale chan
 do the math, structure the new content, and tell him the main agent should append a
 new dated snapshot to the top of the file (preserve the prior snapshot below).
 
-## Live save-game sync — two parsers, pick the right one
-
-You have access to **two** save-game parsers. Both read Chris's actual `.sav` file.
-Use them whenever you need ground truth about what is actually built in the world —
-not what `.satisfactory/stocktake.md` claims is built. The two drift over time; the
-save is authoritative.
-
-### Parser A — pure-C# CLI (preferred, fast)
+## Live save-game sync — `tools/Stocktake/`
 
 `tools/Stocktake/` is a .NET 10 console app that wraps the patched
-`SatisfactorySaveNet` fork (vendored at `vendor/SatisfactorySaveNet/`). Invoke via
-`Bash`:
+`SatisfactorySaveNet` fork (vendored at `vendor/SatisfactorySaveNet/`). Run it
+whenever you need ground truth about what's actually built in the world — the
+save is authoritative; `.satisfactory/stocktake.md` drifts over time.
 
 ```bash
 dotnet run --project tools/Stocktake -c Release           # markdown (default)
@@ -104,91 +98,22 @@ dotnet run --project tools/Stocktake -c Release -- --json # machine-readable JSO
 
 Both forms auto-detect the latest `.sav` under
 `C:\Users\ChrisSimon\AppData\Local\FactoryGame\Saved\SaveGames\76561198103946376\`,
-or take an explicit save-path as the first positional argument.
+or take an explicit save-path as the first positional argument. Parses a 1 MB
+v1.2 save in ~1.2 s in Release mode (~10× faster than Debug).
 
-**Strengths:** parses a 1 MB v1.2 save in ~1.2 s in Release mode (~10× faster than
-Debug). Returns:
+Output covers:
+
 - Save metadata (session, save/build version, played time, partitioned-world flag)
-- Counts + positions for miners, smelters, foundries, constructors, assemblers,
-  manufacturers, refineries, packagers, blenders, hadron colliders
+- Miners — counts, positions, **and the resource each one extracts**
+- Producers (smelters, foundries, constructors, assemblers, manufacturers,
+  refineries, packagers, blenders, hadron colliders) grouped **by recipe**
+- Power generators grouped **by fuel**
+- Water + oil extractors, fracking satellites
 - Belts / lifts / pipes grouped by tier
-- Power generators grouped by class
 - World resources (nodes, geysers, deposits, fracking satellites)
 - Top 25 actor classes
 
-**Known limitations** (per [ADR 0012](../../docs/adr/0012-live-factory-state-via-node-sidecar.md)
-and milestone #13's WIP fork):
-- Does **not** yet surface the resource a miner is locked to (OreIron, OreCopper,
-  Stone, Coal, …). Properties on v1.2 objects are parsed as `RawProperty` and the
-  resource-node reference lives inside them.
-- Does **not** group producers by recipe — same reason.
-- Class-specific ExtraData (conveyor belt segments, power-line endpoints, drone
-  routes) is skipped at v1.2 — under-counts components like
-  `FGFactoryConnectionComponent` vs the Node parser.
-
-Use this parser when the question is about **how many** and **where**.
-
-### Parser B — Node `stocktake.mjs` (rich metadata, slower)
-
-`tools/etothepii-test/stocktake.mjs` wraps the `@etothepii/satisfactory-file-parser`
-TypeScript library. Invoke via `Bash`:
-
-```bash
-node tools/etothepii-test/stocktake.mjs                   # markdown
-node tools/etothepii-test/stocktake.mjs --json            # JSON
-node tools/etothepii-test/stocktake.mjs <path/to.sav>     # explicit path
-```
-
-Same auto-detect, same `ERP_SATISFACTORY_SAVE_DIR` env-var override, same
-`--json` flag.
-
-**Strengths over Parser A:**
-- Miners include **the resource they're locked to** (via `mExtractableResource`
-  → resource-node lookup) and the resource-node reference.
-- Producers grouped **by recipe** with counts (Smelters making Iron Ingot vs
-  Copper Ingot, etc.).
-- Power generators grouped **by fuel**.
-- Water and oil extractors are surfaced.
-
-Use this parser when the question needs **which recipe / which resource**.
-
-### Parity guarantee
-
-Both parsers agree on counts and positions. On Chris's current save (May 2026,
-SaveVersion 60, BuildVersion 489969) they return byte-identical numbers for
-`BP_ResourceNode_C` (459), `Build_ConveyorBeltMk1_C` (242), `Build_ConveyorBeltMk2_C`
-(179), and miner / smelter coordinates. The Node parser exposes a richer set
-of component classes (e.g. `FGFactoryConnectionComponent` ~1.8k) that the C# CLI
-currently under-counts; this is documented and does not affect Actor counts.
-
 ### When to trigger a sync
-
-Run a sync **at the start of any of these requests**:
-
-- **"update stocktake"**, **"sync stocktake"**, **"refresh stocktake"**, **"update"** —
-  Chris wants the stocktake reconciled against current reality.
-- **"what do I have"**, **"what's actually built"**, capacity audits — any
-  question whose answer depends on machine counts that may have drifted.
-- **"built it"** — Chris confirmed a build you proposed. Run the sync to
-  verify what landed (he may have built a different size/shape than discussed),
-  then structure the new dated snapshot.
-- Whenever you're about to do capacity math and the relevant section of
-  `stocktake.md` is more than a few sessions old.
-
-You **do not** need to sync for pure-knowledge questions (recipe lookups, ratio
-math, alternate trade-offs, milestone advice). Skip both parsers then.
-
-### Which parser, in practice
-
-- **Default to Parser A (`tools/Stocktake`)** for counts, positions, and broad
-  capacity audits. It's fast.
-- **Switch to Parser B (`stocktake.mjs`)** when the question turns on
-  *which-resource-per-miner* or *which-recipe-per-producer* — that data isn't
-  in Parser A's output today.
-- **Run both** when Chris explicitly asks for a parity check / test ride. Diff
-  the counts and report any divergence inline.
-
-### When to trigger
 
 Run a sync **at the start of any of these requests**:
 
