@@ -1,0 +1,142 @@
+.factory-map-shell {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.map-canvas {
+    height: 78vh;
+    background-color: #0F0F14;
+    border: 1px solid var(--fx-border);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.map-legend {
+    background-color: var(--fx-bg-panel);
+    border: 1px solid var(--fx-border);
+    border-radius: 4px;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.85rem;
+}
+
+.legend-heading {
+    color: var(--fx-text-muted);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.layer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.layer-toggle {
+    display: grid;
+    grid-template-columns: auto 14px 1fr auto;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0.2rem;
+    border-radius: 3px;
+}
+
+.layer-toggle:hover {
+    background-color: rgba(250, 149, 73, 0.06);
+}
+
+::deep .layer-checkbox {
+    margin: 0;
+    padding: 0;
+}
+
+::deep .layer-checkbox .mud-icon-button {
+    padding: 2px;
+}
+
+.layer-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.layer-name {
+    font-family: 'Bahnschrift', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.78rem;
+}
+
+.layer-count {
+    font-family: 'Cascadia Mono', 'Consolas', monospace;
+    font-size: 0.78rem;
+    color: var(--fx-text-muted);
+}
+
+/* Leaflet popups + tooltips themed. ::deep so the rules pierce the
+   scoped-CSS boundary into the JS-attached Leaflet DOM. */
+::deep .leaflet-popup-content-wrapper,
+::deep .leaflet-tooltip {
+    background-color: var(--fx-bg-panel);
+    color: var(--fx-text);
+    border: 1px solid var(--fx-border);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+::deep .leaflet-popup-tip,
+::deep .leaflet-tooltip:before {
+    background-color: var(--fx-bg-panel);
+    border: 1px solid var(--fx-border);
+}
+
+::deep .fx-map-tooltip {
+    font-family: 'Bahnschrift', sans-serif;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.45rem;
+}
+
+::deep .fx-popup-title {
+    font-family: 'Bahnschrift', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.72rem;
+    color: var(--fx-orange);
+    margin-bottom: 0.15rem;
+}
+
+::deep .fx-popup-kind {
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+}
+
+::deep .fx-popup-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.78rem;
+}
+
+::deep .fx-popup-row span:first-child {
+    color: var(--fx-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.7rem;
+}
+
+::deep .leaflet-control-zoom a {
+    background-color: var(--fx-bg-panel) !important;
+    color: var(--fx-text) !important;
+    border-color: var(--fx-border) !important;
+}
+
+::deep .leaflet-control-zoom a:hover {
+    background-color: var(--fx-bg-elevated) !important;
+    color: var(--fx-orange) !important;
+}
