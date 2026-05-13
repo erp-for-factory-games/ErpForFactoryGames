@@ -8,6 +8,10 @@ A .NET 10 / Blazor / Aspire application that helps you plan factories in the gam
 outputs you need. It also ingests your live `.sav` file so it can plan around what's
 already placed in your world.
 
+## Fancy Charts
+
+![Alt](https://repobeats.axiom.co/api/embed/b5196b0f26128bfafc0dc68fcacd78d12882a641.svg "Repobeats analytics image")
+
 ## Run it
 
 Requires the .NET SDK pinned in [`global.json`](global.json) (currently .NET 10
