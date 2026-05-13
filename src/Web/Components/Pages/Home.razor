@@ -3,48 +3,58 @@
 <PageTitle>ERP.Satisfactory</PageTitle>
 
 <h1>ERP.Satisfactory</h1>
-<p class="lead">An ERP-style production planner for the game <em>Satisfactory</em>.</p>
+<MudText Class="lead mb-3">An ERP-style production planner for the game <em>Satisfactory</em>.</MudText>
 
-<p>Plan a factory from the inputs you have and the outputs you need. The planner walks the recipe graph, scales it
-    to your target rates, and tells you exactly what to build — and where your bottlenecks are.</p>
+<MudText Class="mb-4">
+    Plan a factory from the inputs you have and the outputs you need. The planner walks the recipe graph, scales it
+    to your target rates, and tells you exactly what to build — and where your bottlenecks are.
+</MudText>
 
-<div class="row mt-4 g-3">
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <span class="fx-icon-inline fx-icon-wrench" aria-hidden="true"></span> Planner
-                </h5>
-                <p class="card-text">Define production targets and the resources you already have. Get a step-by-step
-                    plan with building counts and missing inputs flagged.</p>
-                <a class="btn btn-primary btn-sm" href="planner">Open planner</a>
-            </div>
-        </div>
-    </div>
+<MudGrid Spacing="3">
+    <MudItem xs="12" md="4">
+        <MudPaper Class="fx-panel pa-4 d-flex flex-column" Elevation="0" Style="height: 100%;">
+            <MudText Typo="Typo.h5" Class="card-title mb-2">
+                <span class="fx-icon-inline fx-icon-wrench" aria-hidden="true"></span> Planner
+            </MudText>
+            <MudText Class="flex-grow-1 mb-3">
+                Define production targets and the resources you already have. Get a step-by-step plan with building
+                counts and missing inputs flagged.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                       Href="planner" Class="align-self-start">
+                Open planner
+            </MudButton>
+        </MudPaper>
+    </MudItem>
 
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <span class="fx-icon-inline fx-icon-gear" aria-hidden="true"></span> Factory state
-                </h5>
-                <p class="card-text">Ingest a Satisfactory <code>.sav</code> file and see exactly what's placed in
-                    your world — miners, smelters, belts, generators, resource nodes.</p>
-                <a class="btn btn-primary btn-sm" href="factory/ingest">Open factory state</a>
-            </div>
-        </div>
-    </div>
+    <MudItem xs="12" md="4">
+        <MudPaper Class="fx-panel pa-4 d-flex flex-column" Elevation="0" Style="height: 100%;">
+            <MudText Typo="Typo.h5" Class="card-title mb-2">
+                <span class="fx-icon-inline fx-icon-gear" aria-hidden="true"></span> Factory state
+            </MudText>
+            <MudText Class="flex-grow-1 mb-3">
+                Ingest a Satisfactory <code>.sav</code> file and see exactly what's placed in your world — miners,
+                smelters, belts, generators, resource nodes.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                       Href="factory/ingest" Class="align-self-start">
+                Open factory state
+            </MudButton>
+        </MudPaper>
+    </MudItem>
 
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <span class="fx-icon-inline fx-icon-screwdriver" aria-hidden="true"></span> Settings
-                </h5>
-                <p class="card-text">Configure the path to your game's <code>Docs.json</code> catalogue. The planner
-                    can't run without it.</p>
-                <a class="btn btn-primary btn-sm" href="settings">Open settings</a>
-            </div>
-        </div>
-    </div>
-</div>
+    <MudItem xs="12" md="4">
+        <MudPaper Class="fx-panel pa-4 d-flex flex-column" Elevation="0" Style="height: 100%;">
+            <MudText Typo="Typo.h5" Class="card-title mb-2">
+                <span class="fx-icon-inline fx-icon-screwdriver" aria-hidden="true"></span> Settings
+            </MudText>
+            <MudText Class="flex-grow-1 mb-3">
+                Configure the path to your game's <code>Docs.json</code> catalogue. The planner can't run without it.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                       Href="settings" Class="align-self-start">
+                Open settings
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
