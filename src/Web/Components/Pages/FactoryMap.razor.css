@@ -172,6 +172,33 @@
     border-color: rgba(255, 255, 255, 0.4);
 }
 
+/* Per-kind rings for unresolved nodes (#61). The border colour is set
+   inline from NODE_KIND_FALLBACK so layer-toggle swatches and markers stay
+   in sync; the class adds shape/border-weight cues so the kinds are easy
+   to tell apart at a glance. */
+::deep .fx-node-icon--kind-mining {
+    border-radius: 4px;
+    border-width: 2px;
+}
+
+::deep .fx-node-icon--kind-geyser {
+    border-radius: 50%;
+    border-width: 2px;
+    box-shadow: 0 0 4px rgba(95, 176, 201, 0.5);
+}
+
+::deep .fx-node-icon--kind-fracking-core {
+    border-radius: 50%;
+    border-width: 2px;
+    box-shadow: 0 0 4px rgba(179, 136, 235, 0.5);
+}
+
+::deep .fx-node-icon--kind-fracking-satellite {
+    border-radius: 50%;
+    border-width: 1px;
+    opacity: 0.85;
+}
+
 ::deep .fx-node-dot {
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.2);

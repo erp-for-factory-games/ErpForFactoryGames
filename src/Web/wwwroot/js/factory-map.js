@@ -23,16 +23,37 @@ const STYLE = {
 };
 
 // Fallback styling for resource nodes whose resource isn't known yet (no
-// manual override + no entry in the bundled dataset). Once the resource is
-// known we render the wiki icon (Desc_OreIron_C.png etc.) instead. Geysers
-// don't need ore identification (always geothermal) and deposits are small
-// destructible ore piles — both can stay dot-shaped.
+// manual override + no entry in the bundled dataset).
+//
+// Per #61 acceptance, geysers / fracking cores / satellites must render as
+// distinct *icons* even without #42 data — not coloured dots. We don't have
+// dedicated geyser/fracking PNGs in .assets/icons/items/, so we pick a
+// representative item icon per kind and pair it with a kind-coloured ring
+// (the .fx-node-icon--kind-* CSS classes) so they remain visually distinct
+// from resolved mining nodes:
+//
+// - MiningNode (unknown ore)  → BP_ItemDescriptorPortableMiner_C (generic
+//                                miner icon)
+// - Geyser                    → Desc_Water_C (steam/water glyph, blue ring)
+// - FrackingCore              → Desc_LiquidOil_C (oil drum, purple ring;
+//                                fracking is most commonly an oil node)
+// - FrackingSatellite         → Desc_LiquidOil_C (smaller, darker-purple ring)
+// - Deposit                   → small grey dot (destructible scenery piles,
+//                                not in the issue's per-kind icon list)
+//
+// Once #42 populates known-resource-nodes.json with the real resource, the
+// resolved path below kicks in and the kind ring is replaced by the actual
+// per-ore icon (Desc_OreIron_C etc.).
 const NODE_KIND_FALLBACK = {
-    'MiningNode':         { color: '#FFC53D', size: 10, label: 'Mining node (unknown ore)' },
-    'Geyser':             { color: '#5FB0C9', size: 12, label: 'Geothermal geyser' },
-    'Deposit':            { color: '#9A9AA0', size: 7,  label: 'Resource deposit' },
-    'FrackingCore':       { color: '#B388EB', size: 12, label: 'Fracking core (unknown resource)' },
-    'FrackingSatellite':  { color: '#7E5DC5', size: 9,  label: 'Fracking satellite (unknown resource)' },
+    'MiningNode':         { color: '#FFC53D', size: 22, label: 'Mining node (unknown ore)',
+                            iconResource: 'BP_ItemDescriptorPortableMiner_C', kindClass: 'mining' },
+    'Geyser':             { color: '#5FB0C9', size: 22, label: 'Geothermal geyser',
+                            iconResource: 'Desc_Water_C', kindClass: 'geyser' },
+    'Deposit':            { color: '#9A9AA0', size: 7,  label: 'Resource deposit' /* dot only */ },
+    'FrackingCore':       { color: '#B388EB', size: 22, label: 'Fracking core (unknown resource)',
+                            iconResource: 'Desc_LiquidOil_C', kindClass: 'fracking-core' },
+    'FrackingSatellite':  { color: '#7E5DC5', size: 18, label: 'Fracking satellite (unknown resource)',
+                            iconResource: 'Desc_LiquidOil_C', kindClass: 'fracking-satellite' },
 };
 
 export async function initialize(element, featureCollection, callback) {
@@ -261,6 +282,28 @@ function buildResourceNodeIcon(feature) {
 
     const fb = NODE_KIND_FALLBACK[kind] ?? NODE_KIND_FALLBACK['MiningNode'];
     const half = fb.size / 2;
+
+    // Kind-specific icon when we have a representative asset (mining nodes,
+    // geysers, fracking cores/satellites). Wrapped in a kind-coloured ring
+    // so they stay visually distinct from resolved per-ore icons. The img
+    // onerror falls back to a coloured dot if the asset is missing on disk.
+    if (fb.iconResource) {
+        const html =
+            `<div class="fx-node-icon fx-node-icon--kind-${fb.kindClass}"
+                  style="width:${fb.size}px;height:${fb.size}px;border-color:${fb.color};">
+                <img src="/assets/icons/items/${fb.iconResource}.png"
+                     alt=""
+                     onerror="this.style.display='none';this.parentElement.classList.add('fx-node-icon--missing');this.parentElement.style.backgroundColor='${fb.color}';" />
+             </div>`;
+        return L.divIcon({
+            html,
+            className: 'fx-node-divicon',
+            iconSize: [fb.size, fb.size],
+            iconAnchor: [half, half],
+        });
+    }
+
+    // Pure dot fallback (Deposit / unknown kinds).
     const html =
         `<div class="fx-node-dot fx-node-dot--${kind.toLowerCase()}"
               style="width:${fb.size}px;height:${fb.size}px;background-color:${fb.color};"></div>`;
