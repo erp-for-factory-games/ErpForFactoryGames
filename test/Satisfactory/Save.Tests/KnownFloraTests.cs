@@ -15,9 +15,9 @@ public class KnownFloraTests
     }
 
     [Theory]
-    [InlineData("Desc_Berry_C",   "Paleberry")]
-    [InlineData("Desc_Nut_C",     "Beryl Nut")]
-    [InlineData("Desc_Shroom_C",  "Bacon Agaric")]
+    [InlineData("Desc_Berry_C", "Paleberry")]
+    [InlineData("Desc_Nut_C", "Beryl Nut")]
+    [InlineData("Desc_Shroom_C", "Bacon Agaric")]
     [InlineData("Desc_Mycelia_C", "Mycelia")]
     public void DisplayName_maps_known_species(string itemId, string expected)
     {

@@ -80,9 +80,9 @@ public sealed record FloraEntry(double X, double Y, double Z, string Species)
     /// <summary>Human-readable display name for the species ItemId. Falls back to the raw id.</summary>
     public string DisplayName => Species switch
     {
-        "Desc_Berry_C"   => "Paleberry",
-        "Desc_Nut_C"     => "Beryl Nut",
-        "Desc_Shroom_C"  => "Bacon Agaric",
+        "Desc_Berry_C" => "Paleberry",
+        "Desc_Nut_C" => "Beryl Nut",
+        "Desc_Shroom_C" => "Bacon Agaric",
         "Desc_Mycelia_C" => "Mycelia",
         _ => Species,
     };
