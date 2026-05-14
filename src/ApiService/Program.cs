@@ -435,12 +435,14 @@ public sealed record StepDto(
     string BuildingId,
     string BuildingName,
     decimal BuildingCount,
+    decimal PowerMw,
     IReadOnlyList<AmountDto> Inputs,
     IReadOnlyList<AmountDto> Outputs);
 
 public sealed record PlanDto(
     bool IsFeasible,
     IReadOnlyList<StepDto> Steps,
+    decimal TotalPowerMw,
     IReadOnlyList<AmountDto> RawInputsConsumed,
     IReadOnlyList<AmountDto> MissingInputs)
 {
@@ -449,16 +451,20 @@ public sealed record PlanDto(
         AmountDto ToAmount(ItemAmount a) =>
             new(a.Item.Value, catalog.FindItem(a.Item)?.Name ?? a.Item.Value, Math.Round(a.Quantity, 4));
 
+        var steps = plan.Steps.Select(s => new StepDto(
+            s.Recipe.Id.Value,
+            s.Recipe.Name,
+            s.Recipe.Building.Value,
+            catalog.FindBuilding(s.Recipe.Building)?.Name ?? s.Recipe.Building.Value,
+            Math.Round(s.BuildingCount, 4),
+            Math.Round(s.PowerMw, 4),
+            s.InputsPerMinute.Select(ToAmount).ToList(),
+            s.OutputsPerMinute.Select(ToAmount).ToList())).ToList();
+
         return new(
             IsFeasible: plan.IsFeasible,
-            Steps: plan.Steps.Select(s => new StepDto(
-                s.Recipe.Id.Value,
-                s.Recipe.Name,
-                s.Recipe.Building.Value,
-                catalog.FindBuilding(s.Recipe.Building)?.Name ?? s.Recipe.Building.Value,
-                Math.Round(s.BuildingCount, 4),
-                s.InputsPerMinute.Select(ToAmount).ToList(),
-                s.OutputsPerMinute.Select(ToAmount).ToList())).ToList(),
+            Steps: steps,
+            TotalPowerMw: Math.Round(steps.Sum(s => s.PowerMw), 4),
             RawInputsConsumed: plan.RawInputsConsumed.Select(ToAmount).ToList(),
             MissingInputs: plan.MissingInputs.Select(ToAmount).ToList());
     }

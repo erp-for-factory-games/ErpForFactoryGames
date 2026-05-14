@@ -114,12 +114,14 @@ public sealed record StepView(
     string BuildingId,
     string BuildingName,
     decimal BuildingCount,
+    decimal PowerMw,
     IReadOnlyList<AmountView> Inputs,
     IReadOnlyList<AmountView> Outputs);
 
 public sealed record PlanResponse(
     bool IsFeasible,
     IReadOnlyList<StepView> Steps,
+    decimal TotalPowerMw,
     IReadOnlyList<AmountView> RawInputsConsumed,
     IReadOnlyList<AmountView> MissingInputs);
 

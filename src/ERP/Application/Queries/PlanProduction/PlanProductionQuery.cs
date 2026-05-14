@@ -31,7 +31,7 @@ public static class PlanProductionHandler
         }
 
         var steps = stepsByRecipe.Values
-            .Select(a => BuildStep(a.Recipe, a.OutputRatePerMinute))
+            .Select(a => BuildStep(a.Recipe, a.OutputRatePerMinute, catalog))
             .ToList();
 
         return new ProductionPlan(
@@ -125,7 +125,7 @@ public static class PlanProductionHandler
         }
     }
 
-    private static ProductionStep BuildStep(Recipe recipe, decimal scale)
+    private static ProductionStep BuildStep(Recipe recipe, decimal scale, ICatalogProvider catalog)
     {
         var inputs = recipe.Inputs
             .Select(i => new ItemAmount(i.Item, RatePerMinute(i.Quantity, recipe.Duration) * scale))
@@ -133,7 +133,16 @@ public static class PlanProductionHandler
         var outputs = recipe.Outputs
             .Select(o => new ItemAmount(o.Item, RatePerMinute(o.Quantity, recipe.Duration) * scale))
             .ToList();
-        return new ProductionStep(recipe, scale, inputs, outputs);
+
+        // Power: documented base draw × building count. The catalogue only
+        // exposes BasePowerMw today; variable-power buildings (miners, etc.)
+        // would need a separate AveragePowerMw field, which doesn't exist yet
+        // — so this is intentionally the base figure. When the building is
+        // unknown or has no documented power, the contribution is zero.
+        var basePower = catalog.FindBuilding(recipe.Building)?.BasePowerMw ?? 0;
+        var powerMw = (decimal)basePower * scale;
+
+        return new ProductionStep(recipe, scale, powerMw, inputs, outputs);
     }
 
     private static decimal RatePerMinute(decimal quantityPerRun, TimeSpan duration) =>

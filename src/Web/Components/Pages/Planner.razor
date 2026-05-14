@@ -139,7 +139,7 @@ else
 @if (plan is not null)
 {
     <MudDivider Class="my-4" />
-    <div class="d-flex align-items-center gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
         <MudText Typo="Typo.h4" Class="mb-0">Plan</MudText>
         @if (plan.IsFeasible)
         {
@@ -148,6 +148,13 @@ else
         else
         {
             <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Warning">Missing inputs</MudChip>
+        }
+        @if (plan.Steps.Count > 0)
+        {
+            <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Bolt"
+                     title="Sum of base power draw (Building.BasePowerMw × buildings). Variable-power buildings (e.g. miners) report base only.">
+                @FormatPower(plan.TotalPowerMw) MW total
+            </MudChip>
         }
     </div>
 
@@ -168,6 +175,7 @@ else
                 <PropertyColumn Property="s => s.RecipeName" Title="Recipe" />
                 <PropertyColumn Property="s => s.BuildingName" Title="Building" />
                 <PropertyColumn Property="s => s.BuildingCount" Title="Buildings" Format="0.##" CellStyle="text-align: right;" HeaderStyle="text-align: right;" />
+                <PropertyColumn Property="s => s.PowerMw" Title="Power (MW)" Format="0.##" CellStyle="text-align: right;" HeaderStyle="text-align: right;" />
                 <TemplateColumn Title="Inputs / min" Sortable="false" Filterable="false">
                     <CellTemplate>
                         <div class="fx-amount-list">
@@ -287,6 +295,9 @@ else
 
     private static string FormatRate(decimal rate) =>
         rate == Math.Floor(rate) ? rate.ToString("0") : rate.ToString("0.##");
+
+    private static string FormatPower(decimal mw) =>
+        mw == Math.Floor(mw) ? mw.ToString("0") : mw.ToString("0.##");
 
     private Task<IEnumerable<CatalogItem>> SearchItems(string? value, CancellationToken ct)
     {
