@@ -3,3 +3,6 @@
 	url = https://github.com/ChrisonSimtian/SatisfactorySaveNet.git
 	ignore = all
 	update = none
+[submodule "vendor/CUE4Parse"]
+	path = vendor/CUE4Parse
+	url = https://github.com/FabianFG/CUE4Parse

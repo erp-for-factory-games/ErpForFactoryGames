@@ -47,6 +47,26 @@ public class SaveFileReaderParityTests
             Assert.All(state.Buildings, b => Assert.InRange(b.ClockSpeed, 0.01m, 2.5m));
         }
 
+        // #42 — known-resource-nodes dataset coverage. Now that the curated
+        // JSON ships ~640 placements extracted from the pak, the vast
+        // majority of mining nodes / fracking sites in a real save should
+        // resolve to a non-null Resource via the lookup. Pin at ≥80% so a
+        // future regression in the dataset can't silently halve coverage.
+        // Deposits and geysers don't go through the lookup so they're
+        // excluded from the denominator.
+        var lookupCandidates = state.ResourceNodes
+            .Where(n => n.Kind is ResourceNodeKind.MiningNode
+                              or ResourceNodeKind.FrackingCore
+                              or ResourceNodeKind.FrackingSatellite)
+            .ToList();
+        if (lookupCandidates.Count >= 10)
+        {
+            var resolved = lookupCandidates.Count(n => n.Resource is not null);
+            var ratio = (double)resolved / lookupCandidates.Count;
+            Assert.True(ratio >= 0.80,
+                $"Only {resolved}/{lookupCandidates.Count} ({ratio:P1}) mining/fracking nodes resolved a Resource via the lookup; expected ≥80%. The known-resource-nodes.json dataset may be stale — re-run tools/SatisfactoryPakExtractor.");
+        }
+
         // #44 — belt polyline plumbing. When the fork starts emitting
         // ConveyorChainActor ExtraData for v1.2 saves (currently excluded
         // by ObjectSerializer.cs:130 — see fork TODO.md §5), every belt

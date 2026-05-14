@@ -82,35 +82,30 @@ internal static class Program
 
         // CUE4Parse decompresses most UE5-packaged assets via Oodle, which
         // is a closed-source native library not redistributable in source.
-        // Bootstrap by downloading the DLL alongside this tool's binary if
-        // missing — one-time per machine. CUE4Parse exposes a helper that
-        // grabs the public oo2core build from FabianFG's CDN.
-        var oodlePath = Path.Combine(AppContext.BaseDirectory, OodleHelper.OODLE_DLL_NAME);
-        if (!File.Exists(oodlePath))
+        // master's OodleHelper.Initialize() auto-downloads the right build
+        // from the OodleUE GitHub release if not already present alongside
+        // the binary. One-time per machine. The DLL is not committed.
+        var oodlePath = Path.Combine(AppContext.BaseDirectory, OodleHelper.OodleFileName);
+        try
         {
-            Console.WriteLine($"Downloading Oodle DLL to {oodlePath} ...");
-            // CUE4Parse's DownloadOodleDll points at a stale Warframe index;
-            // the OodleUE GitHub release flow works for modern UE5 builds.
-            using var http = new HttpClient();
-            var ok = OodleHelper.DownloadOodleDllFromOodleUEAsync(http, oodlePath).GetAwaiter().GetResult();
-            if (!ok)
-            {
-                Console.Error.WriteLine("Failed to fetch Oodle DLL. Aborting.");
-                return 4;
-            }
+            OodleHelper.Initialize(oodlePath);
+            Console.WriteLine($"Oodle ready: {oodlePath}");
         }
-        OodleHelper.Initialize(oodlePath);
-        Console.WriteLine($"Oodle ready: {oodlePath}");
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to initialise Oodle: {ex.Message}");
+            return 4;
+        }
 
         Console.WriteLine($"Mounting paks from: {paksDir}");
 
-        // Satisfactory 1.x ships on UE5.x. CUE4Parse needs the exact engine
-        // version to parse the IoStore container header layout — fields
-        // like FIoContainerHeaderSoftPackageReferences moved between UE5
-        // minor versions and a mismatch throws "Invalid bool value" at mount.
-        // Empirically GAME_UE5_3 mounts Satisfactory 1.x; UE5_2/UE5_4 fail.
-        // Allow override via --ue-version for future patches.
-        var ueVersion = GetUeVersionArg(args, EGame.GAME_UE5_3);
+        // Satisfactory 1.x runs on Coffee Stain's UE5.3.2 fork, but the
+        // serialised property layout matches CUE4Parse's GAME_UE5_6 profile
+        // — every other UE5_x flag overruns the export read window with a
+        // VersionException. Probably Coffee Stain backports newer-engine
+        // property-tag changes into their fork. Override via --ue-version
+        // if a future game patch lands more changes.
+        var ueVersion = GetUeVersionArg(args, EGame.GAME_UE5_6);
         Console.WriteLine($"UE5 version: {ueVersion}");
         var versions = new VersionContainer(ueVersion);
         var provider = new DefaultFileProvider(paksDir, SearchOption.TopDirectoryOnly, versions);
@@ -181,6 +176,7 @@ internal static class Program
             {
                 Console.WriteLine($"  {(string.IsNullOrEmpty(g.Key) ? "(none)" : g.Key),-10} {g.Count()}");
             }
+
         }
 
         // Locate level/map assets. UE5 IoStore packages drop the .umap
@@ -231,6 +227,32 @@ internal static class Program
 
                     var resource = TryReadResourceClassName(export);
                     var purity = TryReadPurity(export);
+                    if (!string.IsNullOrEmpty(purity))
+                    {
+                        _explicitPurityCounts[purity] = _explicitPurityCounts.GetValueOrDefault(purity) + 1;
+                    }
+
+                    // UE elides serialized properties that match the BP
+                    // archetype default. Empirically (Satisfactory 1.x),
+                    // resource-node placements only carry mPurity when it
+                    // differs from the default, and the only values that
+                    // appear in the data are Impure and Pure — the BP CDO
+                    // sets Normal as the default. Anything missing is Normal.
+                    if (string.IsNullOrEmpty(purity)
+                        && (className == "BP_ResourceNode_C"
+                            || className == "BP_ResourceNodeGeyser_C"
+                            || className == "BP_FrackingCore_C"
+                            || className == "BP_FrackingSatellite_C"))
+                    {
+                        purity = "Normal";
+                    }
+
+                    // BP_ResourceNodeGeyser_C always emits Geothermal "power".
+                    // Recorded as Desc_Geyser_C for parity with other entries.
+                    if (string.IsNullOrEmpty(resource) && className == "BP_ResourceNodeGeyser_C")
+                    {
+                        resource = "Desc_Geyser_C";
+                    }
 
                     entries.Add(new JsonEntry
                     {
@@ -274,10 +296,26 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine($"Entries with resource:  {resolvedResource}/{entries.Count}");
         Console.WriteLine($"Entries with purity:    {resolvedPurity}/{entries.Count}");
+        if (_unmappedPurityNames.Count > 0)
+        {
+            Console.WriteLine("Unmapped purity FNames:");
+            foreach (var kvp in _unmappedPurityNames.OrderByDescending(k => k.Value))
+            {
+                Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
+            }
+        }
+        if (_explicitPurityCounts.Count > 0)
+        {
+            Console.WriteLine("Explicit purity reads (pre-inference):");
+            foreach (var kvp in _explicitPurityCounts.OrderByDescending(k => k.Value))
+            {
+                Console.WriteLine($"  {kvp.Key,-10} {kvp.Value}");
+            }
+        }
 
-        WriteJson(outPath!, entries);
+        var wrote = WriteJson(outPath!, entries);
         Console.WriteLine();
-        Console.WriteLine($"Wrote {entries.Count} entries to {outPath}");
+        Console.WriteLine($"Wrote {wrote} entries to {outPath} (filtered from {entries.Count}; deposits + no-resource entries dropped).");
         return 0;
     }
 
@@ -354,7 +392,12 @@ internal static class Program
         // as an FName, byte, or int.
         if (export.TryGetValue<FName>(out var purityName, "mPurity"))
         {
-            return PurityFromName(purityName.Text);
+            var mapped = PurityFromName(purityName.Text);
+            if (mapped is null && !string.IsNullOrEmpty(purityName.Text))
+            {
+                _unmappedPurityNames[purityName.Text] = _unmappedPurityNames.GetValueOrDefault(purityName.Text) + 1;
+            }
+            return mapped;
         }
         if (export.TryGetValue<byte>(out var purityByte, "mPurity"))
         {
@@ -379,26 +422,41 @@ internal static class Program
         return null;
     }
 
+    private static readonly Dictionary<string, int> _unmappedPurityNames = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, int> _explicitPurityCounts = new(StringComparer.Ordinal);
+
     private static string? PurityFromName(string? text)
     {
         if (string.IsNullOrEmpty(text)) return null;
-        // Format: "EResourcePurity::RP_Impure" / "RP_Normal" / "RP_Pure"
+        // Format: "EResourcePurity::RP_Impure" / "RP_Normal" / "RP_Pure".
+        // Coffee Stain ship the typo "RP_Inpure" in their EResourcePurity
+        // enum (verified against Satisfactory 1.x .pak content); accept both
+        // spellings so we don't drop ~180 impure-marked nodes per world.
         var last = text.LastIndexOf(':');
         var tail = last >= 0 ? text[(last + 1)..] : text;
         return tail switch
         {
-            "RP_Impure" or "Impure" => "Impure",
+            "RP_Impure" or "RP_Inpure" or "Impure" => "Impure",
             "RP_Normal" or "Normal" => "Normal",
             "RP_Pure" or "Pure" => "Pure",
             _ => null,
         };
     }
 
-    private static void WriteJson(string path, List<JsonEntry> entries)
+    private static int WriteJson(string path, List<JsonEntry> entries)
     {
-        // Sort by (resource, x, y, z) so re-runs produce reviewable diffs.
+        // KnownResourceNodes requires non-null Resource on every record (the
+        // record's Resource property is a non-nullable string). Drop entries
+        // where extraction couldn't resolve a resource — they'd cause a NRE
+        // downstream and aren't useful to the planner.
+        // BP_ResourceDeposit_C carries its resource via mResourceDepositTableIndex,
+        // not mResourceClass, so we never resolve a name here. SaveFileReader
+        // handles deposits separately; we drop them from the JSON to keep the
+        // file lean and unambiguous.
         var sorted = entries
-            .OrderBy(e => e.Resource ?? "_unknown", StringComparer.Ordinal)
+            .Where(e => !string.IsNullOrEmpty(e.Resource))
+            .Where(e => e.Class != "BP_ResourceDeposit_C")
+            .OrderBy(e => e.Resource, StringComparer.Ordinal)
             .ThenBy(e => e.Class, StringComparer.Ordinal)
             .ThenBy(e => e.X)
             .ThenBy(e => e.Y)
@@ -432,6 +490,7 @@ internal static class Program
         }
         writer.WriteEndArray();
         writer.Flush();
+        return sorted.Count;
     }
 
     private static EGame GetUeVersionArg(string[] args, EGame fallback)

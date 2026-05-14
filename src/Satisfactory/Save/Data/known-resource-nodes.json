@@ -1,2 +1,5178 @@
 [
+  {
+    "x": -281034.41,
+    "y": -142694.97,
+    "z": -1635.98,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -275456.5,
+    "y": -165870.11,
+    "z": -1621.9,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -271793.5,
+    "y": -146229.11,
+    "z": -1628.9,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -265694.5,
+    "y": -162571.11,
+    "z": 1526.1,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -148429.69,
+    "y": 56309.95,
+    "z": 3127.68,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -144746.09,
+    "y": 64418.61,
+    "z": 3136.95,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -141071.52,
+    "y": 39662.03,
+    "z": 19144.66,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -113615.88,
+    "y": -50450,
+    "z": 16266.27,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -113215.83,
+    "y": -44145,
+    "z": 16295.93,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -110109.1,
+    "y": -129159.96,
+    "z": -1405.48,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -107793.87,
+    "y": 31855.47,
+    "z": 22428.25,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -107739.1,
+    "y": -130639.96,
+    "z": -1525.48,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -107640.28,
+    "y": -52375.52,
+    "z": 16193.37,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -102630.02,
+    "y": -140319.84,
+    "z": -1581.73,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -99604.05,
+    "y": -146823.22,
+    "z": -1631.12,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -89379.35,
+    "y": 136763.08,
+    "z": -3948.65,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -86788.44,
+    "y": 138201.34,
+    "z": -3613.6,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -78418.71,
+    "y": 129174.29,
+    "z": -3648.87,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -75977.25,
+    "y": 130576.34,
+    "z": -3632.12,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -66076.53,
+    "y": 296870.72,
+    "z": -6102.43,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -64843.04,
+    "y": -7738.49,
+    "z": 22626.66,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -60960.89,
+    "y": 96196.09,
+    "z": 21234.12,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -53781.88,
+    "y": 33003.27,
+    "z": 20012.23,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -29925.75,
+    "y": 39693.06,
+    "z": 21307.76,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8348.43,
+    "y": 70432,
+    "z": 23244.65,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8800.77,
+    "y": 2400,
+    "z": 115.5,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 17163.82,
+    "y": 280787.91,
+    "z": 2768.05,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 33024.75,
+    "y": 69.48,
+    "z": 23076.41,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 57623.45,
+    "y": 45463.21,
+    "z": 24895.33,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 122698.04,
+    "y": -26966.29,
+    "z": 7998.92,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 128059.31,
+    "y": -24824.61,
+    "z": 8263.72,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 136290.22,
+    "y": -20923.61,
+    "z": 9425.3,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 138805.36,
+    "y": -23952.67,
+    "z": 9410.77,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 150582.83,
+    "y": 249923.77,
+    "z": -5135.73,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 151131.3,
+    "y": 75310.91,
+    "z": 9714.44,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 153853.69,
+    "y": 84162.78,
+    "z": 9505.6,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 153876.16,
+    "y": 252816.97,
+    "z": -4609.96,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 155600.48,
+    "y": 113111.57,
+    "z": 6026.25,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 155867.52,
+    "y": 248394.41,
+    "z": -6062.53,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 157195.48,
+    "y": 241871.55,
+    "z": -6201.17,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 177478.03,
+    "y": 129905.27,
+    "z": 10377.46,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 180820.03,
+    "y": 141195.28,
+    "z": 9394.46,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 193869.03,
+    "y": 116585.27,
+    "z": 10248.46,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 206003.17,
+    "y": 181237.31,
+    "z": 10347.32,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 209926.73,
+    "y": 162974.75,
+    "z": 5348.38,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 214894.03,
+    "y": 116756.27,
+    "z": 10801.46,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 218926.47,
+    "y": -255338.89,
+    "z": 1070.19,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 220712.89,
+    "y": -250482.2,
+    "z": 1257.35,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 239775.03,
+    "y": 148305.28,
+    "z": 6662.46,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 271513.69,
+    "y": -246510.55,
+    "z": 1630.91,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 276452.75,
+    "y": -250331.38,
+    "z": 1260.68,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 325548.81,
+    "y": -264500.12,
+    "z": 1673.58,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 330471.41,
+    "y": -264658.34,
+    "z": 2144.01,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 362593.59,
+    "y": -135769.97,
+    "z": 5895.03,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 365436.38,
+    "y": -80081.98,
+    "z": -63.16,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 365854.44,
+    "y": -133383.73,
+    "z": 5255.9,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 368128.34,
+    "y": -139150.7,
+    "z": 5475.85,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 368850.56,
+    "y": -76218.82,
+    "z": -538.83,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 399533.88,
+    "y": -255364.92,
+    "z": 3822.78,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 400379.41,
+    "y": -262928.12,
+    "z": 3427.25,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 404471.16,
+    "y": -116794.98,
+    "z": 1122.16,
+    "resource": "Desc_Coal_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 404788.16,
+    "y": -113960.59,
+    "z": 634.64,
+    "resource": "Desc_Coal_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 406197.03,
+    "y": -252989.97,
+    "z": 3920.43,
+    "resource": "Desc_Coal_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -213328,
+    "y": -160655,
+    "z": -1621,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": -209862,
+    "y": -159644,
+    "z": -1769,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": -173000,
+    "y": 29532,
+    "z": 15333,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": -169793,
+    "y": 20466,
+    "z": 15329,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": -142293.36,
+    "y": -61383.32,
+    "z": 3018.41,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": -138869.89,
+    "y": -57952.96,
+    "z": 3236.36,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": -92534,
+    "y": -67192,
+    "z": 15498,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": -49789,
+    "y": -162415.91,
+    "z": -1849,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": -33373,
+    "y": -88036,
+    "z": -87,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 13439.99,
+    "y": 3880,
+    "z": 90,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 13440,
+    "y": 5510,
+    "z": 90,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 13449.99,
+    "y": 2170,
+    "z": 90,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 39037,
+    "y": 218871,
+    "z": -5933,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 40792,
+    "y": 211028,
+    "z": -5818,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 43763,
+    "y": -98725,
+    "z": 10544,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 44326,
+    "y": 48548,
+    "z": 23761,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 46522,
+    "y": 53125,
+    "z": 23943,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 49337,
+    "y": -54670,
+    "z": 5773,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 50532,
+    "y": 44056,
+    "z": 23962,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 70191,
+    "y": -14100,
+    "z": 13085,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 89458,
+    "y": 223800,
+    "z": 21,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 92620,
+    "y": -31568.24,
+    "z": 5615.95,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 94642,
+    "y": 218487,
+    "z": -154,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 95894.55,
+    "y": -30845.92,
+    "z": 5590,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 125777,
+    "y": -147081,
+    "z": 18842,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 134478.39,
+    "y": -90977.96,
+    "z": 1984.02,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 141833,
+    "y": -89090,
+    "z": 1558.64,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 152735,
+    "y": 211451,
+    "z": -8796,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 191906,
+    "y": -242852,
+    "z": 22813,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 202233,
+    "y": 45027.02,
+    "z": -1317,
+    "resource": "Desc_Geyser_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 206903,
+    "y": 45592.02,
+    "z": -1367,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 281106.34,
+    "y": 8139.64,
+    "z": 953.33,
+    "resource": "Desc_Geyser_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 281822,
+    "y": -583,
+    "z": 2408,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": 282899,
+    "y": 1745,
+    "z": 2550,
+    "resource": "Desc_Geyser_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNodeGeyser_C"
+  },
+  {
+    "x": -261572.09,
+    "y": 74704.96,
+    "z": -1344.51,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": -40180.13,
+    "y": -7911.54,
+    "z": 24980.66,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 13840,
+    "y": 9770,
+    "z": 100,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 268155.62,
+    "y": 112797.59,
+    "z": -173.05,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": -266194.75,
+    "y": 75227.37,
+    "z": -1279.52,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -265378.25,
+    "y": 72493.37,
+    "z": -1342.29,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -264372.75,
+    "y": 76059.47,
+    "z": -1296.59,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -263341.78,
+    "y": 72359.8,
+    "z": -1353.62,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -261941.47,
+    "y": 70474.51,
+    "z": -1159.06,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -260625.77,
+    "y": 72573.23,
+    "z": -1188.05,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -43758.8,
+    "y": -8409.4,
+    "z": 25138.88,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -43238.79,
+    "y": -6518.91,
+    "z": 25053.65,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -41776.45,
+    "y": -9868.38,
+    "z": 25142.19,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -40199.91,
+    "y": -4304.33,
+    "z": 25053.8,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -38956.84,
+    "y": -10362.68,
+    "z": 25325.07,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -36959.13,
+    "y": -7833.78,
+    "z": 25170.35,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 12070,
+    "y": 10380,
+    "z": 100,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 12570,
+    "y": 8820,
+    "z": 100,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 13850,
+    "y": 11310,
+    "z": 100,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 15120,
+    "y": 8890,
+    "z": 100,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 15510,
+    "y": 10540,
+    "z": 110,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 264051.56,
+    "y": 112280.8,
+    "z": -66.4,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 264231.31,
+    "y": 114518.45,
+    "z": -77.76,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 267123.12,
+    "y": 115156.31,
+    "z": -101.34,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 267439.25,
+    "y": 110349.33,
+    "z": -91.16,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 269500.41,
+    "y": 115587.59,
+    "z": -83.29,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 271425.28,
+    "y": 111504.1,
+    "z": -102.58,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -252533.73,
+    "y": 69813.32,
+    "z": -1562.46,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -245048.64,
+    "y": 90588.17,
+    "z": -1652.4,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -232468.75,
+    "y": 62838.28,
+    "z": -1676.49,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -229053.75,
+    "y": 78058.34,
+    "z": -1684.97,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -43612.14,
+    "y": -190316.36,
+    "z": 2291.04,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -35725.82,
+    "y": -209521.09,
+    "z": -1708.58,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -32599.65,
+    "y": -192537.5,
+    "z": 2280.04,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8800.77,
+    "y": 4000,
+    "z": 122.41,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 12163,
+    "y": -225348.3,
+    "z": -1744.18,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 15357.45,
+    "y": -197672.22,
+    "z": -1606.5,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 26597.5,
+    "y": -193983.95,
+    "z": -1683.9,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 29991.33,
+    "y": -186849.66,
+    "z": -1689.26,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 44495.81,
+    "y": -228950.03,
+    "z": -1743.5,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 49403.65,
+    "y": -4743.89,
+    "z": 13191.5,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 49638.54,
+    "y": 655.76,
+    "z": 13149.62,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 52471.01,
+    "y": -201464.72,
+    "z": -1658.74,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 52588.73,
+    "y": -8859.3,
+    "z": 13593.47,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 57144.12,
+    "y": -191300.44,
+    "z": -1744.93,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 146451.92,
+    "y": -222638.25,
+    "z": -1580.84,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 147769.36,
+    "y": -212912.34,
+    "z": -1429.34,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 148477.58,
+    "y": -193869.42,
+    "z": -1603.09,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 167391.5,
+    "y": -88953.6,
+    "z": 1049.77,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 169716.92,
+    "y": 203386.05,
+    "z": -9242.58,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 172814.17,
+    "y": -94608.2,
+    "z": 1042.36,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 173702.45,
+    "y": -91776.41,
+    "z": 1051.04,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 176296.81,
+    "y": -94196.84,
+    "z": 1419.15,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 178265.38,
+    "y": 206095.64,
+    "z": -9238.57,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 182115.7,
+    "y": 188396.66,
+    "z": -5640.1,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 184226.86,
+    "y": 217101.75,
+    "z": -8910.76,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 184782.69,
+    "y": 191090.11,
+    "z": -5732.21,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 185124.39,
+    "y": 214441.7,
+    "z": -8910.61,
+    "resource": "Desc_LiquidOil_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -251395.03,
+    "y": -187070.86,
+    "z": -1668.12,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": -143896.03,
+    "y": 122197.14,
+    "z": 15133.88,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 84979.12,
+    "y": 104525.41,
+    "z": 10067.89,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 128310,
+    "y": 256759,
+    "z": 269,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 215923.58,
+    "y": 135917.88,
+    "z": -438.27,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 223618.36,
+    "y": -311503.09,
+    "z": 7674.11,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": -254692.42,
+    "y": -191072.62,
+    "z": -1581.98,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -253968.72,
+    "y": -189214.19,
+    "z": -1460.13,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -253679.44,
+    "y": -187151.62,
+    "z": -1240.98,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -251958.17,
+    "y": -191565.81,
+    "z": -1741.09,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -250936.72,
+    "y": -184679.19,
+    "z": -1457.13,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -249899.39,
+    "y": -190381.27,
+    "z": -1739.57,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -249449.39,
+    "y": -188216.27,
+    "z": -1739.57,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -147628.72,
+    "y": 125722.81,
+    "z": 15315.87,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -145715.25,
+    "y": 119442.08,
+    "z": 15181.54,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -145565.44,
+    "y": 126028.38,
+    "z": 15439.02,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -144341.72,
+    "y": 124609.81,
+    "z": 15387.87,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -142911.44,
+    "y": 118402.38,
+    "z": 14995.02,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -142779.19,
+    "y": 120243.19,
+    "z": 15174.91,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -141750.38,
+    "y": 121997.73,
+    "z": 15259.43,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 81638.91,
+    "y": 103495.17,
+    "z": 10183.62,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 81664.47,
+    "y": 106667.91,
+    "z": 10241.17,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 83093.97,
+    "y": 101821.16,
+    "z": 10216.44,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 83988.22,
+    "y": 107803.27,
+    "z": 10103.81,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 84661.39,
+    "y": 99202.77,
+    "z": 10049.58,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 86027.56,
+    "y": 109451.11,
+    "z": 9962.32,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 86696.75,
+    "y": 99524.29,
+    "z": 10057.59,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 87916.73,
+    "y": 102044.87,
+    "z": 10177.97,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 87990.5,
+    "y": 105052.12,
+    "z": 10209.37,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 88734.25,
+    "y": 107722.67,
+    "z": 9991.83,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 125098.87,
+    "y": 254321.44,
+    "z": 159.65,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 125104,
+    "y": 256475,
+    "z": 734,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 126644,
+    "y": 253042,
+    "z": -372,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 128216,
+    "y": 258878,
+    "z": 890,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 130516,
+    "y": 255126,
+    "z": -294,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 131025,
+    "y": 257428,
+    "z": 238,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 211685.88,
+    "y": 133160.88,
+    "z": -247.36,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 212492.41,
+    "y": 138086.91,
+    "z": -126.03,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 213448.88,
+    "y": 132706.88,
+    "z": -317.36,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 214659.7,
+    "y": 137993.52,
+    "z": -225.08,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 215726,
+    "y": 132791,
+    "z": -285,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 216407.41,
+    "y": 139499.91,
+    "z": -212.03,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 218040.88,
+    "y": 134223.3,
+    "z": -187.52,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 218169.41,
+    "y": 137548.91,
+    "z": -209.03,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 220214.53,
+    "y": -310720.59,
+    "z": 7879.72,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 221263.53,
+    "y": -312256.59,
+    "z": 7931.72,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 221785.27,
+    "y": -308346,
+    "z": 8244.49,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 223981.33,
+    "y": -314008.66,
+    "z": 7867.12,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 225241.62,
+    "y": -309813.31,
+    "z": 7875.64,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 226487.78,
+    "y": -313623.97,
+    "z": 8160.95,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 226851.62,
+    "y": -311423.31,
+    "z": 7905.64,
+    "resource": "Desc_NitrogenGas_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -217052.25,
+    "y": 11242.14,
+    "z": 17705.38,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -177367.2,
+    "y": 44998.92,
+    "z": 23765.87,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -150574.8,
+    "y": -22.56,
+    "z": 19505.62,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -59322.13,
+    "y": 14594.76,
+    "z": 23995.04,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -5633.59,
+    "y": 44274.06,
+    "z": 21066,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -5292.68,
+    "y": 92075.2,
+    "z": 22756.33,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 2570.99,
+    "y": 9834.49,
+    "z": 24001.52,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8800.77,
+    "y": 3200,
+    "z": 120.89,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 39477.65,
+    "y": 52119.99,
+    "z": 23601.6,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 89592.65,
+    "y": 62638.78,
+    "z": 10375.12,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 103317.65,
+    "y": 67498.78,
+    "z": 9540.12,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 106047.65,
+    "y": 50478.79,
+    "z": 9765.12,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 116877.54,
+    "y": 51510.91,
+    "z": 17359.51,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 198936.42,
+    "y": 93354.05,
+    "z": 1238.62,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 199007.17,
+    "y": 89173.19,
+    "z": 1096.8,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 260298.52,
+    "y": 56227.53,
+    "z": -866.57,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 261127.97,
+    "y": 48274.6,
+    "z": -816.8,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 263148.09,
+    "y": 53611.16,
+    "z": -1325.39,
+    "resource": "Desc_OreBauxite_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -281345.62,
+    "y": -71999.67,
+    "z": -1200.91,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -268264.41,
+    "y": -54991.44,
+    "z": -343.69,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -266903.94,
+    "y": -133355.44,
+    "z": 5973.78,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -266711.88,
+    "y": -51317.58,
+    "z": -331.48,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -171878.62,
+    "y": 185789.22,
+    "z": 1077.16,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -166357.25,
+    "y": -129627.56,
+    "z": 1600.23,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -163354.12,
+    "y": -192096.66,
+    "z": 10761.33,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -159616.38,
+    "y": 112857.88,
+    "z": 16254.22,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -156723.47,
+    "y": 109165.41,
+    "z": 16113.07,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -148008.2,
+    "y": -30185.45,
+    "z": -556.13,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -96801,
+    "y": -135276,
+    "z": 166,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -94265.12,
+    "y": 165842.2,
+    "z": -3734.83,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -83962.15,
+    "y": 273576.62,
+    "z": -6240.13,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -83133.63,
+    "y": 275762.22,
+    "z": -6264.25,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -71673.08,
+    "y": 106511.31,
+    "z": 8466.15,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -36771.39,
+    "y": 296778.97,
+    "z": -2366.05,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -33328.18,
+    "y": 231626.16,
+    "z": -1394.35,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -28703.17,
+    "y": 198210.48,
+    "z": -1997.03,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -26897.67,
+    "y": -145468.75,
+    "z": 8397.13,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -21758.37,
+    "y": -145311.75,
+    "z": 10021.68,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -21265.09,
+    "y": 283147.75,
+    "z": -2531.19,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 5023.7,
+    "y": 159951.48,
+    "z": -12082.94,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 5251.41,
+    "y": 157169.19,
+    "z": -12082.82,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 7171.53,
+    "y": 155231.7,
+    "z": -12082.94,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8800.77,
+    "y": 800,
+    "z": 112.43,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 20143.98,
+    "y": -169847.12,
+    "z": 15477.61,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 56109.16,
+    "y": -85970.16,
+    "z": 9944.39,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 58030.62,
+    "y": 82304.88,
+    "z": 11800.67,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 80832.04,
+    "y": 242478.2,
+    "z": -4444.05,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 95345.54,
+    "y": -168441.8,
+    "z": 13262,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 108117.26,
+    "y": 152283.92,
+    "z": 3387.57,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 130551,
+    "y": 179528.53,
+    "z": -5545.1,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 149936.7,
+    "y": 4686.47,
+    "z": 15468.13,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 152648.42,
+    "y": 5227.09,
+    "z": 15168.27,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 157737.73,
+    "y": 14877.82,
+    "z": 15369.97,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 160085.53,
+    "y": 259420.73,
+    "z": -1094.71,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 167904.11,
+    "y": -116373.08,
+    "z": 2426.64,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 225503.75,
+    "y": 55772.54,
+    "z": -1303.98,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 233446.56,
+    "y": -247935.03,
+    "z": 1057,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 252874.52,
+    "y": -161693.45,
+    "z": 3452.74,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 256401.88,
+    "y": -184355.41,
+    "z": 3519.33,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 270316.84,
+    "y": -211596.89,
+    "z": 3051.48,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 277591.06,
+    "y": -94119.44,
+    "z": 5535.77,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 282284.19,
+    "y": 63326.75,
+    "z": -1601.31,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 287767.78,
+    "y": -274886.12,
+    "z": 1242.49,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 297397.53,
+    "y": -96437.46,
+    "z": 6021.43,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 297499.06,
+    "y": -7312.44,
+    "z": -298.23,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 297710.44,
+    "y": -107995.77,
+    "z": 5475.02,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 326947.06,
+    "y": -209586.44,
+    "z": 3687.77,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 329409.59,
+    "y": -186014.45,
+    "z": 3740.88,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 342806.28,
+    "y": -114728.1,
+    "z": 6020.39,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 348939.47,
+    "y": -185584.44,
+    "z": 4235.77,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 355461.72,
+    "y": -149808.08,
+    "z": 4214.5,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 355997.62,
+    "y": -66386.5,
+    "z": -396.26,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 380813.62,
+    "y": -169867.75,
+    "z": 4187.02,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 381666.31,
+    "y": -268289.94,
+    "z": 3485.97,
+    "resource": "Desc_OreCopper_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -178491,
+    "y": -79788,
+    "z": 3331,
+    "resource": "Desc_OreGold_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -153387.22,
+    "y": 82252.45,
+    "z": 20330.23,
+    "resource": "Desc_OreGold_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -135468,
+    "y": -174682,
+    "z": 7753,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -131573.67,
+    "y": 227253.09,
+    "z": -787.02,
+    "resource": "Desc_OreGold_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -92343.34,
+    "y": 281605.88,
+    "z": -4620.5,
+    "resource": "Desc_OreGold_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -12814.52,
+    "y": -104642.12,
+    "z": 10908.92,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8800,
+    "y": 4800,
+    "z": 121.07,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 90375.79,
+    "y": 80713.84,
+    "z": 10116.56,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 103845.57,
+    "y": -94854.04,
+    "z": 12651.91,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 109619.43,
+    "y": 155798.28,
+    "z": 4175.67,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 114180.02,
+    "y": -16999.98,
+    "z": 14021.45,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 208006.5,
+    "y": -16382.59,
+    "z": -55.34,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 208139.61,
+    "y": -23983.09,
+    "z": 594.19,
+    "resource": "Desc_OreGold_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 211843.22,
+    "y": -18819.65,
+    "z": -29.2,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 224307.77,
+    "y": -128741.74,
+    "z": 7240.55,
+    "resource": "Desc_OreGold_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 236608.72,
+    "y": -260095.61,
+    "z": 11784.35,
+    "resource": "Desc_OreGold_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 270786.06,
+    "y": 120111.02,
+    "z": -54.52,
+    "resource": "Desc_OreGold_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 406563.88,
+    "y": -206810.05,
+    "z": -1539.46,
+    "resource": "Desc_OreGold_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -263873.03,
+    "y": -30848.37,
+    "z": -411.67,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -261358.45,
+    "y": -41228.13,
+    "z": -327,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -260110.45,
+    "y": -27673.63,
+    "z": -640.13,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -259120.33,
+    "y": -44688.95,
+    "z": -494.15,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -258432.72,
+    "y": -40560.85,
+    "z": -327,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -256244,
+    "y": -29564,
+    "z": -668.01,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -252032.61,
+    "y": -125001.14,
+    "z": 3847.6,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -250080.31,
+    "y": -126362.7,
+    "z": 3837.6,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -230852.83,
+    "y": -115124.49,
+    "z": 3917.6,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -227410.78,
+    "y": -118862.21,
+    "z": 3931.6,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -190787,
+    "y": -117690,
+    "z": 706,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -187932.66,
+    "y": -114624.19,
+    "z": 706,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -186902.3,
+    "y": -118339.83,
+    "z": 706,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -170447.58,
+    "y": -28321.37,
+    "z": -596.01,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -167603.14,
+    "y": 179557.16,
+    "z": 1589.63,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -166731.05,
+    "y": -26566.14,
+    "z": -509.77,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -164442.61,
+    "y": 171771.8,
+    "z": 1612.35,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -162723.67,
+    "y": 182453.09,
+    "z": 712.98,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -152490.28,
+    "y": -45786.51,
+    "z": 692.62,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -110588,
+    "y": -135153,
+    "z": 1911,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -99586.61,
+    "y": 267811.94,
+    "z": -4660.73,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -98579.16,
+    "y": 265801.06,
+    "z": -4634.95,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -97178.42,
+    "y": 264232.12,
+    "z": -4625.65,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -96100.71,
+    "y": 163752.86,
+    "z": -3734.49,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -94905.47,
+    "y": 262677.5,
+    "z": -4620.16,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -94006.57,
+    "y": 268116.22,
+    "z": -3127.73,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -93267.11,
+    "y": 254146.17,
+    "z": -4509.76,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -92372.08,
+    "y": 266081.84,
+    "z": -3125.04,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -91267.71,
+    "y": 253077.45,
+    "z": -4513.92,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -65049.11,
+    "y": 137463.8,
+    "z": 8488.22,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -64962.75,
+    "y": -201169.06,
+    "z": 6925.35,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -61757.27,
+    "y": 194633.72,
+    "z": -2042.01,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -60453.42,
+    "y": 141695.67,
+    "z": 8416.78,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -58995.68,
+    "y": -224574.77,
+    "z": 9573.6,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -58919.39,
+    "y": 195892.94,
+    "z": -2195.57,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -57161.06,
+    "y": 192772.7,
+    "z": -2513.37,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -55693.17,
+    "y": 194370.48,
+    "z": -2557.03,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -54100.96,
+    "y": 229417.02,
+    "z": -3845.75,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -52876.69,
+    "y": -201761.7,
+    "z": 6792.53,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -51644.6,
+    "y": 229391.39,
+    "z": -3845.75,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -50406.53,
+    "y": 302870.72,
+    "z": -2583.33,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -50101.9,
+    "y": 284478.03,
+    "z": -2614.76,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -49077.02,
+    "y": 231707.75,
+    "z": -3845.75,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -47534.36,
+    "y": 289606.59,
+    "z": -2526.48,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -47085.4,
+    "y": -141054.67,
+    "z": 8074.43,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -44922.05,
+    "y": 302273.56,
+    "z": -2543.12,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -44869.38,
+    "y": -139479.69,
+    "z": 7983.02,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -43940.16,
+    "y": 207992.47,
+    "z": -2228.23,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -43381.93,
+    "y": -136820.03,
+    "z": 8046.35,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -43326.97,
+    "y": 130254.38,
+    "z": 8662.27,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -42273.1,
+    "y": 132150.97,
+    "z": 8668.77,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -41928.32,
+    "y": 206907.64,
+    "z": -2228.23,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -41484.49,
+    "y": 125793.59,
+    "z": 8644.93,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -38249.46,
+    "y": 127975.21,
+    "z": 8811.5,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -37614.5,
+    "y": -142250.45,
+    "z": 7971.79,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -36499.56,
+    "y": 243893.73,
+    "z": -2502.62,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -35040.73,
+    "y": 245805.3,
+    "z": -2504.11,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -10233.54,
+    "y": 291034.91,
+    "z": -2475.65,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -8996.64,
+    "y": 293512.31,
+    "z": -2527.25,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -1126.06,
+    "y": 285301.25,
+    "z": -1139.76,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 571.74,
+    "y": 283802.09,
+    "z": -1139.76,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8800.77,
+    "y": 0,
+    "z": 120.9,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 59113.39,
+    "y": -71501.63,
+    "z": 10568.02,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 64576.34,
+    "y": -71386.95,
+    "z": 10641.13,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 68075.34,
+    "y": -81001.09,
+    "z": 9944.15,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 70865.27,
+    "y": -78125.82,
+    "z": 10451.65,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 83508.54,
+    "y": -90506.79,
+    "z": 9590.73,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 84199.14,
+    "y": -86393.55,
+    "z": 9766.53,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 92724.95,
+    "y": 163305.55,
+    "z": 1881.96,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 93730.26,
+    "y": 160263.92,
+    "z": 2111.12,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 96326,
+    "y": 159762.45,
+    "z": 2102.84,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 96959.12,
+    "y": 157163.2,
+    "z": 2110.3,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 116236.01,
+    "y": -15552.19,
+    "z": 14026.74,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 124933.16,
+    "y": 5226.19,
+    "z": 15573.58,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 128572.93,
+    "y": 1795.3,
+    "z": 15542.84,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 131967.42,
+    "y": 194729,
+    "z": -7424.69,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 133276.12,
+    "y": 197857,
+    "z": -7378.84,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 133637.48,
+    "y": 205791.55,
+    "z": -7424.32,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 164518.28,
+    "y": 238317.95,
+    "z": -8588.6,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 178061.91,
+    "y": -120503.63,
+    "z": 2250.75,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 181723.7,
+    "y": -116280.3,
+    "z": 2150.03,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 219394.75,
+    "y": 37188.82,
+    "z": -1292.17,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 221480.64,
+    "y": 146593.89,
+    "z": -200.09,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 225650.66,
+    "y": 147647.98,
+    "z": -193.44,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 233141.59,
+    "y": -26440.26,
+    "z": 8976.27,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 233292.98,
+    "y": 139879.98,
+    "z": -304.44,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 233432.66,
+    "y": 145602.98,
+    "z": -267.44,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 237724.66,
+    "y": -23005.72,
+    "z": 8796.64,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 241090.69,
+    "y": -239787.95,
+    "z": 1048.34,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 242691.67,
+    "y": -149432.56,
+    "z": 2590.65,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 242756.75,
+    "y": 87933.09,
+    "z": -617.18,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 245043.19,
+    "y": -22318.06,
+    "z": 8820.63,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 245700.44,
+    "y": 30065.4,
+    "z": -847.3,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 245861.55,
+    "y": 4378.94,
+    "z": 573.63,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 248481.44,
+    "y": -146160.34,
+    "z": 3561.89,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 252751.22,
+    "y": 29139.62,
+    "z": -798.66,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 255249.61,
+    "y": -91659.65,
+    "z": 5523.86,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 255908.45,
+    "y": -3071.19,
+    "z": 3583.28,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 256611.66,
+    "y": -197978.56,
+    "z": 3561.47,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 264240.25,
+    "y": -162899.2,
+    "z": 3331.66,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 265501.22,
+    "y": -178205.92,
+    "z": 3456.91,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 266880.72,
+    "y": -120714.6,
+    "z": 4084,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 268524.31,
+    "y": -116944.1,
+    "z": 4206.8,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 271770.69,
+    "y": 100432.48,
+    "z": -1294.8,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 273729.53,
+    "y": -148172.91,
+    "z": 4082.71,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 276673.56,
+    "y": -195099.81,
+    "z": 2898.74,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 278266.31,
+    "y": -210771.86,
+    "z": 3221.95,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 280137.94,
+    "y": -261096.7,
+    "z": 1859.7,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 282689.31,
+    "y": -179305.02,
+    "z": 4212.36,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 283968.62,
+    "y": -121598.34,
+    "z": 4452.27,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 285860.75,
+    "y": -127665.09,
+    "z": 3875.85,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 297575.81,
+    "y": -150186.38,
+    "z": 3972.99,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 298733.94,
+    "y": -199292.72,
+    "z": 2709.46,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 304839.66,
+    "y": -172907.91,
+    "z": 3801.06,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 311229.81,
+    "y": -128705.04,
+    "z": 4669.49,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 311798.84,
+    "y": -215343.44,
+    "z": 2436.9,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 313010.19,
+    "y": -133841.61,
+    "z": 4861.55,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 314598.09,
+    "y": -196773.44,
+    "z": 3905.69,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 319464.06,
+    "y": -158098.33,
+    "z": 3864.57,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 330433.03,
+    "y": -142399.73,
+    "z": 3965.9,
+    "resource": "Desc_OreIron_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 338207.62,
+    "y": -177564.14,
+    "z": 4959.22,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 339300.19,
+    "y": -183354.42,
+    "z": 4477.05,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 347227.78,
+    "y": -58490.81,
+    "z": -748.96,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 348525.66,
+    "y": -123750.76,
+    "z": 4283.54,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 372373.69,
+    "y": -153420.89,
+    "z": 4005.97,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 374874.69,
+    "y": -259903.08,
+    "z": 3231.76,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 377738.06,
+    "y": -254225.64,
+    "z": 3347.13,
+    "resource": "Desc_OreIron_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 385302.66,
+    "y": -189927.91,
+    "z": 4280.76,
+    "resource": "Desc_OreIron_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -132772.22,
+    "y": -187579.23,
+    "z": 46528.31,
+    "resource": "Desc_OreUranium_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -75893.16,
+    "y": 51636.96,
+    "z": 19145.95,
+    "resource": "Desc_OreUranium_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 16530.01,
+    "y": -16420,
+    "z": 121.46,
+    "resource": "Desc_OreUranium_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 16530.01,
+    "y": -14590,
+    "z": 101.46,
+    "resource": "Desc_OreUranium_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 16550.01,
+    "y": -12800,
+    "z": 91.46,
+    "resource": "Desc_OreUranium_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 38000.17,
+    "y": 91735.95,
+    "z": -4809.05,
+    "resource": "Desc_OreUranium_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 168712.56,
+    "y": 50839.16,
+    "z": -9.32,
+    "resource": "Desc_OreUranium_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 180193.91,
+    "y": -189199.45,
+    "z": 23503.2,
+    "resource": "Desc_OreUranium_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -194230.34,
+    "y": -140421.95,
+    "z": -1241.92,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -171986.09,
+    "y": -144145.58,
+    "z": -2030.19,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -167359.83,
+    "y": -145682.58,
+    "z": -1914.12,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -90474.37,
+    "y": 67259.8,
+    "z": 2145.05,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -90370.42,
+    "y": 63712.16,
+    "z": 2145.05,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8800,
+    "y": 6400,
+    "z": 111.11,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 34968.07,
+    "y": 118464.16,
+    "z": 13410.25,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 37926.11,
+    "y": 120939.23,
+    "z": 13370.25,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 55041.62,
+    "y": -130641.27,
+    "z": 7156.28,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 55253.26,
+    "y": 205856.16,
+    "z": -5763.19,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 61653.52,
+    "y": 196432.23,
+    "z": -3725.46,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 62111.48,
+    "y": 207627.14,
+    "z": -4197.02,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 62289.97,
+    "y": -137424.12,
+    "z": 8325.42,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 190097.75,
+    "y": -17280.93,
+    "z": 9456.52,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 193979.56,
+    "y": -5467.69,
+    "z": 10260.31,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 196667.81,
+    "y": -13955.93,
+    "z": 9398.48,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 305659.97,
+    "y": -301305.59,
+    "z": 1232.69,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 308597.78,
+    "y": -296079.19,
+    "z": 1256.87,
+    "resource": "Desc_RawQuartz_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -182183.36,
+    "y": -142367,
+    "z": -1743.87,
+    "resource": "Desc_SAM_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -181813.77,
+    "y": 89076.63,
+    "z": 17039.23,
+    "resource": "Desc_SAM_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -143612.11,
+    "y": 20728.18,
+    "z": 19457.72,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -80869.77,
+    "y": -32418.93,
+    "z": 15656.7,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -48375.42,
+    "y": 128937.13,
+    "z": 23613.65,
+    "resource": "Desc_SAM_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -46645.43,
+    "y": -252947.02,
+    "z": 4931.1,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -24065.67,
+    "y": 269858.09,
+    "z": -13353.77,
+    "resource": "Desc_SAM_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8800,
+    "y": 8703.08,
+    "z": 111.11,
+    "resource": "Desc_SAM_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 15459.89,
+    "y": -803.77,
+    "z": 14671.21,
+    "resource": "Desc_SAM_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 80730.34,
+    "y": 204811.92,
+    "z": 5722.41,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 82558.77,
+    "y": -219609.03,
+    "z": 8929.07,
+    "resource": "Desc_SAM_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 119148.91,
+    "y": 71321.39,
+    "z": 18673.61,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 132957.52,
+    "y": 240892.88,
+    "z": -14192.57,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 152961.88,
+    "y": -24054.34,
+    "z": 4287.44,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 161928.67,
+    "y": 103777.14,
+    "z": 5602.89,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 162898.92,
+    "y": 65413.69,
+    "z": 9782.39,
+    "resource": "Desc_SAM_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 172559.33,
+    "y": -285516.91,
+    "z": 21591.23,
+    "resource": "Desc_SAM_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 228273.23,
+    "y": 116287.04,
+    "z": -1581.82,
+    "resource": "Desc_SAM_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 230542.48,
+    "y": -33617.02,
+    "z": 2185.3,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 272832.38,
+    "y": -261865.69,
+    "z": 1087.68,
+    "resource": "Desc_SAM_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -281761.41,
+    "y": -134704.47,
+    "z": 1998.01,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -280836.69,
+    "y": -42089.18,
+    "z": -1276.15,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -280305.97,
+    "y": -181362.97,
+    "z": 338.11,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -278905.97,
+    "y": -186362.97,
+    "z": 338.11,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -273321.22,
+    "y": -19667,
+    "z": -1537.05,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -268787.81,
+    "y": -79095.18,
+    "z": -292.37,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -267051.41,
+    "y": -24386.79,
+    "z": -723.65,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -261495.66,
+    "y": -116492.59,
+    "z": 4302.59,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -231390.3,
+    "y": -89529.73,
+    "z": 823.98,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -227331.09,
+    "y": -158278.33,
+    "z": 8947.67,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -221696.69,
+    "y": -104736.01,
+    "z": 4105.7,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -206172.67,
+    "y": -141688.64,
+    "z": 4859.96,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -194906.31,
+    "y": -25779.79,
+    "z": -627.99,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -178099.06,
+    "y": -165241.56,
+    "z": 7616.87,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -173249.03,
+    "y": -112172.63,
+    "z": 31.64,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -167201.16,
+    "y": 61297.75,
+    "z": 24000.76,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -165001.94,
+    "y": -133278.09,
+    "z": 1610.91,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -164380.91,
+    "y": 64840.77,
+    "z": 24379.79,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -156728.53,
+    "y": 202159.61,
+    "z": 961.46,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -151152.17,
+    "y": 184381,
+    "z": 998.07,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -145781,
+    "y": -31969,
+    "z": 3281.08,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -133444.86,
+    "y": -35240.25,
+    "z": 3832,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -129599,
+    "y": -96956,
+    "z": 4129.62,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -129015.44,
+    "y": -39541.04,
+    "z": 2898.15,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -110521.77,
+    "y": 249721.67,
+    "z": -5349.68,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -108119.98,
+    "y": 261059.14,
+    "z": -4801.66,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -107864.8,
+    "y": 60190.59,
+    "z": 2653.35,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -94477.42,
+    "y": 228243.27,
+    "z": -2399.37,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -90457.87,
+    "y": -152279.48,
+    "z": -1700.31,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -89046.08,
+    "y": 153285.14,
+    "z": -3019.69,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -80089.19,
+    "y": 204746.5,
+    "z": 1544.53,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -62536.77,
+    "y": 228042.59,
+    "z": -3279.11,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -55951.41,
+    "y": 271564.91,
+    "z": -3776.7,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -55554.98,
+    "y": -129406.36,
+    "z": 6951.59,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -55288.33,
+    "y": 129002.88,
+    "z": 8671.78,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -53615.43,
+    "y": 160375.56,
+    "z": 3355.89,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -52587.44,
+    "y": 264646.91,
+    "z": -3819.66,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -43321.69,
+    "y": 239553.47,
+    "z": -3810.86,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -41844.61,
+    "y": -152412.11,
+    "z": 9227.16,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -41301.41,
+    "y": 288558.03,
+    "z": -2545.57,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -37142.07,
+    "y": 201538.16,
+    "z": -3056.46,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -8700.85,
+    "y": 283439.62,
+    "z": -1137.01,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -6448.66,
+    "y": -120483.45,
+    "z": 10380.25,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 3998.15,
+    "y": 271120.62,
+    "z": -4107.96,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 4127.77,
+    "y": 273241.81,
+    "z": -4107.96,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8341.53,
+    "y": 147571.7,
+    "z": -9599.88,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8750,
+    "y": 1510,
+    "z": 130,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 15240.25,
+    "y": -158578.61,
+    "z": -1397.12,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 16091.84,
+    "y": 264153.12,
+    "z": -3824.18,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 20776.25,
+    "y": -134970.05,
+    "z": 16881.84,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 40251.39,
+    "y": -144690.52,
+    "z": 369.07,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 50259.73,
+    "y": -157152.75,
+    "z": -144.06,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 60592.71,
+    "y": -77890.83,
+    "z": 9437.14,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 63823.27,
+    "y": 8376.8,
+    "z": 14012.66,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 66756.95,
+    "y": -150676.98,
+    "z": -1180.96,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 67878.4,
+    "y": -95777.43,
+    "z": 9362.03,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 69552.09,
+    "y": -100368.7,
+    "z": 9391.89,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 75114.84,
+    "y": -123003.48,
+    "z": 13630.33,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 79670.5,
+    "y": -75852.08,
+    "z": 12028.01,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 92494.69,
+    "y": -132749.06,
+    "z": 700.68,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 107368.21,
+    "y": -43239.49,
+    "z": 14774.43,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 109989.1,
+    "y": 196758.81,
+    "z": -3246.71,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 120084.59,
+    "y": -9957.31,
+    "z": 10448.19,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 121322.34,
+    "y": -88295.22,
+    "z": 13669.12,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 135005.19,
+    "y": 123175.48,
+    "z": 12311.32,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 141567.92,
+    "y": 230906.75,
+    "z": -5835.19,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 146861,
+    "y": 115062.79,
+    "z": 12296.14,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 158314.44,
+    "y": -65002.84,
+    "z": 2591.26,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 166452.45,
+    "y": 7804.26,
+    "z": 15934.05,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 168496.5,
+    "y": -108029.6,
+    "z": 1587.06,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 175981.11,
+    "y": -40156.31,
+    "z": 6611.69,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 177197.55,
+    "y": -86516.85,
+    "z": 2459.14,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 186164.39,
+    "y": 77069.96,
+    "z": 1138.16,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 219900.91,
+    "y": 42217.5,
+    "z": -1597.66,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 225406.31,
+    "y": -237056.66,
+    "z": 1043.23,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 225430.5,
+    "y": -6949.23,
+    "z": -1549.86,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 226320,
+    "y": -200702,
+    "z": 1079.35,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 237354.58,
+    "y": -164936.42,
+    "z": 2636.01,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 244591.2,
+    "y": -190902.92,
+    "z": 1832.6,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 245860.05,
+    "y": -218934.48,
+    "z": 1311.57,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 270772.25,
+    "y": 47035.57,
+    "z": -1613.82,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 284986.28,
+    "y": 111894.07,
+    "z": -1605.71,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 295895.53,
+    "y": -272876.5,
+    "z": 1237.46,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 299122,
+    "y": -85512,
+    "z": 5936,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 308652.03,
+    "y": -100658.06,
+    "z": 6378.2,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 311622.66,
+    "y": -69811.22,
+    "z": 5620.27,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 338761,
+    "y": -205718,
+    "z": 4225,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 343519.19,
+    "y": -83469.72,
+    "z": 5618,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 348908,
+    "y": -163350.39,
+    "z": 4238.03,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 355115.5,
+    "y": -122969.93,
+    "z": 5003.64,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 359885,
+    "y": -200469,
+    "z": 4110,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 370713,
+    "y": -221971,
+    "z": 4225,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 383045.91,
+    "y": -92549.2,
+    "z": 207.14,
+    "resource": "Desc_Stone_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 385953,
+    "y": -254364.75,
+    "z": 3420.02,
+    "resource": "Desc_Stone_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 391118.03,
+    "y": -208702.95,
+    "z": 4998.16,
+    "resource": "Desc_Stone_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -213022.56,
+    "y": -170020.81,
+    "z": -1317.3,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -145043.58,
+    "y": 165965.16,
+    "z": 12698.5,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -101381.73,
+    "y": 91578.52,
+    "z": 8665.24,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -41122.32,
+    "y": -72631.13,
+    "z": 23212.21,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -39889.76,
+    "y": -93579.23,
+    "z": 343.08,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 8780,
+    "y": 5580,
+    "z": 126.49,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 34655,
+    "y": 284303,
+    "z": 905,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 91305.27,
+    "y": 220216.78,
+    "z": -78.61,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 92072.6,
+    "y": 3163.58,
+    "z": 16079.17,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 94847.23,
+    "y": 224537.16,
+    "z": -85.8,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 96367.98,
+    "y": 220401.47,
+    "z": -83.76,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 128296.09,
+    "y": -75942,
+    "z": 3668.38,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 188183.27,
+    "y": -247467.91,
+    "z": 23307.01,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 242309.97,
+    "y": 152778.88,
+    "z": 8887.83,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 246502.22,
+    "y": -276999.91,
+    "z": 1498.77,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Pure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 296499.78,
+    "y": 13253.51,
+    "z": -881.77,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Impure",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": 380366.25,
+    "y": -109496.38,
+    "z": 9236.62,
+    "resource": "Desc_Sulfur_C",
+    "purity": "Normal",
+    "class": "BP_ResourceNode_C"
+  },
+  {
+    "x": -108264.2,
+    "y": 73536.03,
+    "z": 3002.36,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": -19414.2,
+    "y": 173196.03,
+    "z": -197.64,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 6932.23,
+    "y": 187184.75,
+    "z": -10649.29,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 99209.8,
+    "y": 83713.03,
+    "z": 10073.36,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 104339.23,
+    "y": 145802.75,
+    "z": 5427.71,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 185709.8,
+    "y": -57262.83,
+    "z": 5396.36,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 240512.97,
+    "y": -69723.08,
+    "z": 5520.3,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": 316663.25,
+    "y": -290557.25,
+    "z": 1067.47,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingCore_C"
+  },
+  {
+    "x": -111814.81,
+    "y": 71121.26,
+    "z": 3061.76,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -111801.47,
+    "y": 73189.28,
+    "z": 3120.44,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -110139.16,
+    "y": 75375.22,
+    "z": 3196.48,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -108478.47,
+    "y": 77599.94,
+    "z": 3709.26,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -107606.78,
+    "y": 71069.38,
+    "z": 2912.26,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -104692.41,
+    "y": 73355.59,
+    "z": 3096.42,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -104200.78,
+    "y": 70976.78,
+    "z": 2859.18,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -23406.79,
+    "y": 174254.38,
+    "z": -437.74,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -22450.55,
+    "y": 171714.27,
+    "z": -27.8,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -20451.47,
+    "y": 175654.28,
+    "z": -99.56,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -20347.14,
+    "y": 170787.44,
+    "z": 6.99,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -17700.78,
+    "y": 174876.78,
+    "z": -70.82,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -16087.41,
+    "y": 170350.59,
+    "z": 351.42,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": -15611.97,
+    "y": 172710.39,
+    "z": 239.21,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 3582.62,
+    "y": 187082.12,
+    "z": -10305.06,
+    "resource": "Desc_Water_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 4933.53,
+    "y": 184744.28,
+    "z": -10424.56,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 5973.21,
+    "y": 189394.38,
+    "z": -10357.74,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 7164.16,
+    "y": 183858.44,
+    "z": -10524.95,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 9112.53,
+    "y": 184869.94,
+    "z": -10505.74,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 9269.22,
+    "y": 190201.78,
+    "z": -10440.82,
+    "resource": "Desc_Water_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 10342.59,
+    "y": 187520.59,
+    "z": -10473.58,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 95981.59,
+    "y": 85227.59,
+    "z": 10170.42,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 97653.22,
+    "y": 82023.77,
+    "z": 10255.18,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 98700.53,
+    "y": 86231.94,
+    "z": 10246.26,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 99743.53,
+    "y": 147302.94,
+    "z": 6441.26,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 100208.75,
+    "y": 81507.73,
+    "z": 10271.41,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 100716.75,
+    "y": 149703.72,
+    "z": 6494.41,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 100829.72,
+    "y": 143446.38,
+    "z": 6461.34,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 101158.72,
+    "y": 85561.38,
+    "z": 10250.34,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 102318.72,
+    "y": 82976.38,
+    "z": 10270.34,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 103179.53,
+    "y": 141524.94,
+    "z": 6429.26,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 104641.22,
+    "y": 149304.78,
+    "z": 6456.18,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 106354.59,
+    "y": 139678.59,
+    "z": 6603.42,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 108080.53,
+    "y": 142057.28,
+    "z": 6632.44,
+    "resource": "Desc_Water_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 108262.06,
+    "y": 145417.83,
+    "z": 6486.44,
+    "resource": "Desc_Water_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 182806.09,
+    "y": -58147.62,
+    "z": 5535.64,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 183113.64,
+    "y": -55532.73,
+    "z": 5512.05,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 183610.3,
+    "y": -59943.7,
+    "z": 5585.64,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 185693.72,
+    "y": -61072.18,
+    "z": 5431.79,
+    "resource": "Desc_Water_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 186318.42,
+    "y": -52985.66,
+    "z": 5425.98,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 188079.22,
+    "y": -54423.78,
+    "z": 5518.65,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 188862.86,
+    "y": -57590.3,
+    "z": 5566.2,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 238332.19,
+    "y": -69283.02,
+    "z": 5403.43,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 239763.44,
+    "y": -71695.06,
+    "z": 5256.66,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 240788,
+    "y": -74885.24,
+    "z": 4801.52,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 240891.97,
+    "y": -66618.56,
+    "z": 6182.66,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 242801.66,
+    "y": -71309.54,
+    "z": 5419.41,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 245033.62,
+    "y": -71845.84,
+    "z": 4617.38,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 313890.5,
+    "y": -287979.47,
+    "z": 1212.35,
+    "resource": "Desc_Water_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 314277.5,
+    "y": -289755.78,
+    "z": 1267.87,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 314408.25,
+    "y": -292941.69,
+    "z": 1253.29,
+    "resource": "Desc_Water_C",
+    "purity": "Normal",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 316513.25,
+    "y": -293371.69,
+    "z": 1243.29,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 316668.31,
+    "y": -288089.66,
+    "z": 1174.04,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 319126.59,
+    "y": -290062.66,
+    "z": 1228.42,
+    "resource": "Desc_Water_C",
+    "purity": "Pure",
+    "class": "BP_FrackingSatellite_C"
+  },
+  {
+    "x": 320535.31,
+    "y": -291279.56,
+    "z": 1229.57,
+    "resource": "Desc_Water_C",
+    "purity": "Impure",
+    "class": "BP_FrackingSatellite_C"
+  }
 ]

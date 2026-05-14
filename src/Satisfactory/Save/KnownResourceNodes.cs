@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ERP.Domain;
 
 namespace Satisfactory.Save;
@@ -88,6 +89,10 @@ public sealed class KnownResourceNodes
         PropertyNameCaseInsensitive = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true,
+        // NodePurity is an enum but the JSON ships values as strings
+        // ("Impure" / "Normal" / "Pure") for readability. Without this
+        // converter the deserialiser only accepts the integer form.
+        Converters = { new JsonStringEnumConverter() },
     };
 }
 
