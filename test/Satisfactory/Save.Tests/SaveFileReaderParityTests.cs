@@ -46,5 +46,18 @@ public class SaveFileReaderParityTests
             // serialize a value); assert default clock is plausible.
             Assert.All(state.Buildings, b => Assert.InRange(b.ClockSpeed, 0.01m, 2.5m));
         }
+
+        // #44 — belt polyline plumbing. When the fork starts emitting
+        // ConveyorChainActor ExtraData for v1.2 saves (currently excluded
+        // by ObjectSerializer.cs:130 — see fork TODO.md §5), every belt
+        // referenced by a chain actor will get a Polyline of ≥2 points.
+        // Until then this loop runs but yields no matches. Assertion is
+        // a shape check: any polyline we DO produce must be well-formed.
+        foreach (var belt in state.Belts.Where(b => b.Polyline is not null))
+        {
+            Assert.NotNull(belt.Polyline);
+            Assert.True(belt.Polyline!.Count >= 2,
+                $"Belt {belt.Reference} has Polyline with {belt.Polyline.Count} points; expected ≥2.");
+        }
     }
 }

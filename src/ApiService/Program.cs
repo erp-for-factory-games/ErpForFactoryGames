@@ -259,17 +259,34 @@ public sealed record FactoryStateView(
 // handles axis orientation + zoom bounds.
 // ---------------------------------------------------------------------------
 
-public sealed record GeoPoint(string Type, double[] Coordinates)
+// GeoJSON geometry — Point uses [x, y]; LineString uses [[x, y], …]. We
+// serialise both shapes through `object` so the JSON layout matches the
+// GeoJSON spec without needing two parallel `GeoFeature` records.
+public sealed record GeoGeometry(string Type, object Coordinates)
 {
-    public static GeoPoint From(Position p) => new("Point", [p.X, p.Y]);
+    public static GeoGeometry Point(Position p) => new("Point", new double[] { p.X, p.Y });
+
+    public static GeoGeometry LineString(IReadOnlyList<Position> polyline)
+    {
+        var coords = new double[polyline.Count][];
+        for (var i = 0; i < polyline.Count; i++)
+            coords[i] = [polyline[i].X, polyline[i].Y];
+        return new GeoGeometry("LineString", coords);
+    }
 }
 
 public sealed record GeoFeature(
     string Type,
-    GeoPoint Geometry,
+    GeoGeometry Geometry,
     Dictionary<string, object?> Properties)
 {
     public static GeoFeature Make(string category, string kind, Position position, Dictionary<string, object?>? extra = null)
+        => new("Feature", GeoGeometry.Point(position), BuildProps(category, kind, position, extra));
+
+    public static GeoFeature MakeLine(string category, string kind, IReadOnlyList<Position> polyline, Position fallback, Dictionary<string, object?>? extra = null)
+        => new("Feature", GeoGeometry.LineString(polyline), BuildProps(category, kind, fallback, extra));
+
+    private static Dictionary<string, object?> BuildProps(string category, string kind, Position position, Dictionary<string, object?>? extra)
     {
         var props = new Dictionary<string, object?>
         {
@@ -279,7 +296,7 @@ public sealed record GeoFeature(
         };
         if (extra is not null)
             foreach (var kv in extra) props[kv.Key] = kv.Value;
-        return new GeoFeature("Feature", GeoPoint.From(position), props);
+        return props;
     }
 }
 
@@ -322,10 +339,16 @@ public sealed record FactoryStateGeoJson(
             }));
 
         foreach (var belt in s.Belts)
-            features.Add(GeoFeature.Make("belt", belt.Reference, belt.Position, new()
+        {
+            var props = new Dictionary<string, object?>
             {
                 ["tier"] = belt.Tier.ToString(),
-            }));
+            };
+            if (belt.Polyline is { Count: >= 2 } poly)
+                features.Add(GeoFeature.MakeLine("belt", belt.Reference, poly, belt.Position, props));
+            else
+                features.Add(GeoFeature.Make("belt", belt.Reference, belt.Position, props));
+        }
 
         foreach (var g in s.Generators)
             features.Add(GeoFeature.Make("generator", g.Reference, g.Position, new()

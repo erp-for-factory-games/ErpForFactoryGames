@@ -136,12 +136,20 @@ function unrealToLatLng(x, y) {
 function computeBounds(features) {
     if (!features || features.length === 0) return null;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const f of features) {
-        const [x, y] = f.geometry.coordinates;
+    const visit = (x, y) => {
         if (x < minX) minX = x;
         if (y < minY) minY = y;
         if (x > maxX) maxX = x;
         if (y > maxY) maxY = y;
+    };
+    for (const f of features) {
+        const g = f.geometry;
+        if (g.type === 'LineString') {
+            for (const [x, y] of g.coordinates) visit(x, y);
+        } else {
+            const [x, y] = g.coordinates;
+            visit(x, y);
+        }
     }
     return [unrealToLatLng(minX, minY), unrealToLatLng(maxX, maxY)];
 }
@@ -154,7 +162,6 @@ function buildCategoryLayers(featureCollection) {
     }
 
     for (const feature of featureCollection.features) {
-        const [x, y] = feature.geometry.coordinates;
         const cat = feature.properties.category;
         let style = STYLE[cat] ?? { color: '#FFFFFF', radius: 4, opacity: 1 };
 
@@ -166,28 +173,45 @@ function buildCategoryLayers(featureCollection) {
         }
 
         const target = layers[cat] ?? (layers[cat] = L.layerGroup());
+        const shape = buildShape(feature, style);
+        if (!shape) continue;
 
-        const marker = L.circleMarker(unrealToLatLng(x, y), {
-            radius: style.radius,
-            color: style.color,
-            fillColor: style.color,
-            fillOpacity: style.opacity,
-            weight: 1,
-            opacity: style.opacity,
-        });
-
-        marker.bindTooltip(tooltipText(feature), {
+        shape.bindTooltip(tooltipText(feature), {
             direction: 'top',
             offset: [0, -4],
             opacity: 0.95,
             className: 'fx-map-tooltip',
         });
-        marker.bindPopup(popupHtml(feature));
+        shape.bindPopup(popupHtml(feature));
 
-        target.addLayer(marker);
+        target.addLayer(shape);
         target._featureCount = (target._featureCount ?? 0) + 1;
     }
     return layers;
+}
+
+function buildShape(feature, style) {
+    const g = feature.geometry;
+    if (g.type === 'LineString') {
+        const latlngs = g.coordinates.map(([x, y]) => unrealToLatLng(x, y));
+        // Belts use the canvas renderer (preferCanvas: true on the map) so even
+        // dense Mk1 cluster routes stay performant. Stroke weight is small but
+        // visible; tier-coloured via the category STYLE.
+        return L.polyline(latlngs, {
+            color: style.color,
+            weight: 1.5,
+            opacity: Math.min(0.9, (style.opacity ?? 0.5) + 0.3),
+        });
+    }
+    const [x, y] = g.coordinates;
+    return L.circleMarker(unrealToLatLng(x, y), {
+        radius: style.radius,
+        color: style.color,
+        fillColor: style.color,
+        fillOpacity: style.opacity,
+        weight: 1,
+        opacity: style.opacity,
+    });
 }
 
 // -------------------------------------------------------------------------
