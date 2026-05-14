@@ -22,15 +22,17 @@ const STYLE = {
     'generator':     { color: '#E5604A', radius: 6,   opacity: 1.0,  label: 'Generators' },
 };
 
-// Resource-node sub-styles by BP kind. Geysers stand out in blue (water /
-// geothermal) and deposits/fracking get distinct hues so they're not lost in
-// the mining-node sea.
-const NODE_KIND_STYLE = {
-    'MiningNode':         { color: '#FFC53D', radius: 3.5, opacity: 0.85 },
-    'Geyser':             { color: '#5FB0C9', radius: 5,   opacity: 1.0  },
-    'Deposit':            { color: '#9A9AA0', radius: 2.2, opacity: 0.6  },
-    'FrackingCore':       { color: '#B388EB', radius: 5,   opacity: 1.0  },
-    'FrackingSatellite':  { color: '#7E5DC5', radius: 4,   opacity: 0.9  },
+// Fallback styling for resource nodes whose resource isn't known yet (no
+// manual override + no entry in the bundled dataset). Once the resource is
+// known we render the wiki icon (Desc_OreIron_C.png etc.) instead. Geysers
+// don't need ore identification (always geothermal) and deposits are small
+// destructible ore piles — both can stay dot-shaped.
+const NODE_KIND_FALLBACK = {
+    'MiningNode':         { color: '#FFC53D', size: 10, label: 'Mining node (unknown ore)' },
+    'Geyser':             { color: '#5FB0C9', size: 12, label: 'Geothermal geyser' },
+    'Deposit':            { color: '#9A9AA0', size: 7,  label: 'Resource deposit' },
+    'FrackingCore':       { color: '#B388EB', size: 12, label: 'Fracking core (unknown resource)' },
+    'FrackingSatellite':  { color: '#7E5DC5', size: 9,  label: 'Fracking satellite (unknown resource)' },
 };
 
 export async function initialize(element, featureCollection, callback) {
@@ -166,14 +168,7 @@ function buildCategoryLayers(featureCollection) {
 
     for (const feature of featureCollection.features) {
         const cat = feature.properties.category;
-        let style = STYLE[cat] ?? { color: '#FFFFFF', radius: 4, opacity: 1 };
-
-        // Resource nodes get per-kind sub-styling.
-        if (cat === 'resource-node') {
-            const kind = feature.properties.nodeKind;
-            const sub = NODE_KIND_STYLE[kind];
-            if (sub) style = { ...style, ...sub };
-        }
+        const style = STYLE[cat] ?? { color: '#FFFFFF', radius: 4, opacity: 1 };
 
         const target = layers[cat] ?? (layers[cat] = L.layerGroup());
         const shape = buildShape(feature, style);
@@ -219,13 +214,61 @@ function buildShape(feature, style) {
         });
     }
     const [x, y] = g.coordinates;
-    return L.circleMarker(unrealToLatLng(x, y), {
+    const latlng = unrealToLatLng(x, y);
+
+    // Resource nodes render as wiki item icons when the resource is known;
+    // otherwise fall back to a coloured dot keyed by BP kind (#61).
+    if (feature.properties.category === 'resource-node') {
+        return L.marker(latlng, { icon: buildResourceNodeIcon(feature) });
+    }
+
+    return L.circleMarker(latlng, {
         radius: style.radius,
         color: style.color,
         fillColor: style.color,
         fillOpacity: style.opacity,
         weight: 1,
         opacity: style.opacity,
+    });
+}
+
+function buildResourceNodeIcon(feature) {
+    const p = feature.properties;
+    const kind = p.nodeKind ?? 'MiningNode';
+    const resource = typeof p.resource === 'string' && p.resource.length > 0 ? p.resource : null;
+
+    // Resource known → wiki ore icon. The <img> falls back to the
+    // coloured-dot div via onerror when an icon is missing on disk (assets
+    // are dev-local per ADR-0016, not every Desc_*_C will have a PNG yet).
+    if (resource) {
+        const size = kind === 'FrackingSatellite' ? 18 : 22;
+        const half = size / 2;
+        const safeResource = String(resource).replace(/[^A-Za-z0-9_]/g, '');
+        const fallbackColor = NODE_KIND_FALLBACK[kind]?.color ?? '#FFC53D';
+        const html =
+            `<div class="fx-node-icon" style="width:${size}px;height:${size}px;">
+                <img src="/assets/icons/items/${safeResource}.png"
+                     alt=""
+                     onerror="this.style.display='none';this.parentElement.classList.add('fx-node-icon--missing');this.parentElement.style.backgroundColor='${fallbackColor}';" />
+             </div>`;
+        return L.divIcon({
+            html,
+            className: 'fx-node-divicon',
+            iconSize: [size, size],
+            iconAnchor: [half, half],
+        });
+    }
+
+    const fb = NODE_KIND_FALLBACK[kind] ?? NODE_KIND_FALLBACK['MiningNode'];
+    const half = fb.size / 2;
+    const html =
+        `<div class="fx-node-dot fx-node-dot--${kind.toLowerCase()}"
+              style="width:${fb.size}px;height:${fb.size}px;background-color:${fb.color};"></div>`;
+    return L.divIcon({
+        html,
+        className: 'fx-node-divicon',
+        iconSize: [fb.size, fb.size],
+        iconAnchor: [half, half],
     });
 }
 
