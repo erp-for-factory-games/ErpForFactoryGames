@@ -3,6 +3,7 @@ using ERP.Application.Commands.IngestSave;
 using ERP.Application.Queries.PlanProduction;
 using ERP.Domain;
 using ERP.Infrastructure;
+using ERP.Infrastructure.Persistence;
 using Satisfactory.Save;
 using Wolverine;
 
@@ -16,6 +17,21 @@ builder.Host.UseWolverine(opts =>
 });
 
 builder.Services.AddErpInfrastructure(builder.Configuration);
+
+// ---- Plan persistence (EF Core) --------------------------------------------
+// Issue #12: no provider chosen yet. The DbContext is registered with a
+// deliberately-empty configure delegate so the layer compiles and DI resolves,
+// but any attempt to actually query/save will throw with a clear error. Once a
+// provider is picked, replace the body of the lambda with the appropriate
+// .UseSqlite(...) / .UseNpgsql(...) / .UseSqlServer(...) call and pull the
+// connection string from configuration (e.g. builder.Configuration.GetConnectionString("Plans")).
+builder.Services.AddErpPersistence(builder.Configuration, options =>
+{
+    // TODO(#12): wire the chosen EF Core provider here, e.g.:
+    //   options.UseSqlite(builder.Configuration.GetConnectionString("Plans")
+    //       ?? "Data Source=plans.db");
+});
+
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 

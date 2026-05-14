@@ -20,6 +20,9 @@
   <Folder Name="/src/ERP/Infrastructure/">
     <Project Path="src/ERP/Infrastructure/ERP.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/ERP/Infrastructure/Persistence/">
+    <Project Path="src/ERP/Infrastructure/Persistence/ERP.Infrastructure.Persistence.csproj" />
+  </Folder>
   <Folder Name="/src/Satisfactory/" />
   <Folder Name="/src/Satisfactory/Catalog/">
     <Project Path="src/Satisfactory/Catalog/Satisfactory.Catalog.csproj" />

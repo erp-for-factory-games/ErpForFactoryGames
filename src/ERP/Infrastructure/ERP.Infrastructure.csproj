@@ -7,6 +7,18 @@
     <ProjectReference Include="..\..\Satisfactory\Save\Satisfactory.Save.csproj" />
   </ItemGroup>
 
+  <!--
+    The Persistence/ subfolder is its own project (ERP.Infrastructure.Persistence)
+    because EF Core dependencies should stay isolated. Exclude it from this
+    project's default compile/embed/none globs so the files belong to exactly
+    one project.
+  -->
+  <ItemGroup>
+    <Compile Remove="Persistence\**" />
+    <EmbeddedResource Remove="Persistence\**" />
+    <None Remove="Persistence\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
