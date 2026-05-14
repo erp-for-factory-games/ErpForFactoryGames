@@ -83,9 +83,11 @@ auto-detect under `%LocalAppData%\FactoryGame\Saved\SaveGames\<steamId>\`.
   (separating vanilla vs mod readers, raising coverage, plugging the
   v1.2 ExtraData gaps for Vehicle/Locomotive/DroneStation/etc.). None of those
   are blocking for the planner's current needs.
-- `.satisfactory/stocktake.md` remains optional human-curated context (intent,
-  notes, in-game TODOs). The parsed save is the source of truth for the
-  planner from this point on.
+- `.satisfactory/stocktake.md` is retired as a planner input. The parsed
+  save (via `/factory/state`) is the sole source of truth for counts;
+  human-curated intent (module names, in-game TODOs) will move to the
+  app's persistence layer (#12 — ADR pending). Existing `.satisfactory/`
+  files remain as historical notes only.
 - The `tools/etothepii-test/` directory and any remaining TypeScript scaffolding
   becomes reference material for the upstream PR diff and can be retired once
   that PR lands.

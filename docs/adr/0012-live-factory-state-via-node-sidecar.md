@@ -78,8 +78,11 @@ current save versions.
   version" as a structured error in the catalogue-not-loaded UX from ADR 0011.
 - Mod-added actors not in etothepii's class registry are surfaced as
   "unrecognised actor" warnings, not errors. Acceptable v1 limitation.
-- `.satisfactory/stocktake.md` becomes optional human-curated context (notes,
-  intent, todo). The parsed save is the source of truth for the planner.
+- `.satisfactory/stocktake.md` is retired as a planner input. Counts come
+  from the parsed save (`/factory/state`); human-curated intent (module
+  names, in-game TODOs) will move to the app's persistence layer (#12 —
+  ADR pending). Pre-existing snapshots remain in `.satisfactory/` as
+  historical notes only.
 - Multi-game capability is preserved: the port lives in the Application layer
   and a different game's adapter (whether Node, C#, or otherwise) just
   implements the same contract.

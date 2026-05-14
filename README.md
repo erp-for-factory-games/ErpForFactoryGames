@@ -147,7 +147,7 @@ test/                     # xUnit projects per layer
 build/                    # NUKE C# build scripts
 vendor/SatisfactorySaveNet # Forked .sav parser submodule
 docs/adr/                 # Architecture decisions
-.satisfactory/            # In-game stocktake (separate from project backlog)
+.satisfactory/            # Historical in-game stocktake notes (pre-ingestion; superseded by /factory/state)
 .claude/                  # Claude Code conventions for this repo
 ```
 

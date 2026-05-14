@@ -8,9 +8,9 @@ Project-specific guidance and tooling for Claude Code in this repo.
   onion dependency rules. Detailed reference; the top-level `CLAUDE.md` only points here.
 - [`agents/`](agents/) — custom subagents available via the Agent tool.
   - [`ada.md`](agents/ada.md) — **ADA**, the in-game assistant. Game knowledge
-    (recipes, ratios, milestone unlocks, building specs, layout tips) plus
-    live save-game sync into `.satisfactory/stocktake.md` via the pure-C# CLI
-    at [`tools/Stocktake/`](../tools/Stocktake/). Not for code work.
+    (recipes, ratios, milestone unlocks, building specs, layout tips). Live
+    factory state is consumed from the running ApiService at `/factory/state`.
+    Not for code work.
 
 ## Adding things later
 
