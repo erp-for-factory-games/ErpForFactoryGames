@@ -7,39 +7,91 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ERP.Infrastructure.Persistence;
 
 /// <summary>
-/// Composition-root wiring for the EF Core persistence layer.
+/// Composition-root wiring for the EF Core persistence layer (ADR-0018).
 ///
 /// <para>
-/// PROVIDER NOT YET CHOSEN (see issue #12). The current implementation registers the
-/// <see cref="PlanDbContext"/> with no provider — callers MUST supply a configure
-/// delegate that calls <c>UseSqlite</c> / <c>UseNpgsql</c> / etc. The host project
-/// (<c>ApiService</c>) is responsible for that one-line decision so it stays out of
-/// the infrastructure project.
+/// Dual provider: <c>sqlite</c> (default, single-user / OSS / dev) or <c>postgres</c>
+/// (multi-user / hosted). Selection is driven by configuration:
+/// </para>
+///
+/// <code>
+/// {
+///   "Persistence": { "Provider": "sqlite" | "postgres" },
+///   "ConnectionStrings": { "Plans": "..." }
+/// }
+/// </code>
+///
+/// <para>
+/// Migrations live in two provider-specific folders inside this assembly:
+/// </para>
+/// <list type="bullet">
+///   <item><c>Migrations/Sqlite</c> (default namespace <c>ERP.Infrastructure.Persistence.Migrations.Sqlite</c>)</item>
+///   <item><c>Migrations/Postgres</c> (default namespace <c>ERP.Infrastructure.Persistence.Migrations.Postgres</c>)</item>
+/// </list>
+/// <para>
+/// At runtime, the chosen provider scans only its own migrations folder via
+/// <c>MigrationsAssembly</c> + <c>MigrationsHistoryTable</c> overrides; EF Core
+/// otherwise discovers all <c>Migration</c>-derived types in the assembly and
+/// chokes when both provider's snapshots coexist.
 /// </para>
 /// </summary>
 public static class PersistenceServiceCollectionExtensions
 {
+    public const string ProviderConfigKey = "Persistence:Provider";
+    public const string ConnectionStringName = "Plans";
+    public const string SqliteProvider = "sqlite";
+    public const string PostgresProvider = "postgres";
+    public const string DefaultSqliteConnectionString = "Data Source=plans.db";
+
+    /// <summary>
+    /// Migrations history table name shared by both providers — the per-provider
+    /// migration types are kept apart by namespace, so a single history table is
+    /// fine (and removes ambiguity if a connection ever gets aimed at the wrong DB).
+    /// </summary>
+    internal const string MigrationsHistoryTable = "__EFMigrationsHistory";
+
     /// <summary>
     /// Register <see cref="PlanDbContext"/> and the <see cref="IPlanRepository"/>
-    /// implementation. The <paramref name="configureDbContext"/> delegate is where
-    /// the chosen provider gets wired in (e.g. <c>opts.UseSqlite(...)</c>).
+    /// implementation, applying the provider chosen via configuration.
     /// </summary>
-    /// <remarks>
-    /// While no provider is chosen, callers may pass a no-op delegate; the host can
-    /// then opt-in to <c>UseInMemoryDatabase</c> for local dev once that package is
-    /// referenced, OR (preferred) the whole persistence registration can be skipped
-    /// until a provider lands. Either way, <c>SaveChangesAsync</c> on an
-    /// un-configured context will throw, which is intentional — better to fail fast
-    /// than silently lose user plans.
-    /// </remarks>
     public static IServiceCollection AddErpPersistence(
         this IServiceCollection services,
-        IConfiguration configuration,
-        Action<DbContextOptionsBuilder> configureDbContext)
+        IConfiguration configuration)
     {
-        ArgumentNullException.ThrowIfNull(configureDbContext);
+        ArgumentNullException.ThrowIfNull(configuration);
 
-        services.AddDbContext<PlanDbContext>(configureDbContext);
+        var provider = (configuration[ProviderConfigKey] ?? SqliteProvider).Trim().ToLowerInvariant();
+        var connectionString = configuration.GetConnectionString(ConnectionStringName);
+
+        switch (provider)
+        {
+            case SqliteProvider:
+                var sqliteConn = string.IsNullOrWhiteSpace(connectionString)
+                    ? DefaultSqliteConnectionString
+                    : connectionString;
+                services.AddDbContext<SqlitePlanDbContext>(options => options.UseSqlite(sqliteConn,
+                    b => b.MigrationsHistoryTable(MigrationsHistoryTable)));
+                services.AddScoped<PlanDbContext>(sp => sp.GetRequiredService<SqlitePlanDbContext>());
+                break;
+
+            case PostgresProvider:
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "Persistence:Provider is 'postgres' but ConnectionStrings:Plans is not set. " +
+                        "Supply a Npgsql connection string (e.g. 'Host=localhost;Database=plans;Username=...;Password=...').");
+                }
+                services.AddDbContext<PostgresPlanDbContext>(options => options.UseNpgsql(connectionString,
+                    b => b.MigrationsHistoryTable(MigrationsHistoryTable)));
+                services.AddScoped<PlanDbContext>(sp => sp.GetRequiredService<PostgresPlanDbContext>());
+                break;
+
+            default:
+                throw new InvalidOperationException(
+                    $"Unknown Persistence:Provider value '{provider}'. " +
+                    $"Expected '{SqliteProvider}' or '{PostgresProvider}'.");
+        }
+
         services.AddScoped<IPlanRepository, PlanRepository>();
         return services;
     }

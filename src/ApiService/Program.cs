@@ -4,6 +4,7 @@ using ERP.Application.Queries.PlanProduction;
 using ERP.Domain;
 using ERP.Infrastructure;
 using ERP.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Satisfactory.Save;
 using Wolverine;
 
@@ -18,24 +19,26 @@ builder.Host.UseWolverine(opts =>
 
 builder.Services.AddErpInfrastructure(builder.Configuration);
 
-// ---- Plan persistence (EF Core) --------------------------------------------
-// Issue #12: no provider chosen yet. The DbContext is registered with a
-// deliberately-empty configure delegate so the layer compiles and DI resolves,
-// but any attempt to actually query/save will throw with a clear error. Once a
-// provider is picked, replace the body of the lambda with the appropriate
-// .UseSqlite(...) / .UseNpgsql(...) / .UseSqlServer(...) call and pull the
-// connection string from configuration (e.g. builder.Configuration.GetConnectionString("Plans")).
-builder.Services.AddErpPersistence(builder.Configuration, options =>
-{
-    // TODO(#12): wire the chosen EF Core provider here, e.g.:
-    //   options.UseSqlite(builder.Configuration.GetConnectionString("Plans")
-    //       ?? "Data Source=plans.db");
-});
+// ---- Plan persistence (EF Core, ADR-0018) ----------------------------------
+// SQLite by default, Postgres opt-in via `Persistence:Provider=postgres`.
+// Connection string lives in `ConnectionStrings:Plans`.
+builder.Services.AddErpPersistence(builder.Configuration);
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// In Development, apply pending plan-storage migrations on startup so the
+// SQLite default Just Works on a fresh checkout. Production / hosted deploys
+// should run `dotnet ef database update` (or equivalent) out-of-band to keep
+// schema changes explicit.
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<PlanDbContext>();
+    db.Database.Migrate();
+}
 
 app.UseExceptionHandler();
 

@@ -4,22 +4,26 @@ using Microsoft.EntityFrameworkCore;
 namespace ERP.Infrastructure.Persistence;
 
 /// <summary>
-/// EF Core context for persisting <see cref="SavedPlan"/> aggregates.
+/// EF Core context for persisting <see cref="SavedPlan"/> aggregates (ADR-0018).
 ///
 /// <para>
-/// Provider-agnostic: this class never calls <c>UseSqlite</c> / <c>UseNpgsql</c> /
-/// etc. — provider selection happens once in <see cref="PlanDbContextOptionsBuilder"/>
-/// (or the AppHost composition root) so a single switch flips the storage backend.
+/// <b>Single context, dual provider</b>. Provider-specific behaviour stays out of
+/// the model — selection happens in
+/// <see cref="PersistenceServiceCollectionExtensions.AddErpPersistence"/> via
+/// <c>UseSqlite</c> / <c>UseNpgsql</c>. Each provider's migrations live in a
+/// dedicated folder (<c>Migrations/Sqlite</c>, <c>Migrations/Postgres</c>) and the
+/// runtime <c>MigrationsAssembly</c> hint plus filtered namespace ensures EF only
+/// sees the migrations matching the active provider.
 /// </para>
 ///
 /// <para>
-/// Entity configurations live in <c>Configurations/</c>, one file per aggregate, picked
-/// up via <see cref="ModelBuilder.ApplyConfigurationsFromAssembly"/>.
+/// Entity configurations live in <c>Configurations/</c>, one file per aggregate,
+/// picked up via <see cref="ModelBuilder.ApplyConfigurationsFromAssembly"/>.
 /// </para>
 /// </summary>
-public sealed class PlanDbContext : DbContext
+public class PlanDbContext : DbContext
 {
-    public PlanDbContext(DbContextOptions<PlanDbContext> options) : base(options) { }
+    public PlanDbContext(DbContextOptions options) : base(options) { }
 
     public DbSet<SavedPlan> Plans => Set<SavedPlan>();
 

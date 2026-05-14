@@ -14,19 +14,15 @@
 
   <ItemGroup>
     <!--
-      Provider-agnostic EF Core foundation.
-      The base + relational + design packages compile against ANY EF Core provider,
-      so we can wire up DbContext, configurations, and migrations infrastructure
-      without committing to SQLite / Postgres / SQL Server yet (see issue #12).
-
-      When a provider is chosen, add exactly one of:
-        Microsoft.EntityFrameworkCore.Sqlite
-        Npgsql.EntityFrameworkCore.PostgreSQL
-        Microsoft.EntityFrameworkCore.SqlServer
-      and wire it in PersistenceServiceCollectionExtensions + the design-time factory.
+      Dual-provider EF Core setup (ADR-0018, issue #12 phase 2).
+      SQLite is the default for OSS / single-user / dev. Postgres is available
+      for multi-user / hosted deployments. Provider is selected at composition
+      time from the `Persistence:Provider` configuration value.
     -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

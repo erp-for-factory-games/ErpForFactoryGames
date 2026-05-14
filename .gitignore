@@ -49,3 +49,8 @@ test/ui-tests/
 
 # Local reference assets (user-only, not for redistribution)
 .assets/
+
+# SQLite plan storage (ADR-0018) — runtime data, never committed
+*.db
+*.db-shm
+*.db-wal
