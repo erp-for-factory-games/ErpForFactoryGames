@@ -38,9 +38,6 @@ jobs:
     # our own runner. `setup-dotnet@v4` provides .NET on demand so no
     # additional host setup is needed beyond the runner agent itself.
     runs-on: self-hosted
-    env:
-      # Redirect dotnet install to a user-writable path on self-hosted.
-      DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -60,6 +57,11 @@ jobs:
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
+        env:
+          # Redirect install to a user-writable path on self-hosted (default
+          # `/usr/share/dotnet` is root-only). `runner.*` context is allowed
+          # at step env, not at job env, so this lives here per-step.
+          DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
         with:
           dotnet-version: 8.0.x
           global-json-file: global.json
@@ -79,8 +81,6 @@ jobs:
     # extra host packages are needed.
     runs-on: self-hosted
     timeout-minutes: 30
-    env:
-      DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
 
     steps:
       - name: Checkout
@@ -100,6 +100,8 @@ jobs:
 
       - name: Setup .NET (10 from global.json + 8 for vendor submodule)
         uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
         with:
           dotnet-version: 8.0.x
           global-json-file: global.json
@@ -132,8 +134,6 @@ jobs:
     # providers both ship in the SDK packages, nothing else to install.
     runs-on: self-hosted
     timeout-minutes: 15
-    env:
-      DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
 
     steps:
       - name: Checkout
@@ -153,6 +153,8 @@ jobs:
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
         with:
           dotnet-version: 8.0.x
           global-json-file: global.json
