@@ -80,13 +80,13 @@ public static class PlanSerializer
     public static PlanExportDto ToDto(SavedPlan plan, DateTime? exportedAtUtc = null) =>
         new(
             SchemaVersion: CurrentSchemaVersion,
-            Id:            plan.Id,
-            Name:          plan.Name,
-            CreatedUtc:    plan.CreatedUtc,
-            UpdatedUtc:    plan.UpdatedUtc,
-            Targets:       plan.Targets.Select(t => new PlanTargetDto(t.Item.Value, t.ItemsPerMinute)).ToList(),
-            Availability:  plan.Available.Select(a => new PlanAvailabilityDto(a.Item.Value, a.ItemsPerMinute)).ToList(),
-            Metadata:      new PlanExportMetadataDto(exportedAtUtc ?? DateTime.UtcNow, Exporter));
+            Id: plan.Id,
+            Name: plan.Name,
+            CreatedUtc: plan.CreatedUtc,
+            UpdatedUtc: plan.UpdatedUtc,
+            Targets: plan.Targets.Select(t => new PlanTargetDto(t.Item.Value, t.ItemsPerMinute)).ToList(),
+            Availability: plan.Available.Select(a => new PlanAvailabilityDto(a.Item.Value, a.ItemsPerMinute)).ToList(),
+            Metadata: new PlanExportMetadataDto(exportedAtUtc ?? DateTime.UtcNow, Exporter));
 
     public static SavedPlan FromDto(PlanExportDto dto)
     {
@@ -107,12 +107,12 @@ public static class PlanSerializer
             .ToList();
 
         return new SavedPlan(
-            id:          dto.Id,
-            name:        dto.Name,
-            targets:     targets,
-            available:   available,
-            createdUtc:  dto.CreatedUtc,
-            updatedUtc:  dto.UpdatedUtc);
+            id: dto.Id,
+            name: dto.Name,
+            targets: targets,
+            available: available,
+            createdUtc: dto.CreatedUtc,
+            updatedUtc: dto.UpdatedUtc);
     }
 
     public static string Serialize(SavedPlan plan, DateTime? exportedAtUtc = null) =>

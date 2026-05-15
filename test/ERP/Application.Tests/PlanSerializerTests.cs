@@ -11,14 +11,14 @@ namespace ERP.Application.Tests;
 public class PlanSerializerTests
 {
     private static SavedPlan SamplePlan() => new(
-        id:         Guid.Parse("11111111-2222-3333-4444-555555555555"),
-        name:       "Iron Plates / min: 20",
-        targets:    new List<ProductionTarget>
+        id: Guid.Parse("11111111-2222-3333-4444-555555555555"),
+        name: "Iron Plates / min: 20",
+        targets: new List<ProductionTarget>
         {
             new(new ItemId("Desc_IronPlate_C"), 20m),
             new(new ItemId("Desc_IronRod_C"),   15m),
         },
-        available:  new List<ResourceAvailability>
+        available: new List<ResourceAvailability>
         {
             new(new ItemId("Desc_OreIron_C"), 120m),
         },
