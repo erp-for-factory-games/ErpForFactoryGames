@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 
@@ -21,11 +22,6 @@ public class SmokeTests(AspireAppFixture fixture) : IClassFixture<AspireAppFixtu
     [Fact]
     public async Task Planner_page_renders_MudAutocomplete_pickers()
     {
-        // Phase 1 proof-of-integration test for MudBlazor adoption: confirms the framework
-        // is wired correctly (services registered, CSS/JS loaded, providers mounted) by
-        // rendering the page and exercising one MudAutocomplete interactively. Full
-        // round-trip (type → filter → select → submit) needs a seeded catalogue in
-        // tests — deferred to a later phase.
         var context = await fixture.Browser.NewContextAsync();
         var page = await context.NewPageAsync();
         var consoleErrors = new List<string>();
@@ -36,22 +32,59 @@ public class SmokeTests(AspireAppFixture fixture) : IClassFixture<AspireAppFixtu
         Assert.NotNull(response);
         Assert.Equal(200, response!.Status);
 
-        // MudAutocomplete renders as a MudBlazor text-field-shaped input with a known class.
-        // Two pickers on the page (one for sources, one for sinks) → expect 2 occurrences.
         var pickers = page.Locator(".mud-autocomplete");
         await Expect(pickers).ToHaveCountAsync(2);
 
-        // The Blazor error UI is on the page (id="blazor-error-ui") and CSS-hidden until
-        // an unhandled circuit exception unhides it. If MudBlazor's providers weren't in
-        // the same interactive render tree as the autocompletes, this would flip visible.
         await Expect(page.Locator("#blazor-error-ui")).ToBeHiddenAsync();
 
-        // Click the first picker — forces MudAutocomplete to request its popover, which
-        // requires <MudPopoverProvider /> to be reachable in the interactive render tree.
-        // Catches the render-mode boundary class of bug that pure rendering tests miss.
         await pickers.First.ClickAsync();
         await Expect(page.Locator("#blazor-error-ui")).ToBeHiddenAsync();
 
         Assert.Empty(consoleErrors);
+    }
+
+    /// <summary>
+    /// #78 - Auto-save round-trip: seed a LocalStorage draft, reload the
+    /// planner, confirm the "Draft restored" snackbar fires, and capture
+    /// the documented screenshot at test/ui-tests/issue-78-draft-restored.png.
+    /// </summary>
+    [Fact]
+    public async Task Planner_restores_draft_from_localStorage_and_shows_snackbar()
+    {
+        var context = await fixture.Browser.NewContextAsync();
+        var page = await context.NewPageAsync();
+
+        var draftJson = JsonSerializer.Serialize(new
+        {
+            sources = new[] { new { itemId = "Desc_OreIron_C", itemsPerMinute = 120m } },
+            sinks = new[] { new { itemId = "Desc_IronPlate_C", itemsPerMinute = 30m } },
+        });
+        await context.AddInitScriptAsync(
+            $"window.localStorage.setItem('erp-draft:planner', {JsonSerializer.Serialize(draftJson)});");
+
+        var response = await page.GotoAsync($"{fixture.WebFrontendUrl.TrimEnd('/')}/planner");
+        Assert.NotNull(response);
+        Assert.Equal(200, response!.Status);
+
+        var toast = page.Locator(".mud-snackbar", new() { HasTextString = "Draft restored" });
+        await Expect(toast).ToBeVisibleAsync(new() { Timeout = 15_000 });
+
+        var repoRoot = FindRepoRoot();
+        var screenshotDir = Path.Combine(repoRoot, "test", "ui-tests");
+        Directory.CreateDirectory(screenshotDir);
+        var screenshotPath = Path.Combine(screenshotDir, "issue-78-draft-restored.png");
+        await page.ScreenshotAsync(new() { Path = screenshotPath, FullPage = true });
+
+        Assert.True(File.Exists(screenshotPath), $"Expected screenshot at {screenshotPath}");
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "ERP.Satisfactory.slnx")))
+        {
+            dir = dir.Parent;
+        }
+        return dir?.FullName ?? AppContext.BaseDirectory;
     }
 }

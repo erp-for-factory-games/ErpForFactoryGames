@@ -1,8 +1,10 @@
 @page "/planner"
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 @inject PlannerApiClient Api
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
+@inject PlannerDraftStore DraftStore
 @using ERP.Application
 @using ERP.Domain
 @using Microsoft.AspNetCore.Components.Forms
@@ -35,7 +37,7 @@ else
                     <div class="flex-grow-1">
                         <MudAutocomplete T="CatalogItem"
                                          Value="row.Item"
-                                         ValueChanged="@(i => row.Item = i)"
+                                         ValueChanged="@(i => OnRowItemChanged(row, i))"
                                          SearchFunc="@SearchItems"
                                          ToStringFunc="@(i => i?.Name ?? string.Empty)"
                                          Placeholder="Pick item"
@@ -57,7 +59,7 @@ else
                             </ItemTemplate>
                         </MudAutocomplete>
                     </div>
-                    <MudNumericField T="decimal" @bind-Value="row.ItemsPerMinute"
+                    <MudNumericField T="decimal" @bind-Value="row.ItemsPerMinute" @bind-Value:after="ScheduleSave"
                                      Min="0" Step="1m"
                                      Placeholder="items / min"
                                      Variant="Variant.Outlined"
@@ -86,7 +88,7 @@ else
                     <div class="flex-grow-1">
                         <MudAutocomplete T="CatalogItem"
                                          Value="row.Item"
-                                         ValueChanged="@(i => row.Item = i)"
+                                         ValueChanged="@(i => OnRowItemChanged(row, i))"
                                          SearchFunc="@SearchItems"
                                          ToStringFunc="@(i => i?.Name ?? string.Empty)"
                                          Placeholder="Pick item"
@@ -108,7 +110,7 @@ else
                             </ItemTemplate>
                         </MudAutocomplete>
                     </div>
-                    <MudNumericField T="decimal" @bind-Value="row.ItemsPerMinute"
+                    <MudNumericField T="decimal" @bind-Value="row.ItemsPerMinute" @bind-Value:after="ScheduleSave"
                                      Min="0" Step="1m"
                                      Placeholder="items / min"
                                      Variant="Variant.Outlined"
@@ -130,7 +132,7 @@ else
         </MudItem>
     </MudGrid>
 
-    <div class="mt-4 d-flex gap-2 align-items-center flex-wrap">
+    <div class="mt-4 d-flex flex-wrap align-items-center gap-2">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Compute" Disabled="@isComputing">
             @(isComputing ? "Computing..." : "Compute plan")
         </MudButton>
@@ -162,6 +164,16 @@ else
                    OnChange="ImportPlan"
                    style="display:none" />
 
+        @if (hasDraft)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+                       OnClick="DiscardDraft"
+                       StartIcon="@Icons.Material.Filled.DeleteSweep"
+                       data-testid="discard-draft"
+                       title="Clear the locally-saved draft and reset the planner to its server-saved state.">
+                Discard draft
+            </MudButton>
+        }
         @if (!string.IsNullOrEmpty(error))
         {
             <MudText HtmlTag="span" Color="Color.Error" Class="ms-3">@error</MudText>
@@ -185,7 +197,7 @@ else
         @if (plan.Steps.Count > 0)
         {
             <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Bolt"
-                     title="Sum of base power draw (Building.BasePowerMw × buildings). Variable-power buildings (e.g. miners) report base only.">
+                     title="Sum of base power draw (Building.BasePowerMw x buildings). Variable-power buildings (e.g. miners) report base only.">
                 @FormatPower(plan.TotalPowerMw) MW total
             </MudChip>
         }
@@ -289,16 +301,207 @@ else
     private Guid planId = Guid.NewGuid();
     private DateTime planCreatedUtc = DateTime.UtcNow;
 
+    // Auto-save (#78). Debounce timer collapses bursts of edits into a
+    // single LocalStorage write; we also stage the latest snapshot on every
+    // edit so the JS-side beforeunload flush can rescue in-flight changes.
+    // Restoration is deferred to OnAfterRenderAsync(firstRender) because
+    // IJSRuntime isn't usable from OnInitializedAsync on a server-side
+    // component (no JS connection yet).
+    private const int DebounceMs = 500;
+    private System.Timers.Timer? saveTimer;
+    private bool restoreChecked;
+    private bool hasDraft;
+    private bool suppressSaveScheduling;
+
     protected override async Task OnInitializedAsync()
     {
         status = await Api.GetCatalogueStatusAsync();
         items = await Api.GetItemsAsync();
+
+        saveTimer = new System.Timers.Timer(DebounceMs) { AutoReset = false };
+        saveTimer.Elapsed += async (_, _) => await InvokeAsync(SaveDraftNowAsync);
     }
 
-    private void AddSource() => sources.Add(new());
-    private void RemoveSource(Row row) => sources.Remove(row);
-    private void AddSink() => sinks.Add(new());
-    private void RemoveSink(Row row) => sinks.Remove(row);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || restoreChecked) return;
+        restoreChecked = true;
+        await TryRestoreDraftAsync();
+    }
+
+    private async Task TryRestoreDraftAsync()
+    {
+        try
+        {
+            var draft = await DraftStore.LoadAsync();
+            if (draft is null) return;
+
+            // "differs from any loaded server plan" - Planner doesn't yet
+            // load a server plan into the editor (that path lives in #77's
+            // work). The current baseline is the empty editor, so any
+            // non-empty draft is worth restoring.
+            if (IsEmptyDraft(draft)) return;
+
+            suppressSaveScheduling = true;
+            try
+            {
+                ApplyDraft(draft);
+            }
+            finally
+            {
+                suppressSaveScheduling = false;
+            }
+
+            hasDraft = true;
+            Snackbar.Add("Draft restored", Severity.Info);
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            // Don't let a flaky restore break the planner.
+        }
+    }
+
+    private void ApplyDraft(PlannerDraft draft)
+    {
+        sources = draft.Sources.Select(RowFromDraft).ToList();
+        sinks = draft.Sinks.Select(RowFromDraft).ToList();
+        if (sources.Count == 0) sources.Add(new());
+        if (sinks.Count == 0) sinks.Add(new());
+    }
+
+    private Row RowFromDraft(PlannerDraftRow r)
+    {
+        var item = r.ItemId is null ? null : items?.FirstOrDefault(i => i.Id == r.ItemId);
+        return new Row { Item = item, ItemsPerMinute = r.ItemsPerMinute };
+    }
+
+    private PlannerDraft BuildDraft() => new(
+        Sources: sources.Select(r => new PlannerDraftRow(r.Item?.Id, r.ItemsPerMinute)).ToList(),
+        Sinks: sinks.Select(r => new PlannerDraftRow(r.Item?.Id, r.ItemsPerMinute)).ToList());
+
+    private static bool IsEmptyDraft(PlannerDraft d) =>
+        d.Sources.All(IsEmptyRow) && d.Sinks.All(IsEmptyRow);
+
+    private static bool IsEmptyRow(PlannerDraftRow r) =>
+        string.IsNullOrEmpty(r.ItemId) && r.ItemsPerMinute == 0;
+
+    /// <summary>
+    /// Restart the debounce timer and stage the latest snapshot for the
+    /// JS-side beforeunload flush. Cheap enough to call on every change.
+    /// </summary>
+    private void ScheduleSave()
+    {
+        if (suppressSaveScheduling) return;
+        if (saveTimer is null) return;
+
+        saveTimer.Stop();
+        saveTimer.Start();
+
+        // Fire-and-forget the staging interop so we don't block the UI
+        // thread; the staged copy only matters if the user closes the tab
+        // before the debounce timer fires.
+        _ = StagePendingSafeAsync();
+    }
+
+    private async Task StagePendingSafeAsync()
+    {
+        try
+        {
+            await DraftStore.StagePendingAsync(BuildDraft());
+        }
+        catch (Exception)
+        {
+            // JS may be unreachable during prerender / disconnect - ignore.
+        }
+    }
+
+    private async Task SaveDraftNowAsync()
+    {
+        try
+        {
+            var draft = BuildDraft();
+            if (IsEmptyDraft(draft))
+            {
+                // Auto-discard empty drafts so the "Discard draft" button
+                // and restore-on-load don't trip over a meaningless record.
+                await DraftStore.ClearAsync();
+                hasDraft = false;
+            }
+            else
+            {
+                await DraftStore.SaveAsync(draft);
+                hasDraft = true;
+            }
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            // Best-effort - don't surface auto-save failures to the user.
+        }
+    }
+
+    private void OnRowItemChanged(Row row, CatalogItem? item)
+    {
+        row.Item = item;
+        ScheduleSave();
+    }
+
+    private void AddSource()
+    {
+        sources.Add(new());
+        ScheduleSave();
+    }
+
+    private void RemoveSource(Row row)
+    {
+        sources.Remove(row);
+        if (sources.Count == 0) sources.Add(new());
+        ScheduleSave();
+    }
+
+    private void AddSink()
+    {
+        sinks.Add(new());
+        ScheduleSave();
+    }
+
+    private void RemoveSink(Row row)
+    {
+        sinks.Remove(row);
+        if (sinks.Count == 0) sinks.Add(new());
+        ScheduleSave();
+    }
+
+    private async Task DiscardDraft()
+    {
+        try
+        {
+            await DraftStore.ClearAsync();
+        }
+        catch (Exception)
+        {
+            // Ignore - UI reset below is still useful.
+        }
+        suppressSaveScheduling = true;
+        try
+        {
+            // "Revert to the server-saved state." Server-side plan loading
+            // isn't wired into this page yet (#77), so the server baseline
+            // is the empty editor.
+            sources = [new()];
+            sinks = [new()];
+            plan = null;
+            error = null;
+            hasDraft = false;
+        }
+        finally
+        {
+            suppressSaveScheduling = false;
+        }
+        Snackbar.Add("Draft discarded", Severity.Success);
+        StateHasChanged();
+    }
 
     private async Task Compute()
     {
@@ -448,6 +651,27 @@ else
         var invalid = Path.GetInvalidFileNameChars();
         var cleaned = new string(name.Select(c => invalid.Contains(c) ? '_' : c).ToArray()).Trim();
         return string.IsNullOrEmpty(cleaned) ? "plan" : cleaned;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (saveTimer is not null)
+        {
+            saveTimer.Stop();
+            saveTimer.Dispose();
+            saveTimer = null;
+        }
+        // Final synchronous-ish flush before the circuit goes away. The
+        // JS-side beforeunload handler covers tab-close; this covers
+        // server-side disposal (e.g. navigating away to another page).
+        try
+        {
+            await SaveDraftNowAsync();
+        }
+        catch
+        {
+            // Ignore - connection may already be gone.
+        }
     }
 
     private sealed class Row

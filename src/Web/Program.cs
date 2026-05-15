@@ -24,6 +24,9 @@ builder.Services.AddHttpClient<Web.PlannerApiClient>(client =>
         client.BaseAddress = new("https+http://apiservice");
     });
 
+// Per-circuit draft store backing #78's planner auto-save. Scoped because
+// IJSRuntime is scoped to the Blazor Server circuit (i.e. the user's tab).
+builder.Services.AddScoped<Web.PlannerDraftStore>();
 builder.Services.AddScoped<Web.SetupState>();
 
 var app = builder.Build();
@@ -79,3 +82,4 @@ app.MapRazorComponents<App>()
 app.MapDefaultEndpoints();
 
 app.Run();
+
