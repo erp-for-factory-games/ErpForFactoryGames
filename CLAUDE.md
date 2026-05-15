@@ -14,6 +14,11 @@ ERP-style production planner for the game *Satisfactory*. Primary objective:
 ## Build & run
 
 ```powershell
-dotnet build ERP.Satisfactory.sln
+git submodule update --init --recursive   # required after clone or `git worktree add`
+dotnet build ERP.Satisfactory.slnx
 dotnet run --project src/AppHost
 ```
+
+The repo has two submodules under `vendor/` (`SatisfactorySaveNet`, `CUE4Parse`).
+Worktrees do **not** auto-init submodules — run the command above whenever a fresh
+worktree or clone is created, or the solution will fail to build.
