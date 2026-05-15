@@ -1,12 +1,16 @@
 # SatisfactoryPakExtractor
 
-One-shot extractor that reads vanilla resource-node placements from a local
-Satisfactory install and emits the JSON dataset consumed by
-[`Satisfactory.Save.KnownResourceNodes`](../../src/Satisfactory/Save/KnownResourceNodes.cs).
+One-shot extractor that reads vanilla world-fixed placement data from a local
+Satisfactory install and emits the JSON datasets consumed by
+[`Satisfactory.Save.KnownResourceNodes`](../../src/Satisfactory/Save/KnownResourceNodes.cs)
+and [`Satisfactory.Save.KnownFlora`](../../src/Satisfactory/Save/KnownFlora.cs).
 
-Re-run after every game patch — Coffee Stain occasionally moves nodes.
+Re-run after every game patch — Coffee Stain occasionally moves nodes and
+shifts flora placements with biome rework.
 
 ## Run
+
+Resource nodes only:
 
 ```powershell
 dotnet run --project tools/SatisfactoryPakExtractor -- `
@@ -14,11 +18,35 @@ dotnet run --project tools/SatisfactoryPakExtractor -- `
     --out  src/Satisfactory/Save/Data/known-resource-nodes.json
 ```
 
+Flora only:
+
+```powershell
+dotnet run --project tools/SatisfactoryPakExtractor -- `
+    --paks "C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\FactoryGame\Content\Paks" `
+    --flora-out src/Satisfactory/Save/Data/known-flora.json
+```
+
+Both in one run (~3-minute mount + walk):
+
+```powershell
+dotnet run --project tools/SatisfactoryPakExtractor -- `
+    --paks "C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\FactoryGame\Content\Paks" `
+    --out       src/Satisfactory/Save/Data/known-resource-nodes.json `
+    --flora-out src/Satisfactory/Save/Data/known-flora.json
+```
+
 Options:
 - `--paks <dir>` — pak directory (required).
-- `--out <file>` — output JSON path (required).
+- `--out <file>` — resource-node JSON output path.
+- `--flora-out <file>` — flora JSON output path.
+- `--flora-explore` — dump an actor-class histogram instead of writing flora
+  JSON. Use this to refresh `FloraActorMap` in `Program.cs` if Coffee Stain
+  rename the plant BP classes in a future patch.
 - `--ue-version <EGame>` — override the UE5 version flag (default `GAME_UE5_6`).
-- `--verbose` / `-v` — extra diagnostics (top file extensions only).
+- `--verbose` / `-v` — extra diagnostics (top file extensions, per-package
+  skip reasons).
+
+At least one of `--out`, `--flora-out`, or `--flora-explore` is required.
 
 On first run it downloads `oodle-data-shared.dll` (Oodle decompressor) next
 to the binary — needed for UE5 chunk decompression. The DLL is **not**
@@ -73,6 +101,8 @@ Bumping the default may be needed after future patches; override with
 
 Against Satisfactory 1.x (build 444486) the extractor yields:
 
+### Resource nodes
+
 | Class                       | Count |
 | --------------------------- | ----- |
 | `BP_ResourceNode_C`         |   472 |
@@ -87,6 +117,30 @@ Purity split for mining nodes: ~25% Impure, ~45% Normal (inferred from
 elided default), ~30% Pure. Resource distribution skews toward Iron (128),
 Stone/Limestone (95), Coal (63), Water (63), Liquid Oil (58), Copper (56),
 Nitrogen (51).
+
+### Flora
+
+Plant actor placements (each plant is an individual actor — vanilla flora
+are **not** instanced foliage components, despite the issue #62 spike's
+initial guess):
+
+| BP class            | Placements | Species dropped                          |
+| ------------------- | ---------: | ---------------------------------------- |
+| `BP_BerryBush_C`    |      2,164 | `Desc_Berry_C` (Paleberry)               |
+| `BP_NutBush_C`      |      1,525 | `Desc_Nut_C` (Beryl Nut)                 |
+| `BP_Shroom_01_C`    |      1,615 | `Desc_Shroom_C` + `Desc_Mycelia_C`       |
+| **Total actors**    |      5,304 |                                          |
+| **JSON entries**    |      6,919 | (one entry per actor-species pair)       |
+
+Bacon Agaric (`BP_Shroom_01_C`) drops both Bacon Agaric and Mycelia in-game,
+so the extractor emits one entry per species — same coordinates, different
+`species`. The planner can then answer "where is Mycelia?" without a manual
+cross-reference.
+
+If a future game patch renames the plant BP classes, the extractor will
+silently emit zero flora entries. To diagnose, run `--flora-explore`: it
+walks every map and prints a histogram of all `BP_*` / `FG*` actor classes
+it saw. Update `FloraActorMap` in `Program.cs` to point at the new names.
 
 ## Project structure
 

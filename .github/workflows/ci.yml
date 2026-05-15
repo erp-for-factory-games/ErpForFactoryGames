@@ -93,6 +93,97 @@ jobs:
           if-no-files-found: warn
 
   # ---------------------------------------------------------------------------
+  # Migration drift guard (ADR-0018 follow-up, issue #81).
+  # Asserts both EF Core migration sets (SQLite + Postgres) are in sync with
+  # the current PlanDbContext model — `has-pending-model-changes` exits non-zero
+  # if a snapshot drifts. Runs in parallel with Build & Test for fast feedback.
+  # ---------------------------------------------------------------------------
+  migration-drift:
+    name: Migration drift (SQLite + Postgres)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize vendored SatisfactorySaveNet submodule
+        run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ubuntu-latest-nuget-${{ hashFiles('**/*.csproj', '**/global.json') }}
+          restore-keys: ubuntu-latest-nuget-
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          global-json-file: global.json
+
+      - name: Check migrations (both providers)
+        run: ./build.sh CheckMigrations
+
+  # ---------------------------------------------------------------------------
+  # Postgres runtime smoke (ADR-0018 follow-up, issue #81).
+  # Spins up postgres:16 via the GitHub Actions services block and runs
+  # `dotnet ef database update` against it — proves the Postgres migration
+  # actually applies. Non-zero exit fails the job.
+  # ---------------------------------------------------------------------------
+  postgres-smoke:
+    name: Postgres migration smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: plans
+        ports:
+          - 5432:5432
+        # Wait for Postgres to accept connections before the job's steps run.
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize vendored SatisfactorySaveNet submodule
+        run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ubuntu-latest-nuget-${{ hashFiles('**/*.csproj', '**/global.json') }}
+          restore-keys: ubuntu-latest-nuget-
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          global-json-file: global.json
+
+      - name: Apply Postgres migrations
+        env:
+          ERP_PERSISTENCE_CONNECTION: Host=localhost;Port=5432;Database=plans;Username=postgres;Password=postgres
+        run: ./build.sh MigrationsPostgresSmoke
+
+      - name: List applied tables (log only)
+        if: always()
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d plans -c "\dt" || true
+
+  # ---------------------------------------------------------------------------
   # Publish — surface TRX results to commit check + PR comment.
   # ---------------------------------------------------------------------------
   publish-test-results:
@@ -127,7 +218,7 @@ jobs:
   # ---------------------------------------------------------------------------
   release:
     name: Release
-    needs: [lint, build-and-test]
+    needs: [lint, build-and-test, migration-drift, postgres-smoke]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 15

@@ -1,13 +1,22 @@
-// Extracts vanilla resource-node placements (BP_ResourceNode_C and friends)
-// from Satisfactory's shipped pak/utoc archive, emitting the curated dataset
-// consumed by src/Satisfactory/Save/Data/known-resource-nodes.json.
+// Extracts vanilla world-fixed data from Satisfactory's shipped pak/utoc
+// archives, emitting curated datasets consumed by Satisfactory.Save.
 //
-// Run:
-//   dotnet run --project tools/SatisfactoryPakExtractor -- \
-//       --paks "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Satisfactory\\FactoryGame\\Content\\Paks" \
-//       --out  src/Satisfactory/Save/Data/known-resource-nodes.json
+// Two extraction modes (either or both may be enabled in one run):
 //
-// Re-run after every game patch — Coffee Stain occasionally moves nodes.
+//   Resource nodes (BP_ResourceNode_C / BP_FrackingCore_C / BP_FrackingSatellite_C /
+//   BP_ResourceNodeGeyser_C placements):
+//     dotnet run --project tools/SatisfactoryPakExtractor -- \
+//         --paks "C:\\...\\FactoryGame\\Content\\Paks" \
+//         --out  src/Satisfactory/Save/Data/known-resource-nodes.json
+//
+//   Flora (BP_BerryBush_C / BP_NutBush_C / BP_Shroom_01_C placement actors —
+//   Paleberry / Beryl Nut / Bacon Agaric / Mycelia):
+//     dotnet run --project tools/SatisfactoryPakExtractor -- \
+//         --paks "C:\\...\\FactoryGame\\Content\\Paks" \
+//         --flora-out src/Satisfactory/Save/Data/known-flora.json
+//
+// Re-run after every game patch — Coffee Stain occasionally moves placements
+// and the foliage layout shifts with biome rework.
 
 using System.Text.Json;
 using Serilog;
@@ -36,11 +45,30 @@ internal static class Program
         "BP_FrackingSatellite_C",
     };
 
+    // BP class -> harvested-item ItemId(s). Vanilla flora are individual
+    // placement actors (NOT instanced foliage components, despite the issue
+    // #62 spike's initial guess — verified against Satisfactory 1.x build
+    // 444486 by running `--flora-explore` and observing the actor classes
+    // logged by CUE4Parse). Each plant actor drops one or more pickup items
+    // when harvested; we emit one JSON entry per (actor, species) pair.
+    //
+    // BP_Shroom_01_C drops both Bacon Agaric *and* Mycelia, so we emit it as
+    // both species — same XYZ, different species — so the planner can answer
+    // "where can I find Mycelia?" without a manual cross-reference.
+    private static readonly Dictionary<string, string[]> FloraActorMap = new(StringComparer.Ordinal)
+    {
+        ["BP_BerryBush_C"] = ["Desc_Berry_C"],
+        ["BP_NutBush_C"] = ["Desc_Nut_C"],
+        ["BP_Shroom_01_C"] = ["Desc_Shroom_C", "Desc_Mycelia_C"],
+    };
+
     private static int Main(string[] args)
     {
         string? paksDir = null;
         string? outPath = null;
+        string? floraOutPath = null;
         var verbose = false;
+        var floraExplore = false;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -52,6 +80,12 @@ internal static class Program
                 case "--out" when i + 1 < args.Length:
                     outPath = args[++i];
                     break;
+                case "--flora-out" when i + 1 < args.Length:
+                    floraOutPath = args[++i];
+                    break;
+                case "--flora-explore":
+                    floraExplore = true;
+                    break;
                 case "--verbose" or "-v":
                     verbose = true;
                     break;
@@ -61,8 +95,15 @@ internal static class Program
             }
         }
 
-        if (string.IsNullOrEmpty(paksDir) || string.IsNullOrEmpty(outPath))
+        if (string.IsNullOrEmpty(paksDir))
         {
+            PrintUsage();
+            return 1;
+        }
+
+        if (string.IsNullOrEmpty(outPath) && string.IsNullOrEmpty(floraOutPath) && !floraExplore)
+        {
+            Console.Error.WriteLine("Specify at least one of --out, --flora-out, or --flora-explore.");
             PrintUsage();
             return 1;
         }
@@ -192,10 +233,23 @@ internal static class Program
 
         Console.WriteLine($"Candidate map files: {mapFiles.Count}");
 
+        var doNodes = !string.IsNullOrEmpty(outPath);
+        var doFlora = !string.IsNullOrEmpty(floraOutPath) || floraExplore;
+
         var entries = new List<JsonEntry>();
         var classCounts = new Dictionary<string, int>(StringComparer.Ordinal);
         var skippedPackages = 0;
         var mapsWithHits = 0;
+
+        // Flora state
+        var floraEntries = new List<FloraJsonEntry>();
+        var floraSpeciesCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        var floraActorCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        // Exploration mode: histogram of every actor class name seen, so
+        // future-Chris can refresh FloraActorMap if Coffee Stain rename the
+        // BP classes in a future game patch.
+        var actorClassHistogram = new Dictionary<string, int>(StringComparer.Ordinal);
+        var floraMapsWithHits = 0;
 
         foreach (var path in mapFiles)
         {
@@ -204,70 +258,112 @@ internal static class Program
                 if (!provider.TryLoadPackage(path, out var package) || package is null) continue;
 
                 var hitsBefore = entries.Count;
+                var floraHitsBefore = floraEntries.Count;
 
                 foreach (var export in package.GetExports())
                 {
                     if (export is null) continue;
 
                     var className = export.ExportType;
-                    if (string.IsNullOrEmpty(className) || !ResourceNodeClasses.Contains(className))
+
+                    if (doNodes && !string.IsNullOrEmpty(className) && ResourceNodeClasses.Contains(className))
                     {
-                        continue;
+                        // Class-default-object (CDO) exports appear under names
+                        // starting with "Default__"; we want placement instances.
+                        if (export.Name?.StartsWith("Default__", StringComparison.Ordinal) ?? false)
+                        {
+                            // skip CDO
+                        }
+                        else
+                        {
+                            var transform = TryReadWorldTransform(export);
+                            if (transform is not null)
+                            {
+                                var resource = TryReadResourceClassName(export);
+                                var purity = TryReadPurity(export);
+                                if (!string.IsNullOrEmpty(purity))
+                                {
+                                    _explicitPurityCounts[purity] = _explicitPurityCounts.GetValueOrDefault(purity) + 1;
+                                }
+
+                                // UE elides serialized properties that match the BP
+                                // archetype default. Empirically (Satisfactory 1.x),
+                                // resource-node placements only carry mPurity when it
+                                // differs from the default, and the only values that
+                                // appear in the data are Impure and Pure — the BP CDO
+                                // sets Normal as the default. Anything missing is Normal.
+                                if (string.IsNullOrEmpty(purity)
+                                    && (className == "BP_ResourceNode_C"
+                                        || className == "BP_ResourceNodeGeyser_C"
+                                        || className == "BP_FrackingCore_C"
+                                        || className == "BP_FrackingSatellite_C"))
+                                {
+                                    purity = "Normal";
+                                }
+
+                                // BP_ResourceNodeGeyser_C always emits Geothermal "power".
+                                // Recorded as Desc_Geyser_C for parity with other entries.
+                                if (string.IsNullOrEmpty(resource) && className == "BP_ResourceNodeGeyser_C")
+                                {
+                                    resource = "Desc_Geyser_C";
+                                }
+
+                                entries.Add(new JsonEntry
+                                {
+                                    X = transform.Value.x,
+                                    Y = transform.Value.y,
+                                    Z = transform.Value.z,
+                                    Resource = resource,
+                                    Purity = purity,
+                                    Class = className,
+                                });
+
+                                classCounts[className] = classCounts.GetValueOrDefault(className) + 1;
+                            }
+                        }
                     }
 
-                    // Class-default-object (CDO) exports appear under names
-                    // starting with "Default__"; we want placement instances.
-                    if (export.Name?.StartsWith("Default__", StringComparison.Ordinal) ?? false)
+                    // Flora — walk placement actors of known plant BP classes.
+                    // Each actor's RootComponent carries the world transform,
+                    // same pattern as the resource-node walker. One actor per
+                    // plant; we emit one JSON entry per (actor, species) pair
+                    // — BP_Shroom_01_C drops two species so contributes two
+                    // entries per placement.
+                    if (doFlora && !string.IsNullOrEmpty(className))
                     {
-                        continue;
+                        // Class-default-object exports start with Default__.
+                        var isCdo = export.Name?.StartsWith("Default__", StringComparison.Ordinal) ?? false;
+                        if (floraExplore && !isCdo
+                            && (className.StartsWith("BP_", StringComparison.Ordinal)
+                                || className.StartsWith("FG", StringComparison.Ordinal)))
+                        {
+                            actorClassHistogram[className] = actorClassHistogram.GetValueOrDefault(className) + 1;
+                        }
+
+                        if (!isCdo && FloraActorMap.TryGetValue(className, out var speciesList))
+                        {
+                            var transform = TryReadWorldTransform(export);
+                            if (transform is not null)
+                            {
+                                floraActorCounts[className] = floraActorCounts.GetValueOrDefault(className) + 1;
+                                foreach (var species in speciesList)
+                                {
+                                    floraEntries.Add(new FloraJsonEntry
+                                    {
+                                        X = transform.Value.x,
+                                        Y = transform.Value.y,
+                                        Z = transform.Value.z,
+                                        Species = species,
+                                    });
+                                    floraSpeciesCounts[species] = floraSpeciesCounts.GetValueOrDefault(species) + 1;
+                                }
+                            }
+                        }
                     }
-
-                    var transform = TryReadWorldTransform(export);
-                    if (transform is null) continue;
-
-                    var resource = TryReadResourceClassName(export);
-                    var purity = TryReadPurity(export);
-                    if (!string.IsNullOrEmpty(purity))
-                    {
-                        _explicitPurityCounts[purity] = _explicitPurityCounts.GetValueOrDefault(purity) + 1;
-                    }
-
-                    // UE elides serialized properties that match the BP
-                    // archetype default. Empirically (Satisfactory 1.x),
-                    // resource-node placements only carry mPurity when it
-                    // differs from the default, and the only values that
-                    // appear in the data are Impure and Pure — the BP CDO
-                    // sets Normal as the default. Anything missing is Normal.
-                    if (string.IsNullOrEmpty(purity)
-                        && (className == "BP_ResourceNode_C"
-                            || className == "BP_ResourceNodeGeyser_C"
-                            || className == "BP_FrackingCore_C"
-                            || className == "BP_FrackingSatellite_C"))
-                    {
-                        purity = "Normal";
-                    }
-
-                    // BP_ResourceNodeGeyser_C always emits Geothermal "power".
-                    // Recorded as Desc_Geyser_C for parity with other entries.
-                    if (string.IsNullOrEmpty(resource) && className == "BP_ResourceNodeGeyser_C")
-                    {
-                        resource = "Desc_Geyser_C";
-                    }
-
-                    entries.Add(new JsonEntry
-                    {
-                        X = transform.Value.x,
-                        Y = transform.Value.y,
-                        Z = transform.Value.z,
-                        Resource = resource,
-                        Purity = purity,
-                        Class = className,
-                    });
-
-                    classCounts[className] = classCounts.GetValueOrDefault(className) + 1;
                 }
 
                 if (entries.Count > hitsBefore) mapsWithHits++;
+                if (floraEntries.Count > floraHitsBefore) floraMapsWithHits++;
             }
             catch (Exception ex)
             {
@@ -279,43 +375,84 @@ internal static class Program
             }
         }
 
-        Console.WriteLine();
-        Console.WriteLine($"Maps with placements: {mapsWithHits}");
-        Console.WriteLine($"Skipped on error:     {skippedPackages}");
-        Console.WriteLine($"Total placements:     {entries.Count}");
-        Console.WriteLine();
-        Console.WriteLine("Class counts:");
-        foreach (var kvp in classCounts.OrderBy(k => k.Key, StringComparer.Ordinal))
+        if (doNodes)
         {
-            Console.WriteLine($"  {kvp.Key,-32} {kvp.Value}");
+            Console.WriteLine();
+            Console.WriteLine($"Maps with placements: {mapsWithHits}");
+            Console.WriteLine($"Skipped on error:     {skippedPackages}");
+            Console.WriteLine($"Total placements:     {entries.Count}");
+            Console.WriteLine();
+            Console.WriteLine("Class counts:");
+            foreach (var kvp in classCounts.OrderBy(k => k.Key, StringComparer.Ordinal))
+            {
+                Console.WriteLine($"  {kvp.Key,-32} {kvp.Value}");
+            }
+
+            // Diagnostic: how many of the entries carry a resolved purity/resource.
+            var resolvedResource = entries.Count(e => !string.IsNullOrEmpty(e.Resource));
+            var resolvedPurity = entries.Count(e => !string.IsNullOrEmpty(e.Purity));
+            Console.WriteLine();
+            Console.WriteLine($"Entries with resource:  {resolvedResource}/{entries.Count}");
+            Console.WriteLine($"Entries with purity:    {resolvedPurity}/{entries.Count}");
+            if (_unmappedPurityNames.Count > 0)
+            {
+                Console.WriteLine("Unmapped purity FNames:");
+                foreach (var kvp in _unmappedPurityNames.OrderByDescending(k => k.Value))
+                {
+                    Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
+                }
+            }
+            if (_explicitPurityCounts.Count > 0)
+            {
+                Console.WriteLine("Explicit purity reads (pre-inference):");
+                foreach (var kvp in _explicitPurityCounts.OrderByDescending(k => k.Value))
+                {
+                    Console.WriteLine($"  {kvp.Key,-10} {kvp.Value}");
+                }
+            }
+
+            var wrote = WriteJson(outPath!, entries);
+            Console.WriteLine();
+            Console.WriteLine($"Wrote {wrote} entries to {outPath} (filtered from {entries.Count}; deposits + no-resource entries dropped).");
         }
 
-        // Diagnostic: how many of the entries carry a resolved purity/resource.
-        var resolvedResource = entries.Count(e => !string.IsNullOrEmpty(e.Resource));
-        var resolvedPurity = entries.Count(e => !string.IsNullOrEmpty(e.Purity));
-        Console.WriteLine();
-        Console.WriteLine($"Entries with resource:  {resolvedResource}/{entries.Count}");
-        Console.WriteLine($"Entries with purity:    {resolvedPurity}/{entries.Count}");
-        if (_unmappedPurityNames.Count > 0)
+        if (doFlora)
         {
-            Console.WriteLine("Unmapped purity FNames:");
-            foreach (var kvp in _unmappedPurityNames.OrderByDescending(k => k.Value))
+            Console.WriteLine();
+            Console.WriteLine($"Flora maps with hits:  {floraMapsWithHits}");
+            Console.WriteLine($"Flora actor placements: {floraActorCounts.Values.Sum()}");
+            Console.WriteLine($"Flora JSON entries:    {floraEntries.Count} (one per actor-species pair)");
+            Console.WriteLine();
+            Console.WriteLine("Flora actor counts:");
+            foreach (var kvp in floraActorCounts.OrderBy(k => k.Key, StringComparer.Ordinal))
             {
-                Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
+                Console.WriteLine($"  {kvp.Key,-32} {kvp.Value}");
             }
-        }
-        if (_explicitPurityCounts.Count > 0)
-        {
-            Console.WriteLine("Explicit purity reads (pre-inference):");
-            foreach (var kvp in _explicitPurityCounts.OrderByDescending(k => k.Value))
+            Console.WriteLine();
+            Console.WriteLine("Flora species counts:");
+            foreach (var kvp in floraSpeciesCounts.OrderBy(k => k.Key, StringComparer.Ordinal))
             {
-                Console.WriteLine($"  {kvp.Key,-10} {kvp.Value}");
+                Console.WriteLine($"  {kvp.Key,-24} {kvp.Value}");
+            }
+
+            if (floraExplore)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"Actor-class histogram (top 80 of {actorClassHistogram.Count} distinct):");
+                foreach (var kvp in actorClassHistogram.OrderByDescending(k => k.Value).Take(80))
+                {
+                    Console.WriteLine($"  {kvp.Value,-8} {kvp.Key}");
+                }
+            }
+
+            if (!string.IsNullOrEmpty(floraOutPath))
+            {
+                var wroteFlora = WriteFloraJson(floraOutPath!, floraEntries);
+                Console.WriteLine();
+                Console.WriteLine($"Wrote {wroteFlora} flora entries to {floraOutPath}.");
             }
         }
 
-        var wrote = WriteJson(outPath!, entries);
-        Console.WriteLine();
-        Console.WriteLine($"Wrote {wrote} entries to {outPath} (filtered from {entries.Count}; deposits + no-resource entries dropped).");
         return 0;
     }
 
@@ -493,6 +630,47 @@ internal static class Program
         return sorted.Count;
     }
 
+    private static int WriteFloraJson(string path, List<FloraJsonEntry> entries)
+    {
+        // Coordinates come straight from PerInstanceSMData; same cm units
+        // as the resource-node dataset. De-duplicate near-identical instances
+        // (foliage tooling occasionally re-emits the same instance into both
+        // a level and its world-partition cell — drops ~0% in practice but
+        // keeps the dataset clean if it ever does happen).
+        var seen = new HashSet<(long x, long y, long z, string species)>();
+        var sorted = entries
+            .OrderBy(e => e.Species, StringComparer.Ordinal)
+            .ThenBy(e => e.X)
+            .ThenBy(e => e.Y)
+            .ThenBy(e => e.Z)
+            .Where(e =>
+            {
+                // Dedup at 1 cm resolution.
+                var key = ((long)Math.Round(e.X), (long)Math.Round(e.Y), (long)Math.Round(e.Z), e.Species);
+                return seen.Add(key);
+            })
+            .ToList();
+
+        var dir = Path.GetDirectoryName(Path.GetFullPath(path));
+        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+
+        using var fs = File.Create(path);
+        using var writer = new Utf8JsonWriter(fs, new JsonWriterOptions { Indented = true });
+        writer.WriteStartArray();
+        foreach (var e in sorted)
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("x", Math.Round(e.X, 2));
+            writer.WriteNumber("y", Math.Round(e.Y, 2));
+            writer.WriteNumber("z", Math.Round(e.Z, 2));
+            writer.WriteString("species", e.Species);
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+        writer.Flush();
+        return sorted.Count;
+    }
+
     private static EGame GetUeVersionArg(string[] args, EGame fallback)
     {
         for (var i = 0; i < args.Length - 1; i++)
@@ -510,9 +688,16 @@ internal static class Program
         Console.WriteLine("Usage:");
         Console.WriteLine("  dotnet run --project tools/SatisfactoryPakExtractor -- \\");
         Console.WriteLine("    --paks <path-to-FactoryGame/Content/Paks> \\");
-        Console.WriteLine("    --out  <output-json>");
+        Console.WriteLine("    [--out          <resource-nodes-json>] \\");
+        Console.WriteLine("    [--flora-out    <flora-json>] \\");
+        Console.WriteLine("    [--flora-explore]");
+        Console.WriteLine();
+        Console.WriteLine("  At least one of --out, --flora-out, or --flora-explore is required.");
+        Console.WriteLine();
         Console.WriteLine("  Flags:");
         Console.WriteLine("    --verbose / -v   Print per-package skip reasons.");
+        Console.WriteLine("    --flora-explore  Dump mesh-path histogram (for refreshing FloraMeshMap).");
+        Console.WriteLine("    --ue-version <EGame>  Override the CUE4Parse UE version flag (default GAME_UE5_6).");
     }
 
     private sealed class JsonEntry
@@ -523,5 +708,13 @@ internal static class Program
         public string? Resource { get; init; }
         public string? Purity { get; init; }
         public string Class { get; init; } = string.Empty;
+    }
+
+    private sealed class FloraJsonEntry
+    {
+        public double X { get; init; }
+        public double Y { get; init; }
+        public double Z { get; init; }
+        public string Species { get; init; } = string.Empty;
     }
 }

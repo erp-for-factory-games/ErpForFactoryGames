@@ -128,6 +128,114 @@ class Build : NukeBuild
             Log.Information("TRX results written to {Dir} (Web.UiTests excluded — run `./build.sh Test` locally to include them)", TestResultsDirectory);
         });
 
+    // -------------------------------------------------------------------------
+    // Migration-drift guard (ADR-0018 follow-up, issue #81).
+    //
+    // Dual-provider EF Core means two migration sets that must each match the
+    // current `PlanDbContext` model. `dotnet ef migrations has-pending-model-changes`
+    // exits non-zero when the snapshot is out of date — perfect for CI.
+    //
+    // Runs for both SqlitePlanDbContext and PostgresPlanDbContext. The Postgres
+    // design-time factory requires a connection-string env var (the connection
+    // isn't actually opened for `has-pending-model-changes`, but the factory
+    // refuses to construct without it).
+    // -------------------------------------------------------------------------
+    Target CheckMigrations => _ => _
+        .Description("Verifies both EF Core migration sets (SQLite + Postgres) are in sync with the current model.")
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            // Tool restore is idempotent — pulls dotnet-ef from .config/dotnet-tools.json.
+            DotNet("tool restore", workingDirectory: RootDirectory, logOutput: false);
+
+            var persistenceProject = RootDirectory / "src" / "ERP" / "Infrastructure" / "Persistence";
+            var startupProject = RootDirectory / "src" / "ApiService";
+
+            void Check(string contextName, params (string Key, string Value)[] extraEnv)
+            {
+                Log.Information("Checking pending model changes for {Context}", contextName);
+                // --configuration matches what Compile produced so --no-build can find
+                // the right bin/<Configuration>/net10.0/ApiService.deps.json. Without
+                // this, ef defaults to Debug while CI builds Release and the lookup fails.
+                var args = $"ef migrations has-pending-model-changes " +
+                           $"--project \"{persistenceProject}\" " +
+                           $"--startup-project \"{startupProject}\" " +
+                           $"--context {contextName} " +
+                           $"--configuration {Configuration} " +
+                           $"--no-build";
+
+                var env = new Dictionary<string, string>(EnvironmentInfo.Variables);
+                foreach (var (k, v) in extraEnv) env[k] = v;
+
+                var process = ProcessTasks.StartProcess(
+                    "dotnet",
+                    args,
+                    workingDirectory: RootDirectory,
+                    environmentVariables: env);
+                process.AssertZeroExitCode();
+                Log.Information("{Context}: migration snapshot is in sync.", contextName);
+            }
+
+            Check("SqlitePlanDbContext");
+
+            // Placeholder connection string — design-time factory only validates
+            // that it's set, it never opens the connection for this command.
+            Check("PostgresPlanDbContext",
+                ("ERP_PERSISTENCE_CONNECTION", "Host=localhost;Database=plans;Username=postgres;Password=placeholder"));
+        });
+
+    // -------------------------------------------------------------------------
+    // Postgres runtime smoke (ADR-0018 follow-up, issue #81).
+    //
+    // Applies the Postgres migration set against a real Postgres instance and
+    // asserts the schema creates successfully. In CI this runs inside a job
+    // with a `postgres:16` services container; locally you point it at any
+    // reachable Postgres via the standard env vars.
+    //
+    // Requires:
+    //   ERP_PERSISTENCE_CONNECTION = Npgsql connection string to a live DB.
+    // -------------------------------------------------------------------------
+    Target MigrationsPostgresSmoke => _ => _
+        .Description("Applies the Postgres migration set against a live database. Requires ERP_PERSISTENCE_CONNECTION.")
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            var conn = Environment.GetEnvironmentVariable("ERP_PERSISTENCE_CONNECTION");
+            if (string.IsNullOrWhiteSpace(conn))
+            {
+                throw new InvalidOperationException(
+                    "MigrationsPostgresSmoke requires ERP_PERSISTENCE_CONNECTION pointing at a live Postgres. " +
+                    "Locally: `docker run --rm -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16` then " +
+                    "set ERP_PERSISTENCE_CONNECTION=Host=localhost;Database=plans;Username=postgres;Password=postgres.");
+            }
+
+            DotNet("tool restore", workingDirectory: RootDirectory, logOutput: false);
+
+            var persistenceProject = RootDirectory / "src" / "ERP" / "Infrastructure" / "Persistence";
+            var startupProject = RootDirectory / "src" / "ApiService";
+
+            var env = new Dictionary<string, string>(EnvironmentInfo.Variables)
+            {
+                ["ERP_PERSISTENCE_CONNECTION"] = conn,
+            };
+
+            var args = $"ef database update " +
+                       $"--project \"{persistenceProject}\" " +
+                       $"--startup-project \"{startupProject}\" " +
+                       $"--context PostgresPlanDbContext " +
+                       $"--configuration {Configuration} " +
+                       $"--no-build";
+
+            var process = ProcessTasks.StartProcess(
+                "dotnet",
+                args,
+                workingDirectory: RootDirectory,
+                environmentVariables: env);
+            process.AssertZeroExitCode();
+            Log.Information("Postgres migration applied successfully against {Conn}",
+                System.Text.RegularExpressions.Regex.Replace(conn, "Password=[^;]*", "Password=***"));
+        });
+
     Target ComputeVersion => _ => _
         .Description("Reads the Nerdbank.GitVersioning version (SemVer2) and prints it.")
         .Executes(() =>

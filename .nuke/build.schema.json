@@ -24,11 +24,13 @@
     "ExecutableTarget": {
       "type": "string",
       "enum": [
+        "CheckMigrations",
         "Clean",
         "Compile",
         "ComputeVersion",
         "Format",
         "InstallPlaywrightBrowsers",
+        "MigrationsPostgresSmoke",
         "Release",
         "Restore",
         "Test",

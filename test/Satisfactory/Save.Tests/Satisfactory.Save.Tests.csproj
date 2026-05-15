@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\..\src\Satisfactory\Save\Satisfactory.Save.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Fixtures\**\*.sav" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -92,5 +92,71 @@ base `PlanDbContext` service type so repositories (`PlanRepository`,
 
 - The existing in-memory plan storage is NOT migrated to this layer yet —
   that's a separate task (likely the next phase of issue #12).
-- Add a CI check that `dotnet ef migrations has-pending-model-changes` is
-  clean for both contexts.
+- ~~Add a CI check that `dotnet ef migrations has-pending-model-changes` is
+  clean for both contexts.~~ Done in issue #81 — see _CI guards_ below.
+
+## CI guards (issue #81)
+
+Two CI jobs protect the dual-provider migration setup:
+
+1. **Migration drift** — `.github/workflows/ci.yml :: migration-drift` runs the
+   Nuke `CheckMigrations` target, which calls
+   `dotnet ef migrations has-pending-model-changes` for both
+   `SqlitePlanDbContext` and `PostgresPlanDbContext`. If the model changes
+   without the matching `migrations add` running for either provider, the job
+   fails. The Postgres design-time factory requires a connection-string env
+   var even though `has-pending-model-changes` never opens the connection — a
+   placeholder is good enough.
+2. **Postgres runtime smoke** — `.github/workflows/ci.yml :: postgres-smoke`
+   spins up `postgres:16` via the GitHub Actions `services` block and runs
+   `dotnet ef database update` against it. Proves the migration generated for
+   Postgres actually applies.
+
+`dotnet-ef` is pinned in `.config/dotnet-tools.json` so CI gets a reproducible
+version regardless of what's globally installed on the runner.
+
+### Running the guards locally
+
+PowerShell (Windows), bash equivalents are obvious:
+
+```powershell
+# 1) Drift guard — both providers. No external services needed; the Postgres
+#    factory only wants a connection string, it never opens the connection.
+$env:ERP_PERSISTENCE_CONNECTION = 'Host=localhost;Database=plans;Username=postgres;Password=placeholder'
+./build.ps1 CheckMigrations
+
+# 2) Postgres runtime smoke — needs a live Postgres. Easiest: Docker.
+docker run --rm -d --name pg-smoke `
+    -e POSTGRES_PASSWORD=postgres `
+    -e POSTGRES_DB=plans `
+    -p 5432:5432 postgres:16
+
+$env:ERP_PERSISTENCE_CONNECTION = 'Host=localhost;Database=plans;Username=postgres;Password=postgres'
+./build.ps1 MigrationsPostgresSmoke
+
+docker stop pg-smoke
+```
+
+The underlying raw `dotnet ef` invocations (if you want to run them directly):
+
+```powershell
+# Drift, SQLite
+dotnet ef migrations has-pending-model-changes `
+    --project src/ERP/Infrastructure/Persistence `
+    --startup-project src/ApiService `
+    --context SqlitePlanDbContext
+
+# Drift, Postgres
+$env:ERP_PERSISTENCE_CONNECTION = 'Host=localhost;Database=plans;Username=postgres;Password=placeholder'
+dotnet ef migrations has-pending-model-changes `
+    --project src/ERP/Infrastructure/Persistence `
+    --startup-project src/ApiService `
+    --context PostgresPlanDbContext
+
+# Apply Postgres schema to a live DB
+$env:ERP_PERSISTENCE_CONNECTION = 'Host=localhost;Database=plans;Username=postgres;Password=postgres'
+dotnet ef database update `
+    --project src/ERP/Infrastructure/Persistence `
+    --startup-project src/ApiService `
+    --context PostgresPlanDbContext
+```
