@@ -38,6 +38,9 @@
   <Folder Name="/test/ERP/Domain.Tests/">
     <Project Path="test/ERP/Domain.Tests/ERP.Domain.Tests.csproj" />
   </Folder>
+  <Folder Name="/test/ERP/Persistence.Tests/">
+    <Project Path="test/ERP/Persistence.Tests/ERP.Infrastructure.Persistence.Tests.csproj" />
+  </Folder>
   <Folder Name="/test/Satisfactory/" />
   <Folder Name="/test/Satisfactory/Catalog.Tests/">
     <Project Path="test/Satisfactory/Catalog.Tests/Satisfactory.Catalog.Tests.csproj" />

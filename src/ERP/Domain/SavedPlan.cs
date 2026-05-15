@@ -19,10 +19,25 @@ namespace ERP.Domain;
 /// </summary>
 public sealed class SavedPlan
 {
+    // Backing lists are concrete `List<T>` so EF Core (with PropertyAccessMode.Property)
+    // can hydrate them on materialisation by Adding into the collection in place.
+    // The public API still exposes `IReadOnlyList<T>` to keep callers honest about
+    // not mutating the aggregate's children outside its methods.
+    private List<ProductionTarget> _targets = [];
+    private List<ResourceAvailability> _available = [];
+
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
-    public IReadOnlyList<ProductionTarget> Targets { get; private set; } = [];
-    public IReadOnlyList<ResourceAvailability> Available { get; private set; } = [];
+    public IReadOnlyList<ProductionTarget> Targets
+    {
+        get => _targets;
+        private set => _targets = value is List<ProductionTarget> list ? list : [.. value];
+    }
+    public IReadOnlyList<ResourceAvailability> Available
+    {
+        get => _available;
+        private set => _available = value is List<ResourceAvailability> list ? list : [.. value];
+    }
     public DateTime CreatedUtc { get; private set; }
     public DateTime UpdatedUtc { get; private set; }
 

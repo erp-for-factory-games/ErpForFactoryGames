@@ -3,35 +3,43 @@ using System;
 using ERP.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace ERP.Infrastructure.Persistence.Migrations.Sqlite
+namespace ERP.Infrastructure.Persistence.Migrations.Postgres
 {
-    [DbContext(typeof(SqlitePlanDbContext))]
-    partial class SqlitePlanDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(PostgresPlanDbContext))]
+    [Migration("20260515093339_SwitchOwnedCollectionsToJson")]
+    partial class SwitchOwnedCollectionsToJson
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("ERP.Domain.SavedPlan", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime>("UpdatedUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -45,7 +53,7 @@ namespace ERP.Infrastructure.Persistence.Migrations.Sqlite
                             b1.Property<Guid>("SavedPlanId");
 
                             b1.Property<int>("__synthesizedOrdinal")
-                                .ValueGeneratedOnAddOrUpdate();
+                                .ValueGeneratedOnAdd();
 
                             b1.Property<string>("Item")
                                 .IsRequired();
@@ -68,7 +76,7 @@ namespace ERP.Infrastructure.Persistence.Migrations.Sqlite
                             b1.Property<Guid>("SavedPlanId");
 
                             b1.Property<int>("__synthesizedOrdinal")
-                                .ValueGeneratedOnAddOrUpdate();
+                                .ValueGeneratedOnAdd();
 
                             b1.Property<string>("Item")
                                 .IsRequired();

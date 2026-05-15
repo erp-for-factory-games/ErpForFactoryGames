@@ -13,6 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Expose internal types (PlanRepository, internal helpers) to the
+         integration test project so tests can exercise the EF implementation
+         directly without going through DI. -->
+    <InternalsVisibleTo Include="ERP.Infrastructure.Persistence.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!--
       Dual-provider EF Core setup (ADR-0018, issue #12 phase 2).
       SQLite is the default for OSS / single-user / dev. Postgres is available

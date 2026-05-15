@@ -47,58 +47,48 @@ namespace ERP.Infrastructure.Persistence.Migrations.Postgres
                 {
                     b.OwnsMany("ERP.Domain.ProductionTarget", "Targets", b1 =>
                         {
-                            b1.Property<Guid>("PlanId")
-                                .HasColumnType("uuid");
+                            b1.Property<Guid>("SavedPlanId");
 
-                            b1.Property<int>("Ordinal")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("integer");
-
-                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Ordinal"));
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
 
                             b1.Property<string>("Item")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("ItemId");
+                                .IsRequired();
 
                             b1.Property<decimal>("ItemsPerMinute")
                                 .HasColumnType("decimal(18,4)");
 
-                            b1.HasKey("PlanId", "Ordinal");
+                            b1.HasKey("SavedPlanId", "__synthesizedOrdinal");
 
-                            b1.ToTable("PlanTargets", (string)null);
+                            b1.ToTable("Plans");
+
+                            b1.ToJson("Targets");
 
                             b1.WithOwner()
-                                .HasForeignKey("PlanId");
+                                .HasForeignKey("SavedPlanId");
                         });
 
                     b.OwnsMany("ERP.Domain.ResourceAvailability", "Available", b1 =>
                         {
-                            b1.Property<Guid>("PlanId")
-                                .HasColumnType("uuid");
+                            b1.Property<Guid>("SavedPlanId");
 
-                            b1.Property<int>("Ordinal")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("integer");
-
-                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Ordinal"));
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
 
                             b1.Property<string>("Item")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("ItemId");
+                                .IsRequired();
 
                             b1.Property<decimal>("ItemsPerMinute")
                                 .HasColumnType("decimal(18,4)");
 
-                            b1.HasKey("PlanId", "Ordinal");
+                            b1.HasKey("SavedPlanId", "__synthesizedOrdinal");
 
-                            b1.ToTable("PlanAvailability", (string)null);
+                            b1.ToTable("Plans");
+
+                            b1.ToJson("Available");
 
                             b1.WithOwner()
-                                .HasForeignKey("PlanId");
+                                .HasForeignKey("SavedPlanId");
                         });
 
                     b.Navigation("Available");

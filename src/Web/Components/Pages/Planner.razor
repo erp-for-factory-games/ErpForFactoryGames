@@ -15,6 +15,43 @@
 
 <p>Pick what you have on hand (sources) and what you want to produce (sinks). The planner expands recipes backwards and tells you how many buildings of each type you need.</p>
 
+<MudPaper Class="pa-3 mb-3" Outlined="true">
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <MudText Typo="Typo.subtitle1" Class="mr-2">Saved plans</MudText>
+        <MudSelect T="Guid?" Value="@selectedSavedPlanId" ValueChanged="OnSavedPlanSelected"
+                   Placeholder="@(savedPlans.Count == 0 ? "(none saved yet)" : "Load a saved plan...")"
+                   Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true"
+                   Style="min-width: 18rem;" Clearable="true">
+            @foreach (var p in savedPlans)
+            {
+                <MudSelectItem T="Guid?" Value="@((Guid?)p.Id)">@p.Name (@p.UpdatedUtc.ToLocalTime().ToString("g"))</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTextField T="string" @bind-Value="planName"
+                      Placeholder="Plan name"
+                      Variant="Variant.Outlined" Margin="Margin.Dense"
+                      Style="min-width: 14rem;" />
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveCurrent" Disabled="@isSaving">
+            @(selectedSavedPlanId is null ? "Save as new" : "Update")
+        </MudButton>
+        @if (selectedSavedPlanId is not null)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteCurrent" Disabled="@isSaving">
+                Delete
+            </MudButton>
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.NoteAdd"
+                       OnClick="NewPlan">
+                New
+            </MudButton>
+        }
+    </div>
+</MudPaper>
+
 @if (status is { IsLoaded: false })
 {
     <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3">
@@ -301,6 +338,11 @@ else
     private Guid planId = Guid.NewGuid();
     private DateTime planCreatedUtc = DateTime.UtcNow;
 
+    // Saved plans state (#77)
+    private List<SavedPlanSummary> savedPlans = [];
+    private Guid? selectedSavedPlanId;
+    private bool isSaving;
+
     // Auto-save (#78). Debounce timer collapses bursts of edits into a
     // single LocalStorage write; we also stage the latest snapshot on every
     // edit so the JS-side beforeunload flush can rescue in-flight changes.
@@ -317,9 +359,22 @@ else
     {
         status = await Api.GetCatalogueStatusAsync();
         items = await Api.GetItemsAsync();
+        await RefreshSavedPlansAsync();
 
         saveTimer = new System.Timers.Timer(DebounceMs) { AutoReset = false };
         saveTimer.Elapsed += async (_, _) => await InvokeAsync(SaveDraftNowAsync);
+    }
+
+    private async Task RefreshSavedPlansAsync()
+    {
+        try
+        {
+            savedPlans = (await Api.ListSavedPlansAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to list saved plans: {ex.Message}";
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -678,5 +733,124 @@ else
     {
         public CatalogItem? Item { get; set; }
         public decimal ItemsPerMinute { get; set; }
+    }
+
+    // ----- Saved plans (#77) ------------------------------------------------
+
+    private async Task OnSavedPlanSelected(Guid? id)
+    {
+        selectedSavedPlanId = id;
+        if (id is null)
+        {
+            // User cleared the selection — leave rows untouched but reset name.
+            return;
+        }
+
+        try
+        {
+            var detail = await Api.GetSavedPlanAsync(id.Value);
+            if (detail is null)
+            {
+                error = "Selected plan not found.";
+                await RefreshSavedPlansAsync();
+                return;
+            }
+
+            planName = detail.Name;
+            sources = detail.Available
+                .Select(a => new Row { Item = items?.FirstOrDefault(i => i.Id == a.ItemId), ItemsPerMinute = a.ItemsPerMinute })
+                .ToList();
+            if (sources.Count == 0) sources.Add(new());
+            sinks = detail.Targets
+                .Select(t => new Row { Item = items?.FirstOrDefault(i => i.Id == t.ItemId), ItemsPerMinute = t.ItemsPerMinute })
+                .ToList();
+            if (sinks.Count == 0) sinks.Add(new());
+            plan = null;
+            error = null;
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to load plan: {ex.Message}";
+        }
+    }
+
+    private async Task SaveCurrent()
+    {
+        if (string.IsNullOrWhiteSpace(planName))
+        {
+            error = "Enter a name before saving.";
+            return;
+        }
+
+        isSaving = true;
+        error = null;
+        try
+        {
+            var input = new SavePlanInput(
+                Name: planName.Trim(),
+                Targets:   sinks  .Where(r => r.Item is not null).Select(r => new TargetInput(r.Item!.Id, r.ItemsPerMinute)).ToList(),
+                Available: sources.Where(r => r.Item is not null).Select(r => new AvailabilityInput(r.Item!.Id, r.ItemsPerMinute)).ToList());
+
+            SavedPlanDetail? result;
+            if (selectedSavedPlanId is Guid existing)
+            {
+                result = await Api.UpdateSavedPlanAsync(existing, input);
+                Snackbar.Add($"Updated '{input.Name}'.", Severity.Success);
+            }
+            else
+            {
+                result = await Api.CreateSavedPlanAsync(input);
+                selectedSavedPlanId = result?.Id;
+                Snackbar.Add($"Saved '{input.Name}'.", Severity.Success);
+            }
+            await RefreshSavedPlansAsync();
+        }
+        catch (Exception ex)
+        {
+            error = $"Save failed: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteCurrent()
+    {
+        if (selectedSavedPlanId is not Guid id) return;
+        isSaving = true;
+        try
+        {
+            var ok = await Api.DeleteSavedPlanAsync(id);
+            if (ok)
+            {
+                Snackbar.Add($"Deleted '{planName}'.", Severity.Info);
+                selectedSavedPlanId = null;
+                planName = string.Empty;
+            }
+            else
+            {
+                error = "Delete failed.";
+            }
+            await RefreshSavedPlansAsync();
+        }
+        catch (Exception ex)
+        {
+            error = $"Delete failed: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void NewPlan()
+    {
+        selectedSavedPlanId = null;
+        planName = string.Empty;
+        sources = [new()];
+        sinks = [new()];
+        plan = null;
+        error = null;
     }
 }
