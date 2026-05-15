@@ -1,0 +1,179 @@
+@page "/setup"
+@layout Layout.SetupLayout
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+@inject SetupState SetupState
+@using Web.Components.Setup
+
+<PageTitle>Setup</PageTitle>
+
+@*
+    First-load wizard. The host renders a simple list of named steps so adding /
+    removing one is just an edit to the `steps` array — the body of this file
+    doesn't need to change. Each step component is self-contained so the same
+    component can render later from Settings (re-run setup) without rework.
+*@
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="setup-wizard">
+    <h1>Setup</h1>
+    <MudText Typo="Typo.body1" Class="mb-2">
+        A short first-run walk-through. Only the catalogue step is required —
+        skip the rest if you just want to get going.
+    </MudText>
+
+    <ol class="setup-steps">
+        @for (var i = 0; i < steps.Count; i++)
+        {
+            var idx = i;
+            var step = steps[idx];
+            var state = StateFor(idx);
+            <li class="setup-step @StateClass(state)">
+                <button type="button"
+                        class="setup-step-head"
+                        @onclick="@(() => GoTo(idx))"
+                        aria-current="@(idx == current ? "step" : null)">
+                    <span class="setup-step-marker">@(idx + 1)</span>
+                    <span class="setup-step-title">@step.Title</span>
+                    <span class="setup-step-badge">@BadgeFor(step, state)</span>
+                </button>
+                @if (idx == current)
+                {
+                    <div class="setup-step-body">
+                        @step.Body
+                        <div class="setup-step-nav">
+                            <MudButton OnClick="Back" Disabled="@(idx == 0)" Variant="Variant.Text">Back</MudButton>
+                            @if (!IsLastStep)
+                            {
+                                <MudButton OnClick="Next" Variant="Variant.Filled" Color="Color.Primary"
+                                           Disabled="@(!CanLeaveCurrent)">
+                                    @(step.IsRequired ? "Next" : "Next / skip")
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton OnClick="FinishAsync" Variant="Variant.Filled" Color="Color.Primary"
+                                           Disabled="@(!CanFinish)">
+                                    Finish
+                                </MudButton>
+                            }
+                        </div>
+                    </div>
+                }
+            </li>
+        }
+    </ol>
+
+    <div class="setup-skip">
+        <MudButton OnClick="SkipAsync" Variant="Variant.Text">
+            Skip setup — I'll configure things later
+        </MudButton>
+    </div>
+</MudContainer>
+
+@code {
+    private sealed record WizardStep(string Title, bool IsRequired, RenderFragment Body);
+
+    private enum StepState { Upcoming, Current, Complete }
+
+    private List<WizardStep> steps = new();
+    private int current;
+    private bool catalogueComplete;
+
+    protected override void OnInitialized()
+    {
+        steps = new List<WizardStep>
+        {
+            new("Catalogue (required)", IsRequired: true,
+                Body: @<CataloguePathStep CompletedChanged="OnCatalogueCompletedChanged" />),
+            new("Map backdrop", IsRequired: false,
+                Body: @<MapBackdropStep />),
+            new("First save", IsRequired: false,
+                Body: @<SaveIngestStep />),
+            new("Plan storage", IsRequired: false,
+                Body: @<PersistenceProviderStep />),
+        };
+    }
+
+    private bool IsLastStep => current == steps.Count - 1;
+    private bool CanLeaveCurrent => !steps[current].IsRequired || catalogueComplete;
+    private bool CanFinish => catalogueComplete;
+
+    private StepState StateFor(int idx) =>
+        idx < current ? StepState.Complete
+        : idx == current ? StepState.Current
+        : StepState.Upcoming;
+
+    private static string StateClass(StepState s) => s switch
+    {
+        StepState.Complete => "is-complete",
+        StepState.Current => "is-current",
+        _ => "is-upcoming",
+    };
+
+    private static string BadgeFor(WizardStep step, StepState state) => state switch
+    {
+        StepState.Complete => "✓",
+        StepState.Current => step.IsRequired ? "required" : "optional",
+        _ => step.IsRequired ? "required" : "optional",
+    };
+
+    private void GoTo(int idx)
+    {
+        // Backwards-only jumps are always free; forward jumps respect the
+        // required-step gate so a user can't skip past the catalogue.
+        if (idx < current || CanLeaveCurrent)
+        {
+            current = idx;
+        }
+    }
+
+    private void Next()
+    {
+        if (!CanLeaveCurrent) return;
+        if (current < steps.Count - 1)
+        {
+            current++;
+        }
+    }
+
+    private void Back()
+    {
+        if (current > 0) current--;
+    }
+
+    private void OnCatalogueCompletedChanged(bool completed)
+    {
+        catalogueComplete = completed;
+        StateHasChanged();
+    }
+
+    private async Task FinishAsync()
+    {
+        if (!CanFinish) return;
+        await SetupState.SetDismissedAsync(true);
+        Nav.NavigateTo("/");
+    }
+
+    private async Task SkipAsync()
+    {
+        await SetupState.SetDismissedAsync(true);
+        Nav.NavigateTo("/");
+    }
+}
+
+<style>
+    .setup-wizard { padding-top: 1rem; padding-bottom: 2rem; }
+    .setup-steps { list-style: none; padding: 0; margin: 1.5rem 0 0 0; }
+    .setup-step { border-left: 2px solid var(--mud-palette-divider); padding: 0 0 1.25rem 1rem; margin: 0; position: relative; }
+    .setup-step.is-current { border-left-color: var(--mud-palette-primary); }
+    .setup-step.is-complete { border-left-color: var(--mud-palette-success); }
+    .setup-step-head { display: flex; align-items: center; gap: 0.75rem; background: none; border: 0; padding: 0.25rem 0; color: inherit; cursor: pointer; font: inherit; width: 100%; text-align: left; }
+    .setup-step-marker { display: inline-flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--mud-palette-action-default-hover); font-weight: 600; font-size: 0.9rem; flex-shrink: 0; }
+    .setup-step.is-current .setup-step-marker { background: var(--mud-palette-primary); color: var(--mud-palette-primary-text); }
+    .setup-step.is-complete .setup-step-marker { background: var(--mud-palette-success); color: var(--mud-palette-success-text); }
+    .setup-step-title { font-weight: 600; flex-grow: 1; }
+    .setup-step-badge { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; }
+    .setup-step-body { margin-top: 1rem; margin-left: 2.5rem; }
+    .setup-step-nav { margin-top: 1.25rem; display: flex; gap: 0.5rem; justify-content: flex-end; }
+    .setup-skip { margin-top: 2rem; display: flex; justify-content: flex-end; }
+</style>

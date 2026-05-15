@@ -1,0 +1,149 @@
+@inject PlannerApiClient Api
+@inject IDialogService DialogService
+@using Web.Components.Shared
+
+@* Optional step: parse a .sav file so the user lands on a populated Factory
+   map / state page after onboarding. Mirrors FactoryIngest.razor's UX. *@
+
+<MudText Typo="Typo.body2" Class="mb-3">
+    Optional. If you point us at one of your Satisfactory save files we'll
+    parse it now so the Factory map and state pages are populated when you land.
+</MudText>
+
+@if (detectedSaves is { Length: > 0 })
+{
+    <MudSelect T="string" Value="selectedSavePath" ValueChanged="OnDetectedSaveSelected"
+               Label="Detected save files"
+               Variant="Variant.Outlined"
+               Margin="Margin.Dense"
+               Dense="true"
+               Class="mb-1">
+        <MudSelectItem Value="@("")">— pick a save —</MudSelectItem>
+        @foreach (var s in detectedSaves)
+        {
+            <MudSelectItem Value="@s.Path">
+                @s.Name · @s.LastWriteTimeUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @FormatSize(s.SizeBytes)
+            </MudSelectItem>
+        }
+    </MudSelect>
+    <MudText Typo="Typo.caption" Class="d-block mb-3">
+        Found @detectedSaves.Length save(s) under the default SaveGames folder.
+        Selecting one fills the path field below.
+    </MudText>
+}
+
+<MudTextField @bind-Value="pathInput"
+              Label="Path to a .sav file or a SaveGames directory"
+              Placeholder="@SavePathPlaceholder"
+              Variant="Variant.Outlined"
+              Margin="Margin.Dense"
+              ReadOnly="true"
+              Adornment="Adornment.End"
+              AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+              AdornmentAriaLabel="Browse for save file"
+              OnAdornmentClick="Browse"
+              Class="mb-2" />
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Ingest"
+           Disabled="@(string.IsNullOrWhiteSpace(pathInput) || isIngesting)">
+    @(isIngesting ? "Ingesting..." : "Ingest save")
+</MudButton>
+@if (!string.IsNullOrEmpty(message))
+{
+    <MudText HtmlTag="span" Color="@(messageIsError ? Color.Error : Color.Success)" Class="ms-3">@message</MudText>
+}
+
+@code {
+    private DetectedSaveViewModel[]? detectedSaves;
+    private string? pathInput;
+    private string? selectedSavePath;
+    private string? message;
+    private bool messageIsError;
+    private bool isIngesting;
+
+    private static string SavePathPlaceholder =>
+        OperatingSystem.IsMacOS()
+            ? "~/Library/Application Support/CrossOver/Bottles/Steam/drive_c/users/crossover/AppData/Local/FactoryGame/Saved/SaveGames/<steamId>/<session>.sav"
+            : @"C:\Users\<you>\AppData\Local\FactoryGame\Saved\SaveGames\<steamId>\<session>.sav";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            detectedSaves = await Api.GetDetectedSavesAsync();
+        }
+        catch
+        {
+            // Catalogue may not be loaded yet on a fresh wizard run — the API
+            // can return errors here. Treat as "no saves detected" and let the
+            // user paste a path manually.
+            detectedSaves = [];
+        }
+    }
+
+    private void OnDetectedSaveSelected(string value)
+    {
+        selectedSavePath = value;
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            pathInput = value;
+        }
+    }
+
+    private async Task Browse()
+    {
+        var parameters = new DialogParameters<PathPickerDialog>
+        {
+            { x => x.InitialPath, pathInput },
+            { x => x.Mode, PathPickerDialog.PathPickerMode.Either },
+            { x => x.FileFilter, "sav" },
+            { x => x.Purpose, "saves" },
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<PathPickerDialog>("Choose .sav file or SaveGames folder", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string picked })
+        {
+            pathInput = picked;
+        }
+    }
+
+    private async Task Ingest()
+    {
+        if (string.IsNullOrWhiteSpace(pathInput)) return;
+
+        isIngesting = true;
+        message = null;
+        try
+        {
+            var result = await Api.IngestSaveAsync(pathInput!);
+            if (result.Success && result.State is not null)
+            {
+                var totalBuildings = result.State.Buildings.Sum(b => b.Count);
+                var totalMiners = result.State.Miners.Sum(m => m.Count);
+                message = $"Loaded {totalMiners} miners, {totalBuildings} buildings.";
+                messageIsError = false;
+            }
+            else
+            {
+                message = result.Error ?? "Failed to parse save file.";
+                messageIsError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            isIngesting = false;
+        }
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / 1024.0 / 1024.0:F1} MB";
+    }
+}

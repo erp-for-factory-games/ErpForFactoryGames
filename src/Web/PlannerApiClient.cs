@@ -118,6 +118,30 @@ public class PlannerApiClient(HttpClient httpClient)
         var response = await httpClient.DeleteAsync($"/plans/{id}", ct);
         return response.IsSuccessStatusCode;
     }
+
+    /// <summary>
+    /// Backing call for the filesystem picker (issue #84). `path` is an
+    /// absolute filesystem path on the host machine; pass null to start at the
+    /// user's home directory. `filter` is a comma-separated extension list
+    /// (e.g. "json" or ".sav,.json") — empty means all files.
+    /// </summary>
+    public async Task<FsBrowseResult> BrowseFilesystemAsync(string? path, string? filter, string? purpose = null, CancellationToken ct = default)
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(path)) query.Add($"path={Uri.EscapeDataString(path)}");
+        if (!string.IsNullOrWhiteSpace(filter)) query.Add($"filter={Uri.EscapeDataString(filter)}");
+        if (!string.IsNullOrWhiteSpace(purpose)) query.Add($"purpose={Uri.EscapeDataString(purpose)}");
+        var url = "/fs/browse" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+
+        var response = await httpClient.GetAsync(url, ct);
+        if (response.IsSuccessStatusCode)
+        {
+            var view = await response.Content.ReadFromJsonAsync<FsBrowseView>(ct);
+            return new FsBrowseResult(true, view, null);
+        }
+        var error = await response.Content.ReadAsStringAsync(ct);
+        return new FsBrowseResult(false, null, error);
+    }
 }
 
 public sealed record CatalogItem(string Id, string Name);
@@ -222,3 +246,13 @@ public sealed record SavedPlanDetail(
     DateTime UpdatedUtc,
     IReadOnlyList<TargetInput> Targets,
     IReadOnlyList<AvailabilityInput> Available);
+
+public sealed record FsEntryView(string Name, string FullPath, bool IsDirectory, DateTime LastWriteTimeUtc, long? SizeBytes);
+
+public sealed record FsBrowseView(
+    string CurrentPath,
+    string? ParentPath,
+    IReadOnlyList<FsEntryView> Directories,
+    IReadOnlyList<FsEntryView> Files);
+
+public sealed record FsBrowseResult(bool Success, FsBrowseView? View, string? Error);

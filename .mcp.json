@@ -5,8 +5,17 @@
       "command": "npx",
       "args": [
         "@playwright/mcp@latest",
-        "--browser", "chromium",
-        "--output-dir", "./test/ui-tests"
+        "--browser",
+        "chromium",
+        "--output-dir",
+        "./test/ui-tests"
+      ]
+    },
+    "aspire": {
+      "command": "aspire",
+      "args": [
+        "agent",
+        "mcp"
       ]
     }
   }

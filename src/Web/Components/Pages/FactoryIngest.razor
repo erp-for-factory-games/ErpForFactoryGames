@@ -1,6 +1,8 @@
 @page "/factory/ingest"
 @rendermode InteractiveServer
 @inject PlannerApiClient Api
+@inject IDialogService DialogService
+@using Web.Components.Shared
 
 <PageTitle>Factory state</PageTitle>
 
@@ -119,6 +121,11 @@ else
                   Placeholder="C:\Users\<you>\AppData\Local\FactoryGame\Saved\SaveGames\<steamId>\Beta Game_autosave_0.sav"
                   Variant="Variant.Outlined"
                   Margin="Margin.Dense"
+                  ReadOnly="true"
+                  Adornment="Adornment.End"
+                  AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                  AdornmentAriaLabel="Browse for save file"
+                  OnAdornmentClick="BrowseSavePath"
                   Class="mb-1" />
     <MudText Typo="Typo.caption" Class="d-block mb-2">
         Either point at a specific <code>.sav</code> file or a directory (we'll pick the most-recently-written
@@ -188,6 +195,24 @@ else
         if (!string.IsNullOrWhiteSpace(value))
         {
             pathInput = value;
+        }
+    }
+
+    private async Task BrowseSavePath()
+    {
+        var parameters = new DialogParameters<PathPickerDialog>
+        {
+            { x => x.InitialPath, pathInput },
+            { x => x.Mode, PathPickerDialog.PathPickerMode.Either },
+            { x => x.FileFilter, "sav" },
+            { x => x.Purpose, "saves" },
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<PathPickerDialog>("Choose .sav file or SaveGames folder", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string picked })
+        {
+            pathInput = picked;
         }
     }
 

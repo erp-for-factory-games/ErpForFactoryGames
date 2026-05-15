@@ -1,0 +1,152 @@
+@inject PlannerApiClient Api
+@inject IDialogService DialogService
+@using Web.Components.Shared
+
+@* Required step: points the planner at a Docs.json so the recipe graph can load.
+   Mirrors the catalogue section of Settings.razor so users see the same UX
+   whether they're onboarding or reconfiguring later. *@
+
+<MudText Typo="Typo.body2" Class="mb-3">
+    The planner walks the recipe graph from Satisfactory's <code>Docs.json</code>.
+    Point us at the file or its containing <code>Docs</code> directory.
+</MudText>
+
+@if (status is null)
+{
+    <MudText><em>Loading status...</em></MudText>
+}
+else
+{
+    <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined" Class="mb-3">
+        <MudText Typo="Typo.subtitle2"><strong>@StatusHeadline</strong></MudText>
+        @if (!string.IsNullOrEmpty(status.Source))
+        {
+            <MudText Typo="Typo.caption">Source: <code>@status.Source</code></MudText>
+        }
+        @if (status.IsLoaded)
+        {
+            <MudText Typo="Typo.caption">
+                @status.ItemCount items · @status.BuildingCount buildings · @status.RecipeCount recipes
+            </MudText>
+        }
+    </MudAlert>
+}
+
+<MudTextField @bind-Value="pathInput"
+              Label="Path to the Satisfactory Docs directory or a specific locale file"
+              Placeholder="@DocsPathPlaceholder"
+              Variant="Variant.Outlined"
+              Margin="Margin.Dense"
+              ReadOnly="true"
+              Adornment="Adornment.End"
+              AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+              AdornmentAriaLabel="Browse for Docs folder"
+              OnAdornmentClick="Browse"
+              Class="mb-2" />
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply"
+           Disabled="@(string.IsNullOrWhiteSpace(pathInput) || isApplying)">
+    @(isApplying ? "Loading..." : "Load catalogue")
+</MudButton>
+@if (!string.IsNullOrEmpty(message))
+{
+    <MudText HtmlTag="span" Color="@(messageIsError ? Color.Error : Color.Success)" Class="ms-3">@message</MudText>
+}
+
+@code {
+    [Parameter] public EventCallback<bool> CompletedChanged { get; set; }
+
+    private CatalogueStatusView? status;
+    private string? pathInput;
+    private string? message;
+    private bool messageIsError;
+    private bool isApplying;
+    private bool lastEmittedCompleted;
+
+    private Severity StatusSeverity => status is null
+        ? Severity.Info
+        : status.IsLoaded ? Severity.Success : Severity.Warning;
+
+    private string StatusHeadline => status is null
+        ? ""
+        : status.IsLoaded ? "Catalogue loaded."
+        : "No catalogue loaded yet.";
+
+    // Same OS-aware placeholder as Settings.razor — keeps onboarding friendly on
+    // mac (CrossOver bottle path) without forcing Windows defaults on everyone.
+    private static string DocsPathPlaceholder =>
+        OperatingSystem.IsMacOS()
+            ? "~/Library/Application Support/CrossOver/Bottles/Steam/drive_c/Program Files (x86)/Steam/steamapps/common/Satisfactory/CommunityResources/Docs"
+            : @"C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources\Docs";
+
+    protected override async Task OnInitializedAsync()
+    {
+        status = await Api.GetCatalogueStatusAsync();
+        if (status is { IsLoaded: true, Source: { } source } && source != "(empty)")
+        {
+            pathInput = source;
+        }
+        await EmitCompletedAsync(status?.IsLoaded ?? false);
+    }
+
+    private async Task Browse()
+    {
+        var parameters = new DialogParameters<PathPickerDialog>
+        {
+            { x => x.InitialPath, pathInput },
+            { x => x.Mode, PathPickerDialog.PathPickerMode.Either },
+            { x => x.FileFilter, "json" },
+            { x => x.Purpose, "catalogue" },
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<PathPickerDialog>("Choose Docs folder or locale file", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string picked })
+        {
+            pathInput = picked;
+        }
+    }
+
+    private async Task Apply()
+    {
+        if (string.IsNullOrWhiteSpace(pathInput)) return;
+
+        isApplying = true;
+        message = null;
+        try
+        {
+            var result = await Api.ConfigureCatalogueAsync(pathInput!);
+            if (result.Success && result.Status is not null)
+            {
+                status = result.Status;
+                message = $"Loaded {result.Status.ItemCount} items / {result.Status.RecipeCount} recipes.";
+                messageIsError = false;
+            }
+            else
+            {
+                message = result.Error ?? "Failed to load Docs.json.";
+                messageIsError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            isApplying = false;
+            await EmitCompletedAsync(status?.IsLoaded ?? false);
+        }
+    }
+
+    private async Task EmitCompletedAsync(bool completed)
+    {
+        if (completed == lastEmittedCompleted) return;
+        lastEmittedCompleted = completed;
+        if (CompletedChanged.HasDelegate)
+        {
+            await CompletedChanged.InvokeAsync(completed);
+        }
+    }
+}

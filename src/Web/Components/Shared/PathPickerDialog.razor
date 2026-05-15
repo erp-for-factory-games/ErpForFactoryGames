@@ -1,0 +1,232 @@
+@inject PlannerApiClient Api
+
+@* Reusable filesystem picker (issue #84). Opened via MudDialogService from any
+   page that needs an absolute path on the host machine. The dialog returns
+   the picked path as a string (or null on cancel). *@
+
+<MudDialog>
+    <DialogContent>
+        <div class="path-picker">
+            <MudText Typo="Typo.caption" Class="d-block mb-1">@PromptForMode</MudText>
+
+            <div class="path-picker-bar">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                               OnClick="GoUp"
+                               Disabled="@(view?.ParentPath is null || isLoading)"
+                               Size="Size.Small"
+                               title="Up one level" />
+                <MudIconButton Icon="@Icons.Material.Filled.Home"
+                               OnClick="GoHome"
+                               Disabled="@isLoading"
+                               Size="Size.Small"
+                               title="Home directory" />
+                <code class="path-picker-current">@(view?.CurrentPath ?? "...")</code>
+            </div>
+
+            @if (errorMessage is not null)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="my-2">
+                    @errorMessage
+                </MudAlert>
+            }
+
+            <div class="path-picker-list" tabindex="0">
+                @if (view is null && errorMessage is null)
+                {
+                    <MudText Typo="Typo.caption" Class="pa-2"><em>Loading...</em></MudText>
+                }
+                else if (view is not null)
+                {
+                    @if (view.Directories.Count == 0 && view.Files.Count == 0)
+                    {
+                        <MudText Typo="Typo.caption" Class="pa-2"><em>Empty directory.</em></MudText>
+                    }
+                    @foreach (var d in view.Directories)
+                    {
+                        <button type="button"
+                                class="path-picker-row @(IsSelected(d) ? "is-selected" : null)"
+                                @onclick="() => OnEntryClick(d)"
+                                @ondblclick="() => Enter(d)">
+                            <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" Class="me-2" />
+                            <span class="path-picker-name">@d.Name</span>
+                            <span class="path-picker-meta">@d.LastWriteTimeUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                        </button>
+                    }
+                    @foreach (var f in view.Files)
+                    {
+                        <button type="button"
+                                class="path-picker-row @(IsSelected(f) ? "is-selected" : null) @(Mode == PathPickerMode.FolderOnly ? "is-disabled" : null)"
+                                disabled="@(Mode == PathPickerMode.FolderOnly)"
+                                @onclick="() => OnEntryClick(f)"
+                                @ondblclick="() => PickFromDouble(f)">
+                            <MudIcon Icon="@Icons.Material.Filled.InsertDriveFile" Size="Size.Small" Class="me-2" />
+                            <span class="path-picker-name">@f.Name</span>
+                            <span class="path-picker-meta">
+                                @(f.SizeBytes.HasValue ? FormatSize(f.SizeBytes.Value) : "")
+                                · @f.LastWriteTimeUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </span>
+                        </button>
+                    }
+                }
+            </div>
+
+            @if (selected is not null)
+            {
+                <MudText Typo="Typo.caption" Class="d-block mt-2">
+                    Selected: <code>@selected.FullPath</code>
+                </MudText>
+            }
+            else if (Mode != PathPickerMode.FileOnly && view is not null)
+            {
+                <MudText Typo="Typo.caption" Class="d-block mt-2">
+                    No selection — Pick selects the current folder: <code>@view.CurrentPath</code>
+                </MudText>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   OnClick="Pick" Disabled="@(!CanPick)">
+            Pick
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    public enum PathPickerMode { FolderOnly, FileOnly, Either }
+
+    [CascadingParameter] private IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public string? InitialPath { get; set; }
+    [Parameter] public PathPickerMode Mode { get; set; } = PathPickerMode.Either;
+    /// <summary>Comma-separated extensions like "json,sav" — empty means all files.</summary>
+    [Parameter] public string? FileFilter { get; set; }
+    /// <summary>Optional context hint ("catalogue" / "saves") that lets the server
+    /// pick a smart starting directory when <see cref="InitialPath"/> is null.</summary>
+    [Parameter] public string? Purpose { get; set; }
+
+    private FsBrowseView? view;
+    private FsEntryView? selected;
+    private string? errorMessage;
+    private bool isLoading;
+
+    private string PromptForMode => Mode switch
+    {
+        PathPickerMode.FolderOnly => "Pick a folder.",
+        PathPickerMode.FileOnly => "Pick a file.",
+        _ => "Pick a folder or a file.",
+    };
+
+    private bool CanPick => Mode switch
+    {
+        PathPickerMode.FolderOnly => view is not null,         // current folder selectable as default
+        PathPickerMode.FileOnly => selected is { IsDirectory: false },
+        _ => view is not null,
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync(InitialPath);
+    }
+
+    private bool IsSelected(FsEntryView e) =>
+        selected is not null && string.Equals(selected.FullPath, e.FullPath, StringComparison.Ordinal);
+
+    private void OnEntryClick(FsEntryView e)
+    {
+        selected = e;
+    }
+
+    private async Task Enter(FsEntryView d)
+    {
+        // Double-click on a folder navigates into it. Clear any prior selection
+        // so the user must explicitly pick again inside the new directory.
+        selected = null;
+        await LoadAsync(d.FullPath);
+    }
+
+    private async Task PickFromDouble(FsEntryView f)
+    {
+        if (Mode == PathPickerMode.FolderOnly) return;
+        selected = f;
+        Pick();
+        await Task.CompletedTask;
+    }
+
+    private async Task GoUp()
+    {
+        if (view?.ParentPath is null) return;
+        selected = null;
+        await LoadAsync(view.ParentPath);
+    }
+
+    private async Task GoHome()
+    {
+        selected = null;
+        await LoadAsync(null);
+    }
+
+    private async Task LoadAsync(string? path)
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            // Only forward the purpose hint when no explicit path is in play —
+            // once the user starts navigating, they want to stay where they are.
+            var purpose = string.IsNullOrWhiteSpace(path) ? Purpose : null;
+            var result = await Api.BrowseFilesystemAsync(path, FileFilter, purpose);
+            if (result.Success && result.View is not null)
+            {
+                view = result.View;
+            }
+            else
+            {
+                errorMessage = result.Error ?? "Failed to list directory.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Pick()
+    {
+        // If the user clicked an entry, pick that. Otherwise (folder mode) pick
+        // the current directory itself — a common "I'm in the right folder,
+        // accept it" shortcut.
+        var path = selected?.FullPath
+                   ?? (Mode != PathPickerMode.FileOnly ? view?.CurrentPath : null);
+        if (path is null) return;
+        Dialog.Close(DialogResult.Ok(path));
+    }
+
+    private void Cancel() => Dialog.Cancel();
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / 1024.0 / 1024.0:F1} MB";
+    }
+}
+
+<style>
+    .path-picker { min-width: 480px; max-width: 720px; }
+    .path-picker-bar { display: flex; align-items: center; gap: 0.25rem; margin-bottom: 0.5rem; }
+    .path-picker-current { flex-grow: 1; overflow-x: auto; white-space: nowrap; padding: 0.25rem 0.5rem; background: var(--mud-palette-action-default-hover); border-radius: 0.25rem; font-size: 0.85rem; }
+    .path-picker-list { border: 1px solid var(--mud-palette-divider); border-radius: 0.25rem; max-height: 360px; min-height: 200px; overflow-y: auto; background: var(--mud-palette-background); }
+    .path-picker-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.75rem; width: 100%; background: none; border: 0; color: inherit; cursor: pointer; font: inherit; text-align: left; }
+    .path-picker-row:hover:not(.is-disabled) { background: var(--mud-palette-action-default-hover); }
+    .path-picker-row.is-selected { background: var(--mud-palette-primary); color: var(--mud-palette-primary-text); }
+    .path-picker-row.is-disabled { opacity: 0.5; cursor: not-allowed; }
+    .path-picker-name { flex-grow: 1; }
+    .path-picker-meta { font-size: 0.75rem; opacity: 0.7; white-space: nowrap; }
+    .path-picker-row.is-selected .path-picker-meta { opacity: 0.85; }
+</style>
