@@ -1,5 +1,8 @@
 @inherits LayoutComponentBase
 @inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject PlannerApiClient Api
+@inject SetupState SetupState
 
 <MudThemeProvider Theme="FicsitTheme.Instance" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -65,6 +68,32 @@
             _isDarkMode = darkInitial;
             StateHasChanged();
         }
+
+        await MaybeRedirectToSetupAsync();
+    }
+
+    // Gate first-load on the setup wizard. Runs from every page that uses
+    // MainLayout (i.e. everywhere except /setup itself, which opts into
+    // SetupLayout). Once the user dismisses the wizard or loads a catalogue,
+    // they stop hitting this redirect.
+    private async Task MaybeRedirectToSetupAsync()
+    {
+        if (await SetupState.IsDismissedAsync()) return;
+
+        CatalogueStatusView? status;
+        try
+        {
+            status = await Api.GetCatalogueStatusAsync();
+        }
+        catch
+        {
+            // ApiService unreachable on first paint — don't redirect, the user
+            // can refresh once the API is up. The wizard is a guide, not a hard gate.
+            return;
+        }
+        if (status is { IsLoaded: true }) return;
+
+        Nav.NavigateTo("/setup");
     }
 
     private async Task ToggleTheme()

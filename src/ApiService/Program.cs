@@ -118,6 +118,172 @@ app.MapGet("/factory/saves", () =>
         .Select(f => new DetectedSaveView(f.FullName, f.Name, f.LastWriteTimeUtc, f.Length))
         .ToList());
 
+// Backing endpoint for the in-app filesystem picker (issue #84). Lists the
+// directory at `path` so the Blazor `PathPickerDialog` can render breadcrumbs +
+// folder/file rows. Read-only enumeration of an inherently-local dev tool —
+// no auth gate, but every IO call is wrapped so a denied / missing path
+// becomes a structured error instead of a 500.
+//
+// `purpose` is an optional hint ("catalogue" | "saves") used to compute a
+// smart starting directory when the caller hasn't given an explicit `path` —
+// the picker can land the user inside Satisfactory's Docs/SaveGames folder
+// instead of making them click through ~/Library/... by hand.
+app.MapGet("/fs/browse", (string? path, string? filter, string? purpose) =>
+{
+    var startPath = ResolveStartPath(path, purpose);
+
+    DirectoryInfo dir;
+    try
+    {
+        dir = new DirectoryInfo(startPath);
+        if (!dir.Exists)
+        {
+            // Silently fall back so a stale user-stored path doesn't dead-end the picker.
+            dir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        }
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(title: "Invalid path", detail: ex.Message, statusCode: 400);
+    }
+
+    var allowed = ParseFilter(filter);
+    var dirs = new List<FsEntryView>();
+    var files = new List<FsEntryView>();
+
+    IEnumerable<DirectoryInfo> subDirs;
+    IEnumerable<FileInfo> entries;
+    try
+    {
+        subDirs = dir.EnumerateDirectories();
+        entries = dir.EnumerateFiles();
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return Results.Problem(title: "Access denied", detail: ex.Message, statusCode: 403);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(title: "Failed to enumerate", detail: ex.Message, statusCode: 422);
+    }
+
+    foreach (var sub in subDirs.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase))
+    {
+        // Skip hidden entries on Unix-likes — Library, .git, etc. clutter the picker.
+        if (sub.Name.StartsWith('.')) continue;
+        try
+        {
+            dirs.Add(new FsEntryView(sub.Name, sub.FullName, true, sub.LastWriteTimeUtc, null));
+        }
+        catch
+        {
+            // Symlink target missing, permission etc. — skip silently.
+        }
+    }
+
+    foreach (var f in entries.OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase))
+    {
+        if (f.Name.StartsWith('.')) continue;
+        if (allowed.Count > 0 && !allowed.Contains(f.Extension.ToLowerInvariant())) continue;
+        files.Add(new FsEntryView(f.Name, f.FullName, false, f.LastWriteTimeUtc, f.Length));
+    }
+
+    return Results.Ok(new FsBrowseView(dir.FullName, dir.Parent?.FullName, dirs, files));
+
+    static string ResolveStartPath(string? path, string? purpose)
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            var expanded = ExpandHome(path);
+            // If the caller hands us a file (e.g. a previously-picked Docs.json
+            // or .sav), land in its directory so the picker shows siblings.
+            if (File.Exists(expanded))
+                return Path.GetDirectoryName(expanded) ?? home;
+            return expanded;
+        }
+
+        foreach (var candidate in CandidatesFor(purpose, home))
+        {
+            if (Directory.Exists(candidate)) return candidate;
+        }
+        return home;
+    }
+
+    // Probe order matters: Satisfactory Docs/SaveGames first so the user lands
+    // exactly where they need to pick, with the user's profile dir as the
+    // universal last-resort. The macOS bottle name varies (users can name
+    // bottles anything), so we enumerate `~/Library/Application Support/
+    // CrossOver/Bottles/*` rather than hard-coding "Steam".
+    static IEnumerable<string> CandidatesFor(string? purpose, string home)
+    {
+        if (string.IsNullOrWhiteSpace(purpose)) yield break;
+
+        // For each base install root we emit tiered candidates: the exact target
+        // first (Docs/), then a less-specific fallback (the install root) so a
+        // SF 1.0+ user — whose catalogue lives inside .pak, not in CommunityResources —
+        // still lands at the install instead of `~/`.
+        if (OperatingSystem.IsMacOS())
+        {
+            var bottlesRoot = Path.Combine(home, "Library/Application Support/CrossOver/Bottles");
+            if (Directory.Exists(bottlesRoot))
+            {
+                foreach (var bottle in Directory.EnumerateDirectories(bottlesRoot))
+                {
+                    var install = Path.Combine(bottle, "drive_c/Program Files (x86)/Steam/steamapps/common/Satisfactory");
+                    if (purpose == "catalogue")
+                    {
+                        yield return Path.Combine(install, "CommunityResources/Docs");
+                        yield return Path.Combine(install, "CommunityResources");
+                        yield return install;
+                    }
+                    else if (purpose == "saves")
+                    {
+                        yield return Path.Combine(bottle, "drive_c/users/crossover/AppData/Local/FactoryGame/Saved/SaveGames");
+                    }
+                }
+            }
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            if (purpose == "catalogue")
+            {
+                yield return @"C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources\Docs";
+                yield return @"C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources";
+                yield return @"C:\Program Files (x86)\Steam\steamapps\common\Satisfactory";
+                yield return @"C:\Program Files\Epic Games\SatisfactoryEarlyAccess\CommunityResources\Docs";
+                yield return @"C:\Program Files\Epic Games\SatisfactoryEarlyAccess";
+            }
+            else if (purpose == "saves")
+            {
+                var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                if (!string.IsNullOrEmpty(localAppData))
+                    yield return Path.Combine(localAppData, "FactoryGame", "Saved", "SaveGames");
+            }
+        }
+    }
+
+    static string ExpandHome(string p)
+    {
+        if (p.StartsWith("~/", StringComparison.Ordinal) || p == "~")
+        {
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            return p == "~" ? home : Path.Combine(home, p[2..]);
+        }
+        return p;
+    }
+
+    static HashSet<string> ParseFilter(string? filter)
+    {
+        if (string.IsNullOrWhiteSpace(filter)) return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        return filter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(e => e.StartsWith('.') ? e : "." + e)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+});
+
 app.MapPost("/factory/ingest", async (
     IngestSaveRequest request, IMessageBus bus, IFactoryStateProvider provider,
     ICatalogProvider catalog, ILoggerFactory loggerFactory) =>
@@ -247,6 +413,16 @@ public sealed record IngestSaveRequest(string SavePath);
 public sealed record NodeOverrideRequest(string Reference, string Resource, string Purity);
 
 public sealed record DetectedSaveView(string Path, string Name, DateTime LastWriteTimeUtc, long SizeBytes);
+
+/// <summary>One row in the in-app filesystem picker (issue #84).</summary>
+public sealed record FsEntryView(string Name, string FullPath, bool IsDirectory, DateTime LastWriteTimeUtc, long? SizeBytes);
+
+/// <summary>Response from GET /fs/browse — what the picker dialog renders for a directory.</summary>
+public sealed record FsBrowseView(
+    string CurrentPath,
+    string? ParentPath,
+    IReadOnlyList<FsEntryView> Directories,
+    IReadOnlyList<FsEntryView> Files);
 
 public sealed record SaveMetadataView(
     string SessionName,

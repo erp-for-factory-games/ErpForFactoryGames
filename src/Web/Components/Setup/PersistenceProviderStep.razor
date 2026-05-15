@@ -1,0 +1,28 @@
+@* Stub step: surfaces the SQLite ↔ Postgres switch in the onboarding flow even
+   though the runtime toggle doesn't exist yet (issue #77, milestone #8).
+   Disabled until the persistence reconfiguration story is real. *@
+
+<MudText Typo="Typo.body2" Class="mb-3">
+    The planner saves your plans to a local SQLite file by default — no setup
+    needed. A Postgres option exists in the codebase for multi-user / shared
+    deployments but it's not wired into the UI yet.
+</MudText>
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+    <MudText Typo="Typo.subtitle2"><strong>Coming soon</strong></MudText>
+    <MudText Typo="Typo.caption">
+        Switching providers from the UI tracks against
+        <a href="https://github.com/ChrisonSimtian/ERP.Satisfactory/issues/77"
+           target="_blank" rel="noreferrer">issue #77</a>.
+        For now plans go to a local SQLite file (<code>plans.db</code>) next to the API service.
+    </MudText>
+</MudAlert>
+
+<MudRadioGroup T="string" Value="@selected" ValueChanged="@(v => selected = v)" Disabled="true">
+    <MudRadio T="string" Value="@("sqlite")">SQLite (local file — default)</MudRadio>
+    <MudRadio T="string" Value="@("postgres")">Postgres (shared, not yet wired up)</MudRadio>
+</MudRadioGroup>
+
+@code {
+    private string selected = "sqlite";
+}

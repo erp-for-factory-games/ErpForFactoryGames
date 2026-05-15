@@ -2,6 +2,10 @@
 @rendermode InteractiveServer
 @inject PlannerApiClient Api
 @inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject SetupState SetupState
+@inject IDialogService DialogService
+@using Web.Components.Shared
 
 <PageTitle>Settings</PageTitle>
 
@@ -53,6 +57,11 @@ else
                   Variant="Variant.Outlined"
                   Margin="Margin.Dense"
                   HelperTextOnFocus="false"
+                  ReadOnly="true"
+                  Adornment="Adornment.End"
+                  AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                  AdornmentAriaLabel="Browse for Docs folder"
+                  OnAdornmentClick="BrowseCataloguePath"
                   Class="mb-1" />
     <MudText Typo="Typo.caption" Class="d-block mb-2">
         Either point at the <code>Docs</code> folder (we'll pick <code>en-US.json</code> automatically) or pass a specific
@@ -68,6 +77,17 @@ else
     {
         <MudText HtmlTag="span" Color="@(messageIsError ? Color.Error : Color.Success)" Class="ms-3">@message</MudText>
     }
+</div>
+
+<h2 class="mt-5">Setup wizard</h2>
+<div class="mt-3">
+    <MudText Typo="Typo.body2" Class="mb-2">
+        Re-run the first-load wizard. Useful after wiping config or pointing at a new
+        Satisfactory install.
+    </MudText>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RerunSetup">
+        Re-run setup
+    </MudButton>
 </div>
 
 <h2 class="mt-5">Factory map</h2>
@@ -147,6 +167,30 @@ else
         {
             // localStorage unavailable — keep default.
         }
+    }
+
+    private async Task BrowseCataloguePath()
+    {
+        var parameters = new DialogParameters<PathPickerDialog>
+        {
+            { x => x.InitialPath, pathInput },
+            { x => x.Mode, PathPickerDialog.PathPickerMode.Either },
+            { x => x.FileFilter, "json" },
+            { x => x.Purpose, "catalogue" },
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<PathPickerDialog>("Choose Docs folder or locale file", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string picked })
+        {
+            pathInput = picked;
+        }
+    }
+
+    private async Task RerunSetup()
+    {
+        await SetupState.SetDismissedAsync(false);
+        Nav.NavigateTo("/setup");
     }
 
     private async Task OnMapBackdropChanged(string value)

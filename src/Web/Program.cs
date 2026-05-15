@@ -24,6 +24,8 @@ builder.Services.AddHttpClient<Web.PlannerApiClient>(client =>
         client.BaseAddress = new("https+http://apiservice");
     });
 
+builder.Services.AddScoped<Web.SetupState>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

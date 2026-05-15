@@ -1,0 +1,59 @@
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+
+@* Minimal layout for the first-load wizard — no nav drawer so the user isn't
+   tempted to bail mid-setup. Mirrors MainLayout's theme/appbar wiring so the
+   FICSIT styling stays consistent. *@
+
+<MudThemeProvider Theme="FicsitTheme.Instance" IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout Class="fx-layout">
+    <MudAppBar Elevation="0" Dense="true" Color="Color.Transparent" Class="fx-appbar">
+        <span class="status-strip" aria-hidden="true">FICSIT · INITIAL CONFIG</span>
+        <MudSpacer />
+        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                       OnClick="ToggleTheme"
+                       Color="Color.Inherit"
+                       title="Toggle light / dark mode"
+                       Class="fx-theme-toggle" />
+    </MudAppBar>
+
+    <MudMainContent Class="fx-main">
+        <div class="hazard-tape thin" aria-hidden="true"></div>
+        <article class="content px-4">
+            @Body
+        </article>
+    </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    private bool _isDarkMode = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var initial = await JS.InvokeAsync<string>("erpReadInitialTheme");
+        var darkInitial = !string.Equals(initial, "light", StringComparison.Ordinal);
+        if (darkInitial != _isDarkMode)
+        {
+            _isDarkMode = darkInitial;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+        await JS.InvokeVoidAsync("erpSetTheme", _isDarkMode ? "dark" : "light");
+    }
+}

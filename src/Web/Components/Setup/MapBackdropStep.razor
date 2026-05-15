@@ -1,0 +1,68 @@
+@inject IJSRuntime JS
+
+@* Optional step: chooses the Factory map's background. Cosmetic, but a nice
+   thing to set during onboarding so the map page isn't a black canvas. *@
+
+<MudText Typo="Typo.body2" Class="mb-3">
+    Optional. The Factory map can render on top of a Satisfactory-themed backdrop.
+    Pick one now or change later under Settings.
+</MudText>
+
+<MudSelect T="string" Value="backdrop" ValueChanged="OnBackdropChanged"
+           Label="Backdrop"
+           Variant="Variant.Outlined"
+           Margin="Margin.Dense"
+           Dense="true"
+           Class="mb-1"
+           Style="max-width: 360px;">
+    <MudSelectItem Value="@("terrain")">Terrain (wiki)</MudSelectItem>
+    <MudSelectItem Value="@("biome")">Biome (wiki)</MudSelectItem>
+    <MudSelectItem Value="@("water")">Water (wiki)</MudSelectItem>
+    <MudSelectItem Value="@("none")">None (dark canvas)</MudSelectItem>
+</MudSelect>
+<MudText Typo="Typo.caption" Class="d-block">
+    Backdrops are sourced from the
+    <a href="https://satisfactory.wiki.gg/" target="_blank" rel="noreferrer">Satisfactory Fandom wiki</a>
+    under fair-use terms for non-commercial fan tools (ADR-0015).
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <MudText HtmlTag="span" Color="Color.Success" Class="ms-2">@message</MudText>
+    }
+</MudText>
+
+@code {
+    private string backdrop = "terrain";
+    private string? message;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", "erp-map-backdrop");
+            if (!string.IsNullOrEmpty(stored))
+            {
+                backdrop = stored;
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            // localStorage unavailable — keep default.
+        }
+    }
+
+    private async Task OnBackdropChanged(string value)
+    {
+        backdrop = value;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "erp-map-backdrop", backdrop);
+            message = "Saved.";
+        }
+        catch (Exception ex)
+        {
+            message = "Couldn't save: " + ex.Message;
+        }
+    }
+}
