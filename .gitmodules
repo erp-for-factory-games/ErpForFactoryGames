@@ -1,8 +1,18 @@
 [submodule "vendor/SatisfactorySaveNet"]
 	path = vendor/SatisfactorySaveNet
 	url = https://github.com/ChrisonSimtian/SatisfactorySaveNet.git
-	# ignore = all
-	# update = none
+	# ERP consumes the fork via NuGet (see nuget.config), not as a project
+	# reference. The submodule is kept on disk for local iteration on the
+	# fork but is off the build graph — so we tell git to skip its pointer
+	# entirely. `update = none` makes `submodule update` a no-op for this
+	# entry; `ignore = all` hides any commit-pointer drift from `git status`
+	# / `git diff` so a fresh fork checkout doesn't show as a parent change.
+	ignore = all
+	update = none
 [submodule "vendor/CUE4Parse"]
 	path = vendor/CUE4Parse
 	url = https://github.com/FabianFG/CUE4Parse
+	# CUE4Parse isn't on the build graph either — vendored only for
+	# inspection. Same skip/ignore treatment.
+	ignore = all
+	update = none
