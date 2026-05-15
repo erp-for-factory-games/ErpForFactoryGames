@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # NB.GV needs full history for version-height calc
 
       - name: Initialize vendored SatisfactorySaveNet submodule
         run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
@@ -60,6 +62,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # NB.GV needs full history for version-height calc
 
       - name: Initialize vendored SatisfactorySaveNet submodule
         run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
@@ -106,6 +110,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # NB.GV needs full history for version-height calc
 
       - name: Initialize vendored SatisfactorySaveNet submodule
         run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
@@ -155,6 +161,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # NB.GV needs full history for version-height calc
 
       - name: Initialize vendored SatisfactorySaveNet submodule
         run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive

@@ -1,0 +1,19 @@
+<Project>
+  <!--
+    Wire Nerdbank.GitVersioning into every project under the repo so version.json
+    actually drives $(Version), $(AssemblyVersion), $(FileVersion), and
+    $(InformationalVersion). version.json existed before this file but had no
+    backing package, so it was inert. Excludes test projects — they're never
+    published and don't need version stamping.
+
+    PrivateAssets="all" keeps NB.GV from flowing as a transitive dependency to
+    any package consumers (we'd only be a consumer ourselves today, but the
+    plumbing applies if any project ever does ship a nupkg).
+  -->
+  <ItemGroup Condition="!$(MSBuildProjectName.EndsWith('Tests')) and !$(MSBuildProjectName.EndsWith('UiTests'))">
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.7.115">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>
