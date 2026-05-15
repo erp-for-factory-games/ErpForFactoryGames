@@ -15,6 +15,7 @@ ERP-style production planner for the game *Satisfactory*. Primary objective:
 
 ```powershell
 git submodule update --init --recursive   # required after clone or `git worktree add`
+export GITHUB_TOKEN=$(gh auth token)      # nuget.config reads it for GitHub Packages
 dotnet build ERP.Satisfactory.slnx
 dotnet run --project src/AppHost
 ```
@@ -23,8 +24,13 @@ The repo has two submodules under `vendor/` (`SatisfactorySaveNet`, `CUE4Parse`)
 Worktrees do **not** auto-init submodules — run the command above whenever a fresh
 worktree or clone is created, or the solution will fail to build.
 
-The `SatisfactorySaveNet` submodule has its own NUKE build (`./build.sh` in
-that directory) that produces NuGet packages and publishes them to GitHub
-Packages on tag pushes — see its `.github/workflows/ci.yml`. ERP consumes the
-library via `ProjectReference` today; switching to `PackageReference` happens
-once the first tagged release lands.
+ERP consumes `SatisfactorySaveNet` via `PackageReference` from the fork's
+GitHub Packages feed — see `nuget.config`. GitHub Packages NuGet *always*
+requires auth (even for public packages), so set `GITHUB_TOKEN` before
+restoring. Your `gh` CLI token needs the `read:packages` scope: one-time
+`gh auth refresh -h github.com -s read:packages`.
+
+CI does the same thing via `secrets.GITHUB_TOKEN` (the workflow grants
+`packages: read`). The `SatisfactorySaveNet` submodule is still vendored
+for local iteration on the fork; its own NUKE build is at `./build.sh` in
+that directory and publishes on tag pushes.

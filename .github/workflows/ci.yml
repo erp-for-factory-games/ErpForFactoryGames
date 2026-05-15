@@ -11,6 +11,14 @@ permissions:
   contents: read
   checks: write       # publish-unit-test-result-action needs this
   pull-requests: write
+  packages: read      # consume SatisfactorySaveNet from GitHub Packages (nuget.config)
+
+# Surface GITHUB_TOKEN to dotnet restore so nuget.config's %GITHUB_TOKEN%
+# placeholder resolves to the workflow's installation token. GitHub Packages
+# NuGet always requires auth — even for public packages — so this is needed
+# by every job that runs `dotnet restore` / `dotnet build`.
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 concurrency:
   group: ci-${{ github.ref }}

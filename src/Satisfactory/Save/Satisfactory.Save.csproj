@@ -2,8 +2,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\ERP\Domain\ERP.Domain.csproj" />
-    <ProjectReference Include="..\..\..\vendor\SatisfactorySaveNet\SatisfactorySaveNet\SatisfactorySaveNet.csproj" />
-    <ProjectReference Include="..\..\..\vendor\SatisfactorySaveNet\SatisfactorySaveNet.Abstracts\SatisfactorySaveNet.Abstracts.csproj" />
+    <!--
+      Consumed from the fork's GitHub Packages feed (see nuget.config). Bump
+      the version when the fork ships a new tagged release; the submodule under
+      vendor/SatisfactorySaveNet stays for local fork iteration but is no
+      longer on the build path.
+    -->
+    <PackageReference Include="SatisfactorySaveNet" Version="4.0.2" />
+    <PackageReference Include="SatisfactorySaveNet.Abstracts" Version="4.0.2" />
   </ItemGroup>
 
   <PropertyGroup>
