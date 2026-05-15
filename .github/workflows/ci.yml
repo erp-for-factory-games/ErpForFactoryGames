@@ -240,6 +240,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write    # create tags + releases
+      packages: read     # per-job permissions replace workflow-level, so restate
 
     steps:
       - name: Checkout (full history for NB.GV)
