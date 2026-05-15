@@ -22,3 +22,9 @@ dotnet run --project src/AppHost
 The repo has two submodules under `vendor/` (`SatisfactorySaveNet`, `CUE4Parse`).
 Worktrees do **not** auto-init submodules — run the command above whenever a fresh
 worktree or clone is created, or the solution will fail to build.
+
+The `SatisfactorySaveNet` submodule has its own NUKE build (`./build.sh` in
+that directory) that produces NuGet packages and publishes them to GitHub
+Packages on tag pushes — see its `.github/workflows/ci.yml`. ERP consumes the
+library via `ProjectReference` today; switching to `PackageReference` happens
+once the first tagged release lands.

@@ -2,8 +2,12 @@
 @rendermode InteractiveServer
 @implements IAsyncDisposable
 @inject PlannerApiClient Api
-@inject PlannerDraftStore DraftStore
+@inject IJSRuntime JS
 @inject ISnackbar Snackbar
+@inject PlannerDraftStore DraftStore
+@using ERP.Application
+@using ERP.Domain
+@using Microsoft.AspNetCore.Components.Forms
 
 <PageTitle>Planner</PageTitle>
 
@@ -169,6 +173,34 @@ else
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Compute" Disabled="@isComputing">
             @(isComputing ? "Computing..." : "Compute plan")
         </MudButton>
+
+        <MudTextField @bind-Value="planName"
+                      Placeholder="Plan name"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Style="max-width: 16rem;" />
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   StartIcon="@Icons.Material.Filled.Download"
+                   OnClick="ExportPlan"
+                   data-action="export-plan">
+            Export JSON
+        </MudButton>
+
+        @* Trigger a hidden <InputFile> by id (no MudFileUpload to keep markup light). *@
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   StartIcon="@Icons.Material.Filled.Upload"
+                   OnClick="TriggerImportPicker"
+                   data-action="import-plan">
+            Import JSON
+        </MudButton>
+        <InputFile id="plan-import-input"
+                   accept=".json,application/json"
+                   OnChange="ImportPlan"
+                   style="display:none" />
+
         @if (hasDraft)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
@@ -302,6 +334,9 @@ else
     private PlanResponse? plan;
     private string? error;
     private bool isComputing;
+    private string planName = string.Empty;
+    private Guid planId = Guid.NewGuid();
+    private DateTime planCreatedUtc = DateTime.UtcNow;
 
     // Saved plans state (#77)
     private List<SavedPlanSummary> savedPlans = [];
@@ -565,6 +600,113 @@ else
         if (string.IsNullOrWhiteSpace(value)) return Task.FromResult<IEnumerable<CatalogItem>>(items);
         var hits = items.Where(i => i.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(hits);
+    }
+
+    // -------------------- Export / Import (issue #79) ----------------------
+    // Round-trips the current planner state (sources + sinks + name + ids +
+    // timestamps) through ERP.Application.PlanSerializer, which writes a
+    // versioned JSON envelope. Pure client-state for now — no server endpoint
+    // is involved; uploading replaces the in-memory rows.
+
+    private async Task ExportPlan()
+    {
+        try
+        {
+            var plan = BuildSavedPlanFromCurrentState();
+            var json = PlanSerializer.Serialize(plan);
+            var safeName = string.IsNullOrWhiteSpace(plan.Name) ? "plan" : SanitiseFilename(plan.Name);
+            await JS.InvokeVoidAsync("erpPlan.downloadJson", $"plan-{safeName}.json", json);
+            Snackbar.Add($"Exported {plan.Name}", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task TriggerImportPicker()
+    {
+        await JS.InvokeVoidAsync("document.getElementById('plan-import-input').click");
+    }
+
+    private async Task ImportPlan(InputFileChangeEventArgs args)
+    {
+        try
+        {
+            var file = args.File;
+            if (file is null)
+            {
+                Snackbar.Add("No file selected.", Severity.Warning);
+                return;
+            }
+
+            // Plan files are tiny; 1 MB is plenty and keeps memory usage bounded.
+            using var stream = file.OpenReadStream(maxAllowedSize: 1_000_000);
+            using var reader = new StreamReader(stream);
+            var json = await reader.ReadToEndAsync();
+
+            var loaded = PlanSerializer.Deserialize(json);
+            LoadPlanIntoState(loaded);
+            Snackbar.Add($"Imported {loaded.Name}", Severity.Success);
+        }
+        catch (PlanImportException ex)
+        {
+            Snackbar.Add($"Couldn't import plan: {ex.Message}", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Couldn't import plan: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private SavedPlan BuildSavedPlanFromCurrentState()
+    {
+        var name = string.IsNullOrWhiteSpace(planName) ? "Untitled plan" : planName.Trim();
+
+        var targets = sinks
+            .Where(r => r.Item is not null)
+            .Select(r => new ProductionTarget(new ItemId(r.Item!.Id), r.ItemsPerMinute))
+            .ToList();
+        var available = sources
+            .Where(r => r.Item is not null)
+            .Select(r => new ResourceAvailability(new ItemId(r.Item!.Id), r.ItemsPerMinute))
+            .ToList();
+
+        // Use a fresh id only if we don't already have one tracked for this session,
+        // so re-export of the same edited plan keeps a stable id.
+        if (planId == Guid.Empty) planId = Guid.NewGuid();
+        return new SavedPlan(planId, name, targets, available, planCreatedUtc, DateTime.UtcNow);
+    }
+
+    private void LoadPlanIntoState(SavedPlan plan)
+    {
+        // Map ItemIds back to CatalogItem instances so MudAutocomplete renders nicely.
+        // Unknown ids (catalogue mismatch) become rows with null Item — the user can
+        // see the rate but must repick the item.
+        CatalogItem? Find(string id) => items?.FirstOrDefault(i =>
+            string.Equals(i.Id, id, StringComparison.Ordinal));
+
+        sources = plan.Available.Count == 0
+            ? [new Row()]
+            : plan.Available.Select(a => new Row { Item = Find(a.Item.Value), ItemsPerMinute = a.ItemsPerMinute }).ToList();
+        sinks = plan.Targets.Count == 0
+            ? [new Row()]
+            : plan.Targets.Select(t => new Row { Item = Find(t.Item.Value), ItemsPerMinute = t.ItemsPerMinute }).ToList();
+
+        planName = plan.Name;
+        planId = plan.Id;
+        planCreatedUtc = plan.CreatedUtc;
+        // Drop any stale plan result — the user must re-Compute to see numbers
+        // that match the freshly loaded inputs.
+        this.plan = null;
+        error = null;
+    }
+
+    private static string SanitiseFilename(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var cleaned = new string(name.Select(c => invalid.Contains(c) ? '_' : c).ToArray()).Trim();
+        return string.IsNullOrEmpty(cleaned) ? "plan" : cleaned;
     }
 
     public async ValueTask DisposeAsync()
