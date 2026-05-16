@@ -17,10 +17,6 @@ permissions:
 # placeholder resolves to the workflow's installation token. GitHub Packages
 # NuGet always requires auth — even for public packages — so this is needed
 # by every job that runs `dotnet restore` / `dotnet build`.
-#
-# DOTNET_INSTALL_DIR is set per-job (where runner.* context is available)
-# to redirect `setup-dotnet@v4` away from `/usr/share/dotnet` which isn't
-# writable on self-hosted runners.
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -58,10 +54,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         env:
-          # Redirect install to a user-writable path on self-hosted (default
-          # `/usr/share/dotnet` is root-only). `runner.*` context is allowed
-          # at step env, not at job env, so this lives here per-step.
-          DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
+          # Pin install location to the runner user's home so setup-dotnet
+          # finds the pre-installed SDKs at /home/runner/.dotnet (skip),
+          # or installs there cleanly (writable) if a fresh runner.
+          DOTNET_INSTALL_DIR: /home/runner/.dotnet
         with:
           dotnet-version: 8.0.x
           global-json-file: global.json
@@ -101,7 +97,7 @@ jobs:
       - name: Setup .NET (10 from global.json + 8 for vendor submodule)
         uses: actions/setup-dotnet@v4
         env:
-          DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
+          DOTNET_INSTALL_DIR: /home/runner/.dotnet
         with:
           dotnet-version: 8.0.x
           global-json-file: global.json
@@ -154,7 +150,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         env:
-          DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
+          DOTNET_INSTALL_DIR: /home/runner/.dotnet
         with:
           dotnet-version: 8.0.x
           global-json-file: global.json
