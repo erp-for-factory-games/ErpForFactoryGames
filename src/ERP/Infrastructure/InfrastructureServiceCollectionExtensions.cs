@@ -1,4 +1,5 @@
 using ERP.Application;
+using ERP.Application.Queries.PlanProduction;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Satisfactory.Save;
@@ -23,6 +24,9 @@ public static class InfrastructureServiceCollectionExtensions
         // world-fixed and we surface them straight from the bundled JSON.
         services.AddSingleton(_ => KnownFlora.LoadEmbedded());
         services.AddSingleton<IFactoryStateProvider, SatisfactorySaveNetFactoryStateProvider>();
+        // Recipe planner port (#88). Recursive impl today; LP-backed adapter
+        // will land alongside this one behind a `Planner:Engine` switch.
+        services.AddSingleton<IRecipePlanner, RecursiveRecipePlanner>();
         return services;
     }
 }

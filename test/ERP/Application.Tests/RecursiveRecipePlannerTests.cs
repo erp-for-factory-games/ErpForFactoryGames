@@ -4,7 +4,7 @@ using ERP.Domain;
 
 namespace ERP.Application.Tests;
 
-public class PlanProductionHandlerTests
+public class RecursiveRecipePlannerTests
 {
     private static readonly BuildingId SmelterId = new("Build_SmelterMk1_C");
     private static readonly BuildingId ConstructorId = new("Build_ConstructorMk1_C");
@@ -41,11 +41,10 @@ public class PlanProductionHandlerTests
             ],
             recipes: [IronIngotRecipe]);
 
-        var plan = PlanProductionHandler.Handle(
-            new PlanProductionQuery(
-                Targets: [new ProductionTarget(IronIngot, 30)],
-                Available: [new ResourceAvailability(IronOre, 30)]),
-            catalog);
+        var planner = new RecursiveRecipePlanner(catalog);
+        var plan = planner.Plan(new PlanProductionQuery(
+            Targets: [new ProductionTarget(IronIngot, 30)],
+            Available: [new ResourceAvailability(IronOre, 30)]));
 
         var step = Assert.Single(plan.Steps);
         Assert.Equal(1m, step.BuildingCount);
@@ -65,11 +64,10 @@ public class PlanProductionHandlerTests
             ],
             recipes: [IronIngotRecipe, IronPlateRecipe]);
 
-        var plan = PlanProductionHandler.Handle(
-            new PlanProductionQuery(
-                Targets: [new ProductionTarget(IronPlate, 60)],
-                Available: [new ResourceAvailability(IronOre, 999)]),
-            catalog);
+        var planner = new RecursiveRecipePlanner(catalog);
+        var plan = planner.Plan(new PlanProductionQuery(
+            Targets: [new ProductionTarget(IronPlate, 60)],
+            Available: [new ResourceAvailability(IronOre, 999)]));
 
         Assert.Equal(2, plan.Steps.Count);
         var plateStep = plan.Steps.Single(s => s.Recipe.Id == IronPlateRecipe.Id);
@@ -89,18 +87,17 @@ public class PlanProductionHandlerTests
             buildings: [], // smelter intentionally absent
             recipes: [IronIngotRecipe]);
 
-        var plan = PlanProductionHandler.Handle(
-            new PlanProductionQuery(
-                Targets: [new ProductionTarget(IronIngot, 30)],
-                Available: [new ResourceAvailability(IronOre, 30)]),
-            catalog);
+        var planner = new RecursiveRecipePlanner(catalog);
+        var plan = planner.Plan(new PlanProductionQuery(
+            Targets: [new ProductionTarget(IronIngot, 30)],
+            Available: [new ResourceAvailability(IronOre, 30)]));
 
         var step = Assert.Single(plan.Steps);
         Assert.Equal(0m, step.PowerMw);
     }
 
     /// <summary>
-    /// Minimal in-memory catalogue stand-in. The handler only calls
+    /// Minimal in-memory catalogue stand-in. The planner only calls
     /// <see cref="FindDefaultProducerOf"/> and <see cref="FindBuilding"/>, so
     /// everything else throws to surface unexpected usage in tests.
     /// </summary>
