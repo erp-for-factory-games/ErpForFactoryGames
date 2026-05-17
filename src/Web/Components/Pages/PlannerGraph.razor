@@ -110,8 +110,8 @@ else
     }
     else
     {
-        <MudPaper Class="pa-2" Outlined="true" data-testid="graph-svg-wrap">
-            @RenderGraphSvg()
+        <MudPaper Class="pa-2" Outlined="true" data-testid="graph-svg-wrap" Style="overflow-x: auto;">
+            @RenderGraphSvg(BuildLayout(plan))
         </MudPaper>
     }
 }
@@ -123,6 +123,15 @@ else
     private PlanResponse? plan;
     private string? error;
     private bool isComputing;
+
+    // ---- Layout tunables (SVG user-space units; the viewBox handles scaling) ----
+    private const int NodeWidth = 200;
+    private const int NodeHeight = 60;
+    private const int ColumnGap = 140;   // horizontal gap between depth columns
+    private const int RowGap = 36;       // vertical gap between rows in a column
+    private const int Padding = 24;      // outer padding around the whole graph
+    private const int RawColumnWidth = 140;
+    private const int LabelOffsetY = -6;
 
     protected override async Task OnInitializedAsync()
     {
@@ -169,22 +178,343 @@ else
         }
     }
 
-    private RenderFragment RenderGraphSvg() => builder =>
+    // -----------------------------------------------------------------------
+    // Layout
+    // -----------------------------------------------------------------------
+
+    /// <summary>Positioned recipe node: index into PlanResponse.Steps + xy.</summary>
+    private sealed record PlacedNode(int StepIndex, StepView Step, int Depth, double X, double Y);
+
+    /// <summary>Edge from one recipe to another (or from a "raw input" stub on the left).</summary>
+    private sealed record GraphEdge(
+        int? FromStepIndex, // null = raw-input pseudo-node
+        int ToStepIndex,
+        string ItemId,
+        string ItemName,
+        decimal ItemsPerMinute);
+
+    /// <summary>Pseudo-node for a raw input that has no producer step.</summary>
+    private sealed record RawNode(string ItemId, string ItemName, double X, double Y);
+
+    private sealed record Layout(
+        IReadOnlyList<PlacedNode> Nodes,
+        IReadOnlyList<RawNode> Raws,
+        IReadOnlyList<GraphEdge> Edges,
+        double Width,
+        double Height);
+
+    private static Layout BuildLayout(PlanResponse plan)
     {
-        // Stub — real SVG rendering arrives in a follow-up commit on this branch.
-        builder.OpenElement(0, "svg");
-        builder.AddAttribute(1, "viewBox", "0 0 100 40");
-        builder.AddAttribute(2, "width", "100%");
-        builder.AddAttribute(3, "height", "40");
-        builder.AddAttribute(4, "data-testid", "graph-svg");
-        builder.OpenElement(5, "text");
-        builder.AddAttribute(6, "x", "4");
-        builder.AddAttribute(7, "y", "24");
-        builder.AddAttribute(8, "font-size", "10");
-        builder.AddContent(9, $"{plan!.Steps.Count} step(s) — graph rendering pending");
+        var steps = plan.Steps;
+
+        // Index recipes that produce each item id (so we can find the upstream
+        // recipe for any consumed input). A given item *can* be produced by
+        // multiple steps in pathological plans; we pick the first hit — good
+        // enough for v1.
+        var producerByItem = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (var i = 0; i < steps.Count; i++)
+        {
+            foreach (var output in steps[i].Outputs)
+            {
+                producerByItem.TryAdd(output.ItemId, i);
+            }
+        }
+
+        // Edges: for each step's inputs, link the producer step (if any).
+        var edges = new List<GraphEdge>();
+        for (var i = 0; i < steps.Count; i++)
+        {
+            foreach (var input in steps[i].Inputs)
+            {
+                if (producerByItem.TryGetValue(input.ItemId, out var fromIx) && fromIx != i)
+                {
+                    edges.Add(new GraphEdge(fromIx, i, input.ItemId, input.ItemName, input.ItemsPerMinute));
+                }
+                else
+                {
+                    // Raw input — pseudo-node on the left.
+                    edges.Add(new GraphEdge(null, i, input.ItemId, input.ItemName, input.ItemsPerMinute));
+                }
+            }
+        }
+
+        // Compute depth via DFS-memo of "longest path from any source", where
+        // a source = step with no internal predecessor. Cycles shouldn't exist
+        // in a valid plan, but we defensively cap recursion.
+        var depths = new int[steps.Count];
+        Array.Fill(depths, -1);
+        var preds = new List<int>[steps.Count];
+        for (var i = 0; i < steps.Count; i++) preds[i] = [];
+        foreach (var e in edges)
+        {
+            if (e.FromStepIndex is int from) preds[e.ToStepIndex].Add(from);
+        }
+
+        int ComputeDepth(int ix, int guard)
+        {
+            if (guard > steps.Count) return 0; // cycle safety
+            if (depths[ix] >= 0) return depths[ix];
+            var max = 0;
+            foreach (var p in preds[ix])
+            {
+                max = Math.Max(max, ComputeDepth(p, guard + 1) + 1);
+            }
+            depths[ix] = max;
+            return max;
+        }
+        for (var i = 0; i < steps.Count; i++) ComputeDepth(i, 0);
+
+        // Bucket nodes by depth.
+        var maxDepth = depths.Length == 0 ? 0 : depths.Max();
+        var byDepth = new List<List<int>>();
+        for (var d = 0; d <= maxDepth; d++) byDepth.Add([]);
+        for (var i = 0; i < steps.Count; i++) byDepth[depths[i]].Add(i);
+
+        // Place each column. Raw-input pseudo-nodes sit in a column to the
+        // left of depth 0; recipe columns start at xColumn0.
+        var hasRaws = edges.Any(e => e.FromStepIndex is null);
+        var xColumn0 = Padding + (hasRaws ? RawColumnWidth + ColumnGap : 0);
+
+        var placed = new List<PlacedNode>(steps.Count);
+        for (var d = 0; d <= maxDepth; d++)
+        {
+            var column = byDepth[d];
+            var x = xColumn0 + d * (NodeWidth + ColumnGap);
+            for (var row = 0; row < column.Count; row++)
+            {
+                var y = Padding + row * (NodeHeight + RowGap);
+                placed.Add(new PlacedNode(column[row], steps[column[row]], d, x, y));
+            }
+        }
+
+        // Distinct raw items in the order they appear in edges (deterministic).
+        var rawItems = new List<(string id, string name)>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var e in edges)
+        {
+            if (e.FromStepIndex is null && seen.Add(e.ItemId))
+            {
+                rawItems.Add((e.ItemId, e.ItemName));
+            }
+        }
+        var raws = new List<RawNode>(rawItems.Count);
+        for (var r = 0; r < rawItems.Count; r++)
+        {
+            var y = Padding + r * (NodeHeight + RowGap);
+            raws.Add(new RawNode(rawItems[r].id, rawItems[r].name, Padding, y));
+        }
+
+        // Overall canvas dimensions = furthest-right node edge + padding,
+        // tallest column height + padding.
+        var rightmost = placed.Count == 0
+            ? xColumn0
+            : placed.Max(n => n.X) + NodeWidth;
+        var maxRows = byDepth.Count == 0 ? 0 : byDepth.Max(c => c.Count);
+        var maxRowsOverall = Math.Max(maxRows, raws.Count);
+        var height = Padding * 2 + Math.Max(NodeHeight, maxRowsOverall * (NodeHeight + RowGap) - RowGap);
+        var width = rightmost + Padding;
+
+        return new Layout(placed, raws, edges, width, height);
+    }
+
+    // -----------------------------------------------------------------------
+    // SVG rendering (RenderTreeBuilder so we keep one .razor file)
+    // -----------------------------------------------------------------------
+
+    private RenderFragment RenderGraphSvg(Layout layout) => builder =>
+    {
+        var seq = 0;
+        builder.OpenElement(seq++, "svg");
+        builder.AddAttribute(seq++, "xmlns", "http://www.w3.org/2000/svg");
+        builder.AddAttribute(seq++, "viewBox", $"0 0 {layout.Width.ToString(System.Globalization.CultureInfo.InvariantCulture)} {layout.Height.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+        builder.AddAttribute(seq++, "width", layout.Width.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        builder.AddAttribute(seq++, "height", layout.Height.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        builder.AddAttribute(seq++, "data-testid", "graph-svg");
+        builder.AddAttribute(seq++, "style", "font-family: -apple-system, Segoe UI, sans-serif;");
+
+        // Marker for arrow heads.
+        builder.OpenElement(seq++, "defs");
+        builder.OpenElement(seq++, "marker");
+        builder.AddAttribute(seq++, "id", "fx-arrow");
+        builder.AddAttribute(seq++, "viewBox", "0 0 10 10");
+        builder.AddAttribute(seq++, "refX", "9");
+        builder.AddAttribute(seq++, "refY", "5");
+        builder.AddAttribute(seq++, "markerWidth", "8");
+        builder.AddAttribute(seq++, "markerHeight", "8");
+        builder.AddAttribute(seq++, "orient", "auto-start-reverse");
+        builder.OpenElement(seq++, "path");
+        builder.AddAttribute(seq++, "d", "M 0 0 L 10 5 L 0 10 z");
+        builder.AddAttribute(seq++, "fill", "#5a6f88");
         builder.CloseElement();
         builder.CloseElement();
+        builder.CloseElement();
+
+        // 1. Edges (rendered first so nodes paint on top).
+        foreach (var edge in layout.Edges)
+        {
+            var (x1, y1) = SourceMidRight(edge, layout);
+            var (x2, y2) = TargetMidLeft(edge, layout);
+            if (double.IsNaN(x1) || double.IsNaN(x2)) continue;
+
+            // Bezier curve with handles pushed horizontally for a sankey-ish flow.
+            var cx1 = x1 + (x2 - x1) * 0.5;
+            var cx2 = x1 + (x2 - x1) * 0.5;
+            var d = $"M {Fmt(x1)} {Fmt(y1)} C {Fmt(cx1)} {Fmt(y1)} {Fmt(cx2)} {Fmt(y2)} {Fmt(x2)} {Fmt(y2)}";
+
+            builder.OpenElement(seq++, "path");
+            builder.AddAttribute(seq++, "d", d);
+            builder.AddAttribute(seq++, "fill", "none");
+            builder.AddAttribute(seq++, "stroke", "#5a6f88");
+            builder.AddAttribute(seq++, "stroke-width", "1.5");
+            builder.AddAttribute(seq++, "marker-end", "url(#fx-arrow)");
+            builder.AddAttribute(seq++, "data-edge-item", edge.ItemId);
+            builder.CloseElement();
+
+            // Edge label hanging just above its midpoint.
+            var mx = (x1 + x2) / 2.0;
+            var my = (y1 + y2) / 2.0 + LabelOffsetY;
+            builder.OpenElement(seq++, "text");
+            builder.AddAttribute(seq++, "x", Fmt(mx));
+            builder.AddAttribute(seq++, "y", Fmt(my));
+            builder.AddAttribute(seq++, "font-size", "10");
+            builder.AddAttribute(seq++, "fill", "#33425a");
+            builder.AddAttribute(seq++, "text-anchor", "middle");
+            builder.AddContent(seq++, $"{FormatRate(edge.ItemsPerMinute)} {edge.ItemName} / min");
+            builder.CloseElement();
+        }
+
+        // 2. Raw-input pseudo-nodes (left column).
+        foreach (var raw in layout.Raws)
+        {
+            builder.OpenElement(seq++, "g");
+            builder.AddAttribute(seq++, "data-raw-id", raw.ItemId);
+
+            builder.OpenElement(seq++, "rect");
+            builder.AddAttribute(seq++, "x", Fmt(raw.X));
+            builder.AddAttribute(seq++, "y", Fmt(raw.Y));
+            builder.AddAttribute(seq++, "width", RawColumnWidth.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            builder.AddAttribute(seq++, "height", NodeHeight.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            builder.AddAttribute(seq++, "rx", "6");
+            builder.AddAttribute(seq++, "ry", "6");
+            builder.AddAttribute(seq++, "fill", "#eef3f8");
+            builder.AddAttribute(seq++, "stroke", "#8aa0b8");
+            builder.AddAttribute(seq++, "stroke-dasharray", "4 3");
+            builder.CloseElement();
+
+            builder.OpenElement(seq++, "text");
+            builder.AddAttribute(seq++, "x", Fmt(raw.X + RawColumnWidth / 2.0));
+            builder.AddAttribute(seq++, "y", Fmt(raw.Y + NodeHeight / 2.0 - 4));
+            builder.AddAttribute(seq++, "font-size", "11");
+            builder.AddAttribute(seq++, "fill", "#33425a");
+            builder.AddAttribute(seq++, "text-anchor", "middle");
+            builder.AddAttribute(seq++, "font-weight", "600");
+            builder.AddContent(seq++, "RAW");
+            builder.CloseElement();
+
+            builder.OpenElement(seq++, "text");
+            builder.AddAttribute(seq++, "x", Fmt(raw.X + RawColumnWidth / 2.0));
+            builder.AddAttribute(seq++, "y", Fmt(raw.Y + NodeHeight / 2.0 + 12));
+            builder.AddAttribute(seq++, "font-size", "11");
+            builder.AddAttribute(seq++, "fill", "#33425a");
+            builder.AddAttribute(seq++, "text-anchor", "middle");
+            builder.AddContent(seq++, raw.ItemName);
+            builder.CloseElement();
+
+            builder.CloseElement();
+        }
+
+        // 3. Recipe nodes.
+        foreach (var node in layout.Nodes)
+        {
+            builder.OpenElement(seq++, "g");
+            builder.AddAttribute(seq++, "data-step-id", node.Step.RecipeId);
+            builder.AddAttribute(seq++, "data-step-index", node.StepIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            builder.OpenElement(seq++, "rect");
+            builder.AddAttribute(seq++, "x", Fmt(node.X));
+            builder.AddAttribute(seq++, "y", Fmt(node.Y));
+            builder.AddAttribute(seq++, "width", NodeWidth.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            builder.AddAttribute(seq++, "height", NodeHeight.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            builder.AddAttribute(seq++, "rx", "6");
+            builder.AddAttribute(seq++, "ry", "6");
+            builder.AddAttribute(seq++, "fill", "#fff7e0");
+            builder.AddAttribute(seq++, "stroke", "#c19a3c");
+            builder.AddAttribute(seq++, "stroke-width", "1.5");
+            builder.CloseElement();
+
+            // Recipe name (bold).
+            builder.OpenElement(seq++, "text");
+            builder.AddAttribute(seq++, "x", Fmt(node.X + NodeWidth / 2.0));
+            builder.AddAttribute(seq++, "y", Fmt(node.Y + 20));
+            builder.AddAttribute(seq++, "font-size", "12");
+            builder.AddAttribute(seq++, "font-weight", "600");
+            builder.AddAttribute(seq++, "fill", "#2a2a2a");
+            builder.AddAttribute(seq++, "text-anchor", "middle");
+            builder.AddContent(seq++, Truncate(node.Step.RecipeName, 26));
+            builder.CloseElement();
+
+            // Building count · power
+            builder.OpenElement(seq++, "text");
+            builder.AddAttribute(seq++, "x", Fmt(node.X + NodeWidth / 2.0));
+            builder.AddAttribute(seq++, "y", Fmt(node.Y + 38));
+            builder.AddAttribute(seq++, "font-size", "11");
+            builder.AddAttribute(seq++, "fill", "#33425a");
+            builder.AddAttribute(seq++, "text-anchor", "middle");
+            builder.AddContent(seq++, $"{FormatCount(node.Step.BuildingCount)} bldg · {FormatPower(node.Step.PowerMw)} MW");
+            builder.CloseElement();
+
+            // Building name (small, lighter).
+            builder.OpenElement(seq++, "text");
+            builder.AddAttribute(seq++, "x", Fmt(node.X + NodeWidth / 2.0));
+            builder.AddAttribute(seq++, "y", Fmt(node.Y + 52));
+            builder.AddAttribute(seq++, "font-size", "10");
+            builder.AddAttribute(seq++, "fill", "#5a6f88");
+            builder.AddAttribute(seq++, "text-anchor", "middle");
+            builder.AddContent(seq++, Truncate(node.Step.BuildingName, 30));
+            builder.CloseElement();
+
+            builder.CloseElement();
+        }
+
+        builder.CloseElement(); // </svg>
     };
+
+    /// <summary>Right-midpoint of the upstream node for an edge.</summary>
+    private static (double X, double Y) SourceMidRight(GraphEdge edge, Layout layout)
+    {
+        if (edge.FromStepIndex is int from)
+        {
+            var node = layout.Nodes.FirstOrDefault(n => n.StepIndex == from);
+            if (node is null) return (double.NaN, double.NaN);
+            return (node.X + NodeWidth, node.Y + NodeHeight / 2.0);
+        }
+        var raw = layout.Raws.FirstOrDefault(r => r.ItemId == edge.ItemId);
+        if (raw is null) return (double.NaN, double.NaN);
+        return (raw.X + RawColumnWidth, raw.Y + NodeHeight / 2.0);
+    }
+
+    /// <summary>Left-midpoint of the downstream recipe node for an edge.</summary>
+    private static (double X, double Y) TargetMidLeft(GraphEdge edge, Layout layout)
+    {
+        var node = layout.Nodes.FirstOrDefault(n => n.StepIndex == edge.ToStepIndex);
+        if (node is null) return (double.NaN, double.NaN);
+        return (node.X, node.Y + NodeHeight / 2.0);
+    }
+
+    private static string Fmt(double v) =>
+        v.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string FormatRate(decimal rate) =>
+        rate == Math.Floor(rate) ? rate.ToString("0") : rate.ToString("0.##");
+
+    private static string FormatCount(decimal count) =>
+        count.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string FormatPower(decimal mw) =>
+        mw == Math.Floor(mw) ? mw.ToString("0") : mw.ToString("0.##");
+
+    private static string Truncate(string s, int max) =>
+        s.Length <= max ? s : s[..(max - 1)] + "…";
 
     private sealed class Row
     {
