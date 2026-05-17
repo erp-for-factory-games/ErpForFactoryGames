@@ -295,7 +295,8 @@ app.MapGet("/fs/browse", (string? path, string? filter, string? purpose) =>
 
 app.MapPost("/factory/ingest", async (
     IngestSaveRequest request, IMessageBus bus, IFactoryStateProvider provider,
-    ICatalogProvider catalog, ILoggerFactory loggerFactory) =>
+    ICatalogProvider catalog, FactoryAlertAnalysisService alertAnalysis,
+    ILoggerFactory loggerFactory, CancellationToken ct) =>
 {
     if (string.IsNullOrWhiteSpace(request.SavePath))
         return Results.BadRequest(new { error = "SavePath is required." });
@@ -305,8 +306,22 @@ app.MapPost("/factory/ingest", async (
         var sw = System.Diagnostics.Stopwatch.StartNew();
         await bus.InvokeAsync<FactoryStateStatus>(new IngestSaveCommand(request.SavePath));
         sw.Stop();
-        loggerFactory.CreateLogger("FactoryIngestEndpoint")
-            .LogInformation("Ingested save in {Elapsed}ms", sw.ElapsedMilliseconds);
+        var ingestLogger = loggerFactory.CreateLogger("FactoryIngestEndpoint");
+        ingestLogger.LogInformation("Ingested save in {Elapsed}ms", sw.ElapsedMilliseconds);
+
+        // Run alert analysis post-ingest (#116). Best-effort: failures here
+        // are logged but never fail the ingest itself — the save loaded
+        // successfully, and alerts are an auxiliary surface.
+        try
+        {
+            var source = $"save:{System.IO.Path.GetFileNameWithoutExtension(request.SavePath)}";
+            await alertAnalysis.RunAsync(source, ct);
+        }
+        catch (Exception alertEx)
+        {
+            ingestLogger.LogWarning(alertEx, "Alert analysis failed post-ingest; ingest itself succeeded.");
+        }
+
         return Results.Ok(FactoryStateView.From(provider, catalog));
     }
     catch (FileNotFoundException ex)

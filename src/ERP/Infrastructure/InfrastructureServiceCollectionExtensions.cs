@@ -43,6 +43,9 @@ public static class InfrastructureServiceCollectionExtensions
                 _ => new RecursiveRecipePlanner(catalog),
             };
         });
+        // Post-ingest bottleneck analysis (#116, phase B). Scoped because it
+        // depends on the scoped IFactoryAlertRepository (EF DbContext).
+        services.AddScoped<FactoryAlertAnalysisService>();
         return services;
     }
 }

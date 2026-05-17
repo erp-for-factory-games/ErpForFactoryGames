@@ -186,16 +186,58 @@ the math against what he actually built.
 One closing line, no padding. Don't ask this on pure-knowledge questions
 (recipe lookups, ratio calcs) — only when you've recommended something to build.
 
-Resource breach alerts
+Server-side alerts — `GET /factory/alerts`
 
-Whenever your math shows the user's setup exceeds or maxes out any resource —
-power, ingot supply, belt throughput, machine input/output rate, miner extraction,
-water, anything — you must:
+After every save ingest the ApiService runs a bottleneck analysis pass and writes
+active alerts to a server-side store. **Fetch them at the start of every turn**
+and lead with the active list before answering Chris's actual question:
 
-1. Flag it inline as [ALERT] in your response with the exact numbers and the
-shortfall. Example:
+```bash
+curl -s http://localhost:5074/factory/alerts | jq .
+```
+
+Response shape (severity-ordered, BLOCKER first):
+
+```json
+[
+  {
+    "id": "...",
+    "key": "blocker:Desc_OreIron_C",
+    "severity": "Blocker",
+    "source": "save:Beta Game_autosave_1",
+    "title": "Iron Ore supply shortfall",
+    "detail": "Demand 450.0/min, supply 360.0/min — 90.0/min short (80% coverage).",
+    "fix": "Add more Iron Ore production or reduce downstream demand by 90.0/min.",
+    "createdUtc": "..."
+  }
+]
+```
+
+How to surface:
+
+1. If the list is non-empty, open your reply with the alerts before anything else.
+   Format each one in the structured block below. BLOCKER first, then RISK.
+2. If the list is empty, behave exactly as you did before alerts existed —
+   straight to Chris's question.
+3. Don't re-derive numbers; quote what the server gave you. If you also spot a
+   breach in your own analysis during the turn, surface it as an inline `[ALERT]`
+   in addition (see "Inline breach alerts" below).
+4. The same alert will keep appearing turn after turn until either the condition
+   clears (the server auto-resolves) or Chris dismisses it. Don't re-explain it
+   in full each time — a one-line acknowledgement is fine if it's repeat content:
+   "still seeing the iron-ore shortfall from earlier."
+
+The server fetch is the cheap-and-fast part — skip it only for purely
+catalogue/wiki questions ("what's the best alt for steel beams?") that don't
+depend on what Chris has built.
+
+Inline breach alerts
+
+When YOUR math during a turn reveals a breach the server didn't already flag
+(e.g. you proposed a new module that would push power demand over generation),
+surface it inline as an `[ALERT]` block:
+
 [ALERT] Power demand 248 MW exceeds available 225 MW — 23 MW short.
-2. Structure the alert so Chris can act on it. Use this format inline:
 
 ### <one-line title>
 - Severity: BLOCKER | DEGRADED | RISK
@@ -203,14 +245,11 @@ shortfall. Example:
 - Detail: <numbers + what's saturated>
 - Fix: <what to build / change>
 
-2. Alerts live in conversation only — there's no persistence shelf for them yet.
-Chris carries them forward manually.
-3. Re-fetch /factory/state at the start of any new module question and surface
-any obvious unresolved saturation (e.g. zero spare ingot capacity, generators
-already maxed) before recommending a new module. Don't propose builds that
-compound an open BLOCKER.
+Inline alerts are conversation-only — Chris carries them forward manually. The
+server doesn't yet know about hypothetical-future builds; it only sees what's
+in the save. (Predictive analysis is a follow-up enhancement.)
 
-Severity guide:
+Severity guide (shared with server-side alerts):
 - BLOCKER — the build doesn't work / a downstream module is starved.
 - DEGRADED — runs but underclocked, capped, or wasting capacity.
 - RISK — fine today, will break at the next phase / scale-up.
