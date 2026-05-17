@@ -120,11 +120,26 @@ app.MapGet("/factory/saves", () =>
 
 // Active factory bottleneck alerts (#116). Read by the ADA agent so she leads
 // with active alerts on each user turn. Empty list when nothing's flagged.
-// Writes happen post-ingest via the analysis service (separate PR).
+// Writes happen post-ingest via the analysis service.
 app.MapGet("/factory/alerts", async (IFactoryAlertRepository repo, CancellationToken ct) =>
 {
     var alerts = await repo.ListActiveAsync(ct);
     return Results.Ok(alerts.Select(FactoryAlertView.From).ToList());
+});
+
+// Manual dismissal (#116, phase C). Marks an alert as dismissed; subsequent
+// analysis passes that re-detect the same condition will create a *new* alert
+// rather than re-fire the dismissed one. Idempotent — re-dismissing an
+// already-dismissed alert is a 204, not an error.
+app.MapPost("/factory/alerts/{id:guid}/dismiss", async (
+    Guid id, IFactoryAlertRepository repo, TimeProvider clock, CancellationToken ct) =>
+{
+    var alert = await repo.GetAsync(id, ct);
+    if (alert is null) return Results.NotFound();
+
+    alert.Dismiss(clock.GetUtcNow().UtcDateTime);
+    await repo.SaveChangesAsync(ct);
+    return Results.NoContent();
 });
 
 // Backing endpoint for the in-app filesystem picker (issue #84). Lists the
