@@ -1,0 +1,194 @@
+@page "/planner/graph"
+@rendermode InteractiveServer
+@inject PlannerApiClient Api
+
+<PageTitle>Planner · Flow graph</PageTitle>
+
+<h1>Production-flow Graph</h1>
+
+<MudText Typo="Typo.body2" Class="mb-3">
+    Visualise the current plan as a left-to-right DAG of recipes. Raw inputs flow in on the left;
+    target items emerge on the right.
+</MudText>
+
+@if (items is null)
+{
+    <MudText><em>Loading catalogue...</em></MudText>
+}
+else
+{
+    <MudPaper Class="pa-3 mb-3" Outlined="true">
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Sources (items/min available)</MudText>
+                @foreach (var row in sources)
+                {
+                    <div class="d-flex gap-2 mb-2 align-items-center">
+                        <MudAutocomplete T="CatalogItem"
+                                         Value="row.Item"
+                                         ValueChanged="@(i => row.Item = i)"
+                                         SearchFunc="@SearchItems"
+                                         ToStringFunc="@(i => i?.Name ?? string.Empty)"
+                                         Placeholder="Pick item"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Dense="true"
+                                         Clearable="true"
+                                         Style="min-width: 14rem;" />
+                        <MudNumericField T="decimal" @bind-Value="row.ItemsPerMinute"
+                                         Min="0" Step="1m"
+                                         Placeholder="items / min"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Style="max-width: 9rem;" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                       Color="Color.Error" Size="Size.Small"
+                                       Variant="Variant.Outlined"
+                                       OnClick="() => RemoveSource(row)" title="Remove" />
+                    </div>
+                }
+                <MudButton Variant="Variant.Outlined" OnClick="AddSource"
+                           StartIcon="@Icons.Material.Filled.Add">Add source</MudButton>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Sinks (items/min wanted)</MudText>
+                @foreach (var row in sinks)
+                {
+                    <div class="d-flex gap-2 mb-2 align-items-center">
+                        <MudAutocomplete T="CatalogItem"
+                                         Value="row.Item"
+                                         ValueChanged="@(i => row.Item = i)"
+                                         SearchFunc="@SearchItems"
+                                         ToStringFunc="@(i => i?.Name ?? string.Empty)"
+                                         Placeholder="Pick item"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Dense="true"
+                                         Clearable="true"
+                                         Style="min-width: 14rem;" />
+                        <MudNumericField T="decimal" @bind-Value="row.ItemsPerMinute"
+                                         Min="0" Step="1m"
+                                         Placeholder="items / min"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Style="max-width: 9rem;" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                       Color="Color.Error" Size="Size.Small"
+                                       Variant="Variant.Outlined"
+                                       OnClick="() => RemoveSink(row)" title="Remove" />
+                    </div>
+                }
+                <MudButton Variant="Variant.Outlined" OnClick="AddSink"
+                           StartIcon="@Icons.Material.Filled.Add">Add sink</MudButton>
+            </MudItem>
+        </MudGrid>
+
+        <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="Compute" Disabled="@isComputing">
+                @(isComputing ? "Computing..." : "Compute & render")
+            </MudButton>
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <MudText HtmlTag="span" Color="Color.Error">@error</MudText>
+            }
+        </div>
+    </MudPaper>
+
+    @if (plan is null)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" data-testid="graph-empty">
+            No plan to graph yet — pick sinks above and press <strong>Compute &amp; render</strong>,
+            or visit <MudLink Href="planner">/planner</MudLink> to set one up first.
+        </MudAlert>
+    }
+    else if (plan.Steps.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            Plan is empty — no production steps to graph (everything is already covered by sources).
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Class="pa-2" Outlined="true" data-testid="graph-svg-wrap">
+            @RenderGraphSvg()
+        </MudPaper>
+    }
+}
+
+@code {
+    private CatalogItem[]? items;
+    private List<Row> sources = [new()];
+    private List<Row> sinks = [new()];
+    private PlanResponse? plan;
+    private string? error;
+    private bool isComputing;
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = await Api.GetItemsAsync();
+    }
+
+    private Task<IEnumerable<CatalogItem>> SearchItems(string? value, CancellationToken ct)
+    {
+        if (items is null) return Task.FromResult<IEnumerable<CatalogItem>>([]);
+        if (string.IsNullOrWhiteSpace(value)) return Task.FromResult<IEnumerable<CatalogItem>>(items);
+        return Task.FromResult(items.Where(i => i.Name.Contains(value, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private void AddSource() => sources.Add(new());
+    private void RemoveSource(Row r) { sources.Remove(r); if (sources.Count == 0) sources.Add(new()); }
+    private void AddSink() => sinks.Add(new());
+    private void RemoveSink(Row r) { sinks.Remove(r); if (sinks.Count == 0) sinks.Add(new()); }
+
+    private async Task Compute()
+    {
+        error = null;
+        plan = null;
+        isComputing = true;
+        try
+        {
+            var request = new PlanRequest(
+                Targets:   sinks  .Where(r => r.Item is not null).Select(r => new TargetInput(r.Item!.Id, r.ItemsPerMinute)).ToList(),
+                Available: sources.Where(r => r.Item is not null).Select(r => new AvailabilityInput(r.Item!.Id, r.ItemsPerMinute)).ToList());
+
+            if (request.Targets.Count == 0)
+            {
+                error = "Add at least one sink.";
+                return;
+            }
+            plan = await Api.ComputePlanAsync(request);
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isComputing = false;
+        }
+    }
+
+    private RenderFragment RenderGraphSvg() => builder =>
+    {
+        // Stub — real SVG rendering arrives in a follow-up commit on this branch.
+        builder.OpenElement(0, "svg");
+        builder.AddAttribute(1, "viewBox", "0 0 100 40");
+        builder.AddAttribute(2, "width", "100%");
+        builder.AddAttribute(3, "height", "40");
+        builder.AddAttribute(4, "data-testid", "graph-svg");
+        builder.OpenElement(5, "text");
+        builder.AddAttribute(6, "x", "4");
+        builder.AddAttribute(7, "y", "24");
+        builder.AddAttribute(8, "font-size", "10");
+        builder.AddContent(9, $"{plan!.Steps.Count} step(s) — graph rendering pending");
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+
+    private sealed class Row
+    {
+        public CatalogItem? Item { get; set; }
+        public decimal ItemsPerMinute { get; set; }
+    }
+}
