@@ -1,0 +1,308 @@
+@page "/dashboard"
+@rendermode InteractiveServer
+@inject PlannerApiClient Api
+@implements IAsyncDisposable
+
+<PageTitle>Dashboard</PageTitle>
+
+@*
+    In-game-feel dashboard (#131). Designed to be kept open in a side window
+    while playing — compact, alert-first, auto-refreshing. Three sections:
+    active alerts up top, factory state summary middle, last-ingest metadata
+    + re-ingest action at the bottom.
+*@
+
+<div class="fx-dashboard">
+    <div class="fx-dashboard-header">
+        <MudText Typo="Typo.h5" Class="mb-0">Factory dashboard</MudText>
+        <div class="fx-dashboard-toolbar">
+            @if (lastRefreshedUtc is { } refreshed)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Default" Class="mr-2">
+                    refreshed @FormatRelative(refreshed)
+                </MudText>
+            }
+            <MudSwitch T="bool" @bind-Value="autoRefresh"
+                       Label="@(autoRefresh ? "auto" : "paused")"
+                       Color="Color.Primary" Size="Size.Small" />
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                           Color="Color.Default" Size="Size.Small"
+                           Disabled="@isRefreshing"
+                           OnClick="@RefreshAsync"
+                           aria-label="Refresh now" />
+        </div>
+    </div>
+
+    @* ---------- Alerts ---------- *@
+    <section class="mt-3">
+        @if (alerts is null)
+        {
+            <MudText Typo="Typo.caption"><em>Loading alerts…</em></MudText>
+        }
+        else if (alerts.Length == 0)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
+                No active alerts. Factory state nominal.
+            </MudAlert>
+        }
+        else
+        {
+            @foreach (var alert in alerts)
+            {
+                <MudAlert Severity="@MapSeverity(alert.Severity)"
+                          Variant="Variant.Outlined"
+                          Dense="true"
+                          Class="mb-2"
+                          ShowCloseIcon="true"
+                          CloseIconClicked="@(() => DismissAsync(alert.Id))">
+                    <div class="fx-dashboard-alert">
+                        <MudText Typo="Typo.subtitle2" Class="mb-1">
+                            <strong>@alert.Severity.ToUpper()</strong> · @alert.Title
+                        </MudText>
+                        <MudText Typo="Typo.body2" Class="mb-1">@alert.Detail</MudText>
+                        @if (!string.IsNullOrWhiteSpace(alert.Fix))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Default" Class="d-block">
+                                <strong>Fix:</strong> @alert.Fix
+                            </MudText>
+                        }
+                    </div>
+                </MudAlert>
+            }
+        }
+    </section>
+
+    @* ---------- Factory state summary ---------- *@
+    <section class="mt-4">
+        <MudText Typo="Typo.h6" Class="mb-2">Current state</MudText>
+        @if (state is null)
+        {
+            <MudText Typo="Typo.caption"><em>Loading state…</em></MudText>
+        }
+        else if (!state.IsLoaded)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                No save ingested yet. Open <MudLink Href="/factory/ingest">Factory state</MudLink> to pick a .sav.
+            </MudAlert>
+        }
+        else
+        {
+            <MudGrid Spacing="2">
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Default">Miners</MudText>
+                    <MudText Typo="Typo.h6">@state.Miners.Sum(m => m.Count).ToString("N0")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Default">
+                        @state.MinersBoundToNode bound · @ResourceNodeCount nodes
+                    </MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Default">Production buildings</MudText>
+                    <MudText Typo="Typo.h6">@state.Buildings.Sum(b => b.Count).ToString("N0")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Default">
+                        @state.BuildingsWithRecipe with a recipe
+                    </MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Default">Generators</MudText>
+                    <MudText Typo="Typo.h6">@state.Generators.Sum(g => g.Count).ToString("N0")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Default">
+                        @SummariseTopKinds(state.Generators)
+                    </MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Default">Belts</MudText>
+                    <MudText Typo="Typo.h6">@state.Belts.Sum(b => b.Count).ToString("N0")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Default">
+                        @SummariseTopKinds(state.Belts)
+                    </MudText>
+                </MudItem>
+            </MudGrid>
+        }
+    </section>
+
+    @* ---------- Last ingest + re-ingest ---------- *@
+    <section class="mt-4">
+        <MudText Typo="Typo.h6" Class="mb-2">Save snapshot</MudText>
+        @if (state?.Save is { } save)
+        {
+            <MudText Typo="Typo.body2">
+                <strong>@save.SessionName</strong>
+            </MudText>
+            <MudText Typo="Typo.caption" Color="Color.Default" Class="d-block">
+                saved @save.SaveDateTimeUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · played @FormatPlayed(save.PlayedSeconds)
+            </MudText>
+            @if (!string.IsNullOrWhiteSpace(state!.Source))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Default" Class="d-block">
+                    <code class="fx-dashboard-source">@System.IO.Path.GetFileName(state.Source)</code>
+                </MudText>
+            }
+        }
+        else
+        {
+            <MudText Typo="Typo.caption">No save loaded.</MudText>
+        }
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Sync"
+                   OnClick="@ReingestAsync"
+                   Disabled="@(state?.Source is null || isReingesting)"
+                   Class="mt-2">
+            @(isReingesting ? "Re-ingesting…" : "Re-ingest current save")
+        </MudButton>
+
+        @if (!string.IsNullOrEmpty(reingestError))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                @reingestError
+            </MudAlert>
+        }
+    </section>
+</div>
+
+@code {
+    private static readonly TimeSpan AutoRefreshInterval = TimeSpan.FromSeconds(10);
+
+    private FactoryAlertView[]? alerts;
+    private FactoryStateViewModel? state;
+    private DateTime? lastRefreshedUtc;
+    private bool isRefreshing;
+    private bool isReingesting;
+    private string? reingestError;
+
+    private bool _autoRefresh = true;
+    private bool autoRefresh
+    {
+        get => _autoRefresh;
+        set
+        {
+            if (_autoRefresh == value) return;
+            _autoRefresh = value;
+            if (value) _ = StartAutoRefreshAsync();
+        }
+    }
+
+    private CancellationTokenSource? autoRefreshCts;
+
+    private int ResourceNodeCount => state?.ResourceNodeCount ?? 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAsync();
+        _ = StartAutoRefreshAsync();
+    }
+
+    private async Task StartAutoRefreshAsync()
+    {
+        autoRefreshCts?.Cancel();
+        autoRefreshCts = new CancellationTokenSource();
+        var ct = autoRefreshCts.Token;
+
+        try
+        {
+            using var timer = new PeriodicTimer(AutoRefreshInterval);
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                if (!_autoRefresh) break;
+                await InvokeAsync(RefreshAsync);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Loop exit on toggle or page dispose — expected.
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (isRefreshing) return;
+        isRefreshing = true;
+        try
+        {
+            // Parallel fetches — both endpoints are independent.
+            var alertsTask = Api.GetFactoryAlertsAsync();
+            var stateTask = Api.GetFactoryStateAsync();
+            alerts = await alertsTask;
+            state = await stateTask;
+            lastRefreshedUtc = DateTime.UtcNow;
+        }
+        catch
+        {
+            // Swallow transient errors; next tick retries. Surface via the
+            // refreshed-X-seconds-ago indicator going stale.
+        }
+        finally
+        {
+            isRefreshing = false;
+        }
+    }
+
+    private async Task DismissAsync(Guid id)
+    {
+        var ok = await Api.DismissAlertAsync(id);
+        if (ok && alerts is not null)
+        {
+            // Optimistic local removal so the row vanishes before the next
+            // refresh cycle. Next tick reconciles with the server.
+            alerts = alerts.Where(a => a.Id != id).ToArray();
+        }
+    }
+
+    private async Task ReingestAsync()
+    {
+        if (state?.Source is not { Length: > 0 } source) return;
+        isReingesting = true;
+        reingestError = null;
+        try
+        {
+            var result = await Api.IngestSaveAsync(source);
+            if (!result.Success) reingestError = result.Error ?? "Re-ingest failed.";
+            // The next auto-refresh tick will pick up the new state +
+            // refreshed alerts from the post-ingest analysis pass.
+            await RefreshAsync();
+        }
+        finally
+        {
+            isReingesting = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        autoRefreshCts?.Cancel();
+        autoRefreshCts?.Dispose();
+        await Task.CompletedTask;
+    }
+
+    private static Severity MapSeverity(string severity) => severity?.ToLowerInvariant() switch
+    {
+        "blocker" => Severity.Error,
+        "degraded" => Severity.Warning,
+        "risk" => Severity.Info,
+        _ => Severity.Info,
+    };
+
+    private static string SummariseTopKinds(IReadOnlyList<CountViewModel> rows)
+    {
+        if (rows.Count == 0) return string.Empty;
+        return string.Join(", ", rows.OrderByDescending(r => r.Count).Take(3).Select(r => $"{r.Count} {r.Key}"));
+    }
+
+    private static string FormatPlayed(double seconds)
+    {
+        var t = TimeSpan.FromSeconds(seconds);
+        if (t.TotalHours >= 1) return $"{(int)t.TotalHours}h {t.Minutes}m";
+        return $"{t.Minutes}m";
+    }
+
+    private static string FormatRelative(DateTime utc)
+    {
+        var delta = DateTime.UtcNow - utc;
+        if (delta < TimeSpan.FromSeconds(2)) return "just now";
+        if (delta < TimeSpan.FromMinutes(1)) return $"{(int)delta.TotalSeconds}s ago";
+        if (delta < TimeSpan.FromHours(1)) return $"{(int)delta.TotalMinutes}m ago";
+        return utc.ToLocalTime().ToString("HH:mm");
+    }
+}
