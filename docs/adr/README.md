@@ -39,3 +39,4 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0016](0016-external-assets-drop-folder.md) | External game-derived assets via the `.assets/` drop folder | Accepted (extends [0015](0015-map-backdrops-fair-use.md)) |
 | [0017](0017-mudblazor-as-ui-framework.md) | MudBlazor as the UI component framework, Bootstrap removed | Accepted |
 | [0018](0018-persistence-stack.md) | Persistence stack: EF Core with SQLite default, Postgres opt-in | Accepted |
+| [0019](0019-tickerq-background-scheduler.md) | TickerQ as the background-job scheduler | Accepted |

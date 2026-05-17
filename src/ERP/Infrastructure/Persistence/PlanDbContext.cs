@@ -1,5 +1,8 @@
 using ERP.Domain;
 using Microsoft.EntityFrameworkCore;
+using TickerQ.EntityFrameworkCore;
+using TickerQ.EntityFrameworkCore.Configurations;
+using TickerQ.Utilities.Entities;
 
 namespace ERP.Infrastructure.Persistence;
 
@@ -34,6 +37,18 @@ public class PlanDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PlanDbContext).Assembly);
+
+        // TickerQ (#115, ADR-0019). Apply the operational-store entity
+        // configurations directly here rather than via TickerQ's
+        // IModelCustomizer — the customizer relies on the host's DI being
+        // active during model build, which the design-time DbContext factory
+        // (PlanDbContextFactory.cs) bypasses. Direct ApplyConfiguration is
+        // identical at runtime AND at `dotnet ef migrations add` time, so
+        // the snapshot stays consistent.
+        modelBuilder.ApplyConfiguration(new TimeTickerConfigurations<TimeTickerEntity>(Constants.DefaultSchema));
+        modelBuilder.ApplyConfiguration(new CronTickerConfigurations<CronTickerEntity>(Constants.DefaultSchema));
+        modelBuilder.ApplyConfiguration(new CronTickerOccurrenceConfigurations<CronTickerEntity>(Constants.DefaultSchema));
+
         base.OnModelCreating(modelBuilder);
     }
 

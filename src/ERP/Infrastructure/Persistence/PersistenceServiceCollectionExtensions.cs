@@ -3,6 +3,9 @@ using ERP.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TickerQ.DependencyInjection;
+using TickerQ.EntityFrameworkCore.Customizer;
+using TickerQ.EntityFrameworkCore.DependencyInjection;
 
 namespace ERP.Infrastructure.Persistence;
 
@@ -95,6 +98,21 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IPlanRepository, PlanRepository>();
         services.AddScoped<IPlanShareRepository, PlanShareRepository>();
         services.AddScoped<IFactoryAlertRepository, FactoryAlertRepository>();
+
+        // TickerQ — background job scheduler (#115, ADR-0019). Entity
+        // configurations are applied explicitly in PlanDbContext.OnModelCreating
+        // (see comment there for the design-time-factory rationale), so
+        // `IgnoreModelCustomizer` is the correct switch here — TickerQ
+        // wires its DI but skips registering its own IModelCustomizer.
+        // Job processor is activated in Program.cs with app.UseTickerQ();
+        // without that call jobs never run even if scheduled rows exist.
+        services.AddTickerQ(opts =>
+        {
+            opts.AddOperationalStore(efOpts =>
+            {
+                efOpts.UseApplicationDbContext<PlanDbContext>(ConfigurationType.IgnoreModelCustomizer);
+            });
+        });
         return services;
     }
 }

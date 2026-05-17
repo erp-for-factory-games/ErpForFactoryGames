@@ -1,3 +1,4 @@
+using ApiService;
 using ERP.Application;
 using ERP.Application.Commands.IngestSave;
 using ERP.Application.Queries.PlanProduction;
@@ -6,6 +7,7 @@ using ERP.Infrastructure;
 using ERP.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Satisfactory.Save;
+using TickerQ.DependencyInjection;
 using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,6 +41,15 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<PlanDbContext>();
     db.Database.Migrate();
 }
+
+// Auto-ingest cron registration (#115). Idempotent: ensures a TickerQ
+// cron entry for the AutoIngestJob exists if AutoIngest:Enabled=true,
+// removes it otherwise. Runs after migrations so the TickerQ tables exist.
+await AutoIngestStartup.EnsureCronRegistrationAsync(app.Services);
+
+// Activate the TickerQ job processor. Without this call the cron entries
+// sit dormant in the DB and nothing fires.
+app.UseTickerQ();
 
 app.UseExceptionHandler();
 

@@ -24,6 +24,12 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <!-- TickerQ ships the source generator bundled in the core package — it
+         scans this assembly for [TickerFunction] methods at compile time and
+         emits the registration code. No separate SourceGenerator package on
+         NuGet despite the sample csprojs in the upstream repo using a
+         ProjectReference (those are intra-repo). -->
+    <PackageReference Include="TickerQ" Version="10.4.0" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -14,6 +14,7 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.Configure<CatalogueOptions>(configuration.GetSection("Catalogue:Satisfactory"));
         services.Configure<FactoryStateOptions>(configuration.GetSection("FactoryState:Satisfactory"));
+        services.Configure<AutoIngestOptions>(configuration.GetSection("FactoryState:Satisfactory:AutoIngest"));
         services.Configure<PlannerOptions>(configuration.GetSection("Planner"));
         services.AddSingleton<UserCatalogueConfig>();
         services.AddSingleton<ICatalogProvider, DocsCatalogProvider>();
@@ -46,6 +47,10 @@ public static class InfrastructureServiceCollectionExtensions
         // Post-ingest bottleneck analysis (#116, phase B). Scoped because it
         // depends on the scoped IFactoryAlertRepository (EF DbContext).
         services.AddScoped<FactoryAlertAnalysisService>();
+        // TickerQ AutoIngestJob (#115). Singleton because TickerQ resolves
+        // the function host directly; the job's per-tick scope is opened by
+        // the framework around InvokeAsync calls inside RunAsync.
+        services.AddSingleton<AutoIngestJob>();
         return services;
     }
 }
