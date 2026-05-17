@@ -140,6 +140,9 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
         //   raw_i + Σ_r x_r·(out_rate(r,i) − in_rate(r,i))
         //         + Σ_(node, tier) n_(node,tier)·extractionRate(tier, node.Purity)
         //         + short_i ≥ target_i
+        // Keep references in `supplyConstraints` so we can read dual values
+        // for the sensitivity analysis (#129) after the solve.
+        var supplyConstraints = new Dictionary<ItemId, Constraint>();
         foreach (var i in items)
         {
             var targetI = targets.TryGetValue(i, out var t) ? t : 0.0;
@@ -166,6 +169,7 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
                     }
                 }
             }
+            supplyConstraints[i] = c;
         }
 
         // Objective: minimise total base power (Σ_r x_r · basePower(r)) plus
@@ -261,6 +265,9 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
             }
         }
 
+        var sensitivity = BuildSensitivity(
+            supplyConstraints, xVars, rawVars, shortVars, items, targets, recipes);
+
         return new ProductionPlan(
             Targets: query.Targets,
             Available: query.Available,
@@ -269,7 +276,77 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
             MissingInputs: InfeasibilityDiagnostics.Build(missingByItem, _catalog, steps),
             ExtractorAllocations: allocations,
             Warnings: PowerVarianceWarning.Build(steps),
-            FluidPipes: FluidPipeRequirements.Build(steps, rawConsumed));
+            FluidPipes: FluidPipeRequirements.Build(steps, rawConsumed),
+            Sensitivity: sensitivity);
+    }
+
+    /// <summary>
+    /// Reads dual values and reduced costs straight off the solved LP and
+    /// packages them as an <see cref="LpSensitivity"/> attached to the
+    /// returned plan (#129).
+    ///
+    /// <para>
+    /// Shadow price = constraint's <see cref="Constraint.DualValue"/>: how
+    /// much the objective improves per +1 unit on the RHS (extra demand).
+    /// Slack is computed by walking the constraint's terms in the same
+    /// shape they were originally added — Σ x_r·net_rate + raw + short −
+    /// target. OR-Tools' .NET bindings don't expose constraint enumeration,
+    /// so we recompute from the inputs the caller already has on hand.
+    /// </para>
+    /// </summary>
+    private static LpSensitivity BuildSensitivity(
+        Dictionary<ItemId, Constraint> supplyConstraints,
+        Dictionary<RecipeId, Variable> xVars,
+        Dictionary<ItemId, Variable> rawVars,
+        Dictionary<ItemId, Variable> shortVars,
+        IEnumerable<ItemId> items,
+        Dictionary<ItemId, double> targets,
+        IReadOnlyList<Recipe> recipes)
+    {
+        var shadowPrices = new List<ItemShadowPrice>();
+        foreach (var i in items)
+        {
+            // Some OR-Tools builds throw on DualValue() / ReducedCost() if
+            // the solve didn't return a basis (e.g. SCIP MIP runs). Surface
+            // as zero rather than crash the planner — the primal answer is
+            // still correct, sensitivity surface just empty.
+            var shadow = TryDualValue(supplyConstraints[i]);
+            var rhs = targets.TryGetValue(i, out var t) ? t : 0.0;
+
+            // Reconstruct LHS at the solution = raw + short + Σ x_r·net_rate
+            var lhs = rawVars[i].SolutionValue() + shortVars[i].SolutionValue();
+            foreach (var r in recipes)
+            {
+                var coeff = NetRatePerMinute(r, i);
+                if (Math.Abs(coeff) > Epsilon)
+                    lhs += coeff * xVars[r.Id].SolutionValue();
+            }
+            var slack = lhs - rhs;
+            if (slack < 0) slack = 0; // numerical noise — constraint can't be violated at OPTIMAL
+
+            shadowPrices.Add(new ItemShadowPrice(i, (decimal)shadow, (decimal)slack));
+        }
+
+        var reducedCosts = new List<RecipeReducedCost>();
+        foreach (var r in recipes)
+        {
+            var rc = TryReducedCost(xVars[r.Id]);
+            reducedCosts.Add(new RecipeReducedCost(r.Id, (decimal)rc));
+        }
+
+        return new LpSensitivity(shadowPrices, reducedCosts);
+    }
+
+    private static double TryDualValue(Constraint c)
+    {
+        try { return c.DualValue(); }
+        catch { return 0; }
+    }
+
+    private static double TryReducedCost(Variable v)
+    {
+        try { return v.ReducedCost(); }
+        catch { return 0; }
     }
 
     private static readonly IReadOnlyList<MinerTier> AllMinerTiers =

@@ -976,6 +976,24 @@ public sealed record FluidPipeRequirementDto(
     decimal MaxRatePerMinute,
     string RecommendedTier);
 
+/// <summary>LP sensitivity surface attached to <see cref="PlanDto"/> when
+/// the OR-Tools engine ran the plan (#129). <c>null</c> on plans produced
+/// by the recursive engine.</summary>
+public sealed record LpSensitivityDto(
+    IReadOnlyList<ItemShadowPriceDto> SupplyConstraints,
+    IReadOnlyList<RecipeReducedCostDto> ProductionRecipes);
+
+public sealed record ItemShadowPriceDto(
+    string ItemId,
+    string ItemName,
+    decimal ShadowPrice,
+    decimal Slack);
+
+public sealed record RecipeReducedCostDto(
+    string RecipeId,
+    string RecipeName,
+    decimal ReducedCost);
+
 public sealed record PlanDto(
     bool IsFeasible,
     IReadOnlyList<StepDto> Steps,
@@ -984,7 +1002,8 @@ public sealed record PlanDto(
     IReadOnlyList<MissingInputDto> MissingInputs,
     IReadOnlyList<ExtractorAllocationDto> ExtractorAllocations,
     IReadOnlyList<string> Warnings,
-    IReadOnlyList<FluidPipeRequirementDto> FluidPipeRequirements)
+    IReadOnlyList<FluidPipeRequirementDto> FluidPipeRequirements,
+    LpSensitivityDto? Sensitivity)
 {
     public static PlanDto From(ProductionPlan plan, ICatalogProvider catalog)
     {
@@ -1020,6 +1039,25 @@ public sealed record PlanDto(
                 MaxRatePerMinute: Math.Round(f.MaxRatePerMinute, 4),
                 RecommendedTier: f.RecommendedTier.ToString());
 
+        LpSensitivityDto? ToSensitivity(LpSensitivity? s)
+        {
+            if (s is null) return null;
+            return new LpSensitivityDto(
+                SupplyConstraints: s.SupplyConstraints
+                    .Select(sp => new ItemShadowPriceDto(
+                        ItemId: sp.Item.Value,
+                        ItemName: catalog.FindItem(sp.Item)?.Name ?? sp.Item.Value,
+                        ShadowPrice: Math.Round(sp.ShadowPrice, 6),
+                        Slack: Math.Round(sp.Slack, 4)))
+                    .ToList(),
+                ProductionRecipes: s.ProductionRecipes
+                    .Select(rc => new RecipeReducedCostDto(
+                        RecipeId: rc.Recipe.Value,
+                        RecipeName: catalog.FindRecipe(rc.Recipe)?.Name ?? rc.Recipe.Value,
+                        ReducedCost: Math.Round(rc.ReducedCost, 6)))
+                    .ToList());
+        }
+
         var steps = plan.Steps.Select(s => new StepDto(
             s.Recipe.Id.Value,
             s.Recipe.Name,
@@ -1038,6 +1076,7 @@ public sealed record PlanDto(
             MissingInputs: plan.MissingInputs.Select(ToMissing).ToList(),
             ExtractorAllocations: plan.Allocations.Select(ToAllocation).ToList(),
             Warnings: plan.WarningsOrEmpty,
-            FluidPipeRequirements: plan.Pipes.Select(ToFluidPipe).ToList());
+            FluidPipeRequirements: plan.Pipes.Select(ToFluidPipe).ToList(),
+            Sensitivity: ToSensitivity(plan.Sensitivity));
     }
 }
