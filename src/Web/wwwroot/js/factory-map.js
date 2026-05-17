@@ -23,6 +23,12 @@ const STYLE = {
     'miner':            { color: '#FA9549', radius: 6,   opacity: 1.0,  label: 'Miners' },
     'building':         { color: '#5FB0C9', radius: 5,   opacity: 1.0,  label: 'Production buildings' },
     'belt':             { color: '#7BB66B', radius: 1.8, opacity: 0.5,  label: 'Conveyor belts' },
+    // Pipes (#65). Mk1 = base teal, Mk2 = brighter cyan; per-tier overrides
+    // applied in buildShape() when the feature's `tier` property is present.
+    // Polylines stay sparse until the SatisfactorySaveNet fork can parse
+    // `Array<Struct<FSplinePointData>>` — see follow-up parser issue.
+    'pipe':             { color: '#4FB3BF', radius: 1.8, opacity: 0.5,  label: 'Pipelines',
+                          tierColors: { 'Mk1': '#4FB3BF', 'Mk2': '#9CDEE0' } },
     'generator':        { color: '#E5604A', radius: 6,   opacity: 1.0,  label: 'Generators' },
     // Flora (#62) — Bacon Agaric / Paleberry / Beryl Nut / Mycelia. Off by
     // default (lots of plants — clutters the map). Markers use per-species
@@ -235,13 +241,17 @@ function buildCategoryLayers(featureCollection) {
 
 function buildShape(feature, style) {
     const g = feature.geometry;
+    // Per-tier stroke / dot colour when the category opts in via `tierColors`
+    // (#65 — pipes use this so Mk1 vs Mk2 are distinguishable on the map).
+    const tier = feature.properties?.tier;
+    const strokeColor = (style.tierColors && tier && style.tierColors[tier]) || style.color;
     if (g.type === 'LineString') {
         const latlngs = g.coordinates.map(([x, y]) => unrealToLatLng(x, y));
-        // Belts use the canvas renderer (preferCanvas: true on the map) so even
-        // dense Mk1 cluster routes stay performant. Stroke weight is small but
-        // visible; tier-coloured via the category STYLE.
+        // Belts + pipes use the canvas renderer (preferCanvas: true on the map)
+        // so even dense Mk1 cluster routes stay performant. Stroke weight is
+        // small but visible; tier-coloured via STYLE / tierColors.
         return L.polyline(latlngs, {
-            color: style.color,
+            color: strokeColor,
             weight: 1.5,
             opacity: Math.min(0.9, (style.opacity ?? 0.5) + 0.3),
         });
@@ -262,8 +272,8 @@ function buildShape(feature, style) {
 
     return L.circleMarker(latlng, {
         radius: style.radius,
-        color: style.color,
-        fillColor: style.color,
+        color: strokeColor,
+        fillColor: strokeColor,
         fillOpacity: style.opacity,
         weight: 1,
         opacity: style.opacity,

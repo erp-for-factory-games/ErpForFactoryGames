@@ -37,7 +37,7 @@ public sealed class SaveFileReader
         if (save.Body is not BodyV8 body)
         {
             return new LiveFactoryState(
-                metadata, [], [], [], [], [],
+                metadata, [], [], [], [], [], [],
                 [$"Unsupported body version: {save.Body?.GetType().Name ?? "null"}. v1.2 saves are expected to be BodyV8."]);
         }
 
@@ -45,6 +45,7 @@ public sealed class SaveFileReader
         var miners = new List<Miner>();
         var buildings = new List<ProductionBuilding>();
         var belts = new List<ConveyorBelt>();
+        var pipelines = new List<Pipeline>();
         var generators = new List<PowerGenerator>();
         var warnings = new List<string>();
 
@@ -89,6 +90,15 @@ public sealed class SaveFileReader
                 var polyline = beltSplines.GetValueOrDefault(reference);
                 belts.Add(new ConveyorBelt(reference, beltTier, position, polyline));
             }
+            else if (BuildingIdentifiers.PipelineTier(typePath) is { } pipeTier)
+            {
+                // Polyline stays null until the vendored fork can parse the
+                // pipe actor's `mSplineData` (Array<Struct<FSplinePointData>>);
+                // see Pipeline.cs xmldoc + issue #65 for the wiring rationale.
+                // Once the fork lands the new property reader, populate here
+                // from the FSplinePointData entries.
+                pipelines.Add(new Pipeline(reference, pipeTier, position, Polyline: null));
+            }
             else if (BuildingIdentifiers.GeneratorKind(typePath) is { } genKind)
             {
                 generators.Add(new PowerGenerator(reference, genKind, position));
@@ -99,7 +109,7 @@ public sealed class SaveFileReader
             }
         }
 
-        return new LiveFactoryState(metadata, resourceNodes, miners, buildings, belts, generators, warnings);
+        return new LiveFactoryState(metadata, resourceNodes, miners, buildings, belts, pipelines, generators, warnings);
     }
 
     /// <summary>

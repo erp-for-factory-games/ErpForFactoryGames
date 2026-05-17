@@ -52,9 +52,16 @@ else
 
         <MudGrid Spacing="3" Class="mt-3">
             <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h5" Class="mb-2">Pipelines <MudText HtmlTag="span" Typo="Typo.caption" Color="Color.Default">by tier</MudText></MudText>
+                @CountTable(state.Pipelines, "No pipelines.")
+            </MudItem>
+            <MudItem xs="12" md="6">
                 <MudText Typo="Typo.h5" Class="mb-2">Generators <MudText HtmlTag="span" Typo="Typo.caption" Color="Color.Default">by kind</MudText></MudText>
                 @CountTable(state.Generators, "No generators.")
             </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mt-3">
             <MudItem xs="12" md="6">
                 <MudText Typo="Typo.h5" Class="mb-2">Resource nodes</MudText>
                 <MudText Class="display-6">@state.ResourceNodeCount.ToString("N0")</MudText>

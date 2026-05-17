@@ -182,6 +182,7 @@ public class FactoryAlertAnalysisServiceTests
             Miners: miners ?? [],
             Buildings: buildings ?? [],
             Belts: [],
+            Pipelines: [],
             Generators: [],
             Warnings: []);
 

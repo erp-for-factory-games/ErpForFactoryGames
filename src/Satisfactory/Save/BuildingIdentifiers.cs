@@ -31,6 +31,13 @@ internal static class BuildingIdentifiers
         _ => null,
     };
 
+    public static PipelineTier? PipelineTier(string typePath) => ShortName(typePath) switch
+    {
+        "Build_Pipeline_C" => ERP.Domain.PipelineTier.Mk1,
+        "Build_PipelineMk2_C" => ERP.Domain.PipelineTier.Mk2,
+        _ => null,
+    };
+
     public static GeneratorKind? GeneratorKind(string typePath) => ShortName(typePath) switch
     {
         "Build_GeneratorBiomass_Automated_C" or

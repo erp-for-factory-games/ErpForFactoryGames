@@ -658,6 +658,7 @@ public sealed record FactoryStateView(
     IReadOnlyList<BuildingGroupView> Buildings,
     int BuildingsWithRecipe,
     IReadOnlyList<CountView> Belts,
+    IReadOnlyList<CountView> Pipelines,
     IReadOnlyList<CountView> Generators,
     int ResourceNodeCount,
     IReadOnlyList<string> Warnings)
@@ -700,6 +701,11 @@ public sealed record FactoryStateView(
             BuildingsWithRecipe: state.Buildings.Count(b => b.Recipe is not null),
             Belts: state.Belts
                 .GroupBy(b => b.Tier.ToString())
+                .Select(g => new CountView(g.Key, g.Count()))
+                .OrderBy(c => c.Key, StringComparer.Ordinal)
+                .ToList(),
+            Pipelines: state.Pipelines
+                .GroupBy(p => p.Tier.ToString())
                 .Select(g => new CountView(g.Key, g.Count()))
                 .OrderBy(c => c.Key, StringComparer.Ordinal)
                 .ToList(),
@@ -825,6 +831,22 @@ public sealed record FactoryStateGeoJson(
                 features.Add(GeoFeature.MakeLine("belt", belt.Reference, poly, belt.Position, props));
             else
                 features.Add(GeoFeature.Make("belt", belt.Reference, belt.Position, props));
+        }
+
+        // Pipelines mirror the belt shape exactly — LineString when the
+        // polyline has ≥2 points, point fallback otherwise. Polylines will
+        // stay empty until the SatisfactorySaveNet fork parses pipe
+        // `mSplineData` (Array<Struct<FSplinePointData>>); see issue #65.
+        foreach (var pipe in s.Pipelines)
+        {
+            var props = new Dictionary<string, object?>
+            {
+                ["tier"] = pipe.Tier.ToString(),
+            };
+            if (pipe.Polyline is { Count: >= 2 } poly)
+                features.Add(GeoFeature.MakeLine("pipe", pipe.Reference, poly, pipe.Position, props));
+            else
+                features.Add(GeoFeature.Make("pipe", pipe.Reference, pipe.Position, props));
         }
 
         foreach (var g in s.Generators)
