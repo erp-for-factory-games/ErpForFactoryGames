@@ -217,7 +217,16 @@ public sealed record NodeAvailabilityInput(
 public sealed record PlanRequest(
     IReadOnlyList<TargetInput> Targets,
     IReadOnlyList<AvailabilityInput> Available,
-    IReadOnlyList<NodeAvailabilityInput>? Nodes = null);
+    IReadOnlyList<NodeAvailabilityInput>? Nodes = null,
+    decimal? PowerTargetMw = null);
+
+/// <summary>Per-generator output entry on a plan (#137).</summary>
+public sealed record GeneratorAllocationView(
+    string Kind,
+    string Fuel,
+    string FuelName,
+    decimal BuildingCount,
+    decimal PowerMw);
 
 public sealed record AmountView(string ItemId, string ItemName, decimal ItemsPerMinute);
 public sealed record StepView(
@@ -239,7 +248,8 @@ public sealed record PlanResponse(
     IReadOnlyList<ExtractorAllocationView> ExtractorAllocations,
     IReadOnlyList<string>? Warnings = null,
     IReadOnlyList<FluidPipeRequirementView>? FluidPipeRequirements = null,
-    LpSensitivityView? Sensitivity = null)
+    LpSensitivityView? Sensitivity = null,
+    IReadOnlyList<GeneratorAllocationView>? GeneratorAllocations = null)
 {
     /// <summary>
     /// Plan-wide advisory strings (e.g. the variable-power-buildings notice

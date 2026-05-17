@@ -428,7 +428,8 @@ app.MapPost("/plan", async (PlanRequest request, IMessageBus bus, ICatalogProvid
             Purity: Enum.TryParse<NodePurity>(n.Purity, ignoreCase: true, out var p) ? p : NodePurity.Normal,
             AvailableTiers: n.AvailableTiers?
                 .Select(s => Enum.TryParse<MinerTier>(s, ignoreCase: true, out var t) ? t : MinerTier.Mk1)
-                .ToList())).ToList());
+                .ToList())).ToList(),
+        PowerTargetMw: request.PowerTargetMw);
 
     var logger = loggerFactory.CreateLogger("PlannerEndpoint");
     var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -906,7 +907,18 @@ public sealed record ExtractorAllocationDto(
 public sealed record PlanRequest(
     IReadOnlyList<TargetDto> Targets,
     IReadOnlyList<AvailabilityDto> Available,
-    IReadOnlyList<NodeAvailabilityDto>? Nodes = null);
+    IReadOnlyList<NodeAvailabilityDto>? Nodes = null,
+    decimal? PowerTargetMw = null);
+
+/// <summary>Per-generator power-production row in the plan output (#137).
+/// <c>Kind</c> + <c>Tier</c>-style string for clean JSON. <c>Fuel</c> is the
+/// item id; <c>FuelName</c> is the catalog display name.</summary>
+public sealed record GeneratorAllocationDto(
+    string Kind,
+    string Fuel,
+    string FuelName,
+    decimal BuildingCount,
+    decimal PowerMw);
 
 public sealed record AmountDto(string ItemId, string ItemName, decimal ItemsPerMinute);
 public sealed record StepDto(
@@ -1003,7 +1015,8 @@ public sealed record PlanDto(
     IReadOnlyList<ExtractorAllocationDto> ExtractorAllocations,
     IReadOnlyList<string> Warnings,
     IReadOnlyList<FluidPipeRequirementDto> FluidPipeRequirements,
-    LpSensitivityDto? Sensitivity)
+    LpSensitivityDto? Sensitivity,
+    IReadOnlyList<GeneratorAllocationDto> GeneratorAllocations)
 {
     public static PlanDto From(ProductionPlan plan, ICatalogProvider catalog)
     {
@@ -1077,6 +1090,12 @@ public sealed record PlanDto(
             ExtractorAllocations: plan.Allocations.Select(ToAllocation).ToList(),
             Warnings: plan.WarningsOrEmpty,
             FluidPipeRequirements: plan.Pipes.Select(ToFluidPipe).ToList(),
-            Sensitivity: ToSensitivity(plan.Sensitivity));
+            Sensitivity: ToSensitivity(plan.Sensitivity),
+            GeneratorAllocations: plan.Generators.Select(g => new GeneratorAllocationDto(
+                Kind: g.Kind.ToString(),
+                Fuel: g.Fuel.Value,
+                FuelName: catalog.FindItem(g.Fuel)?.Name ?? g.Fuel.Value,
+                BuildingCount: Math.Round(g.BuildingCount, 4),
+                PowerMw: Math.Round(g.PowerMw, 4))).ToList());
     }
 }

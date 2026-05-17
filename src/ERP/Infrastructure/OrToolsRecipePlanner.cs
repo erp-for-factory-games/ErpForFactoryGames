@@ -59,6 +59,43 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
     private const double PurityNormal = 1.0;
     private const double PurityPure = 2.0;
 
+    // Generator profiles (#137). Hardcoded list mirrors docs/power-generators.md.
+    // Each profile names the fuel item id, the rate that fuel is consumed per
+    // minute, the produced MW, and optional water demand (per-minute) for the
+    // generators that need it. Byproducts (e.g. nuclear waste) are modelled
+    // as ItemAmount entries that the LP credits as supply for that item.
+    private sealed record GeneratorProfile(
+        GeneratorKind Kind,
+        ItemId Fuel,
+        double FuelPerMinute,
+        double PowerMw,
+        double WaterPerMinute,
+        ItemAmount[] Byproducts);
+
+    private static readonly ItemId Water = new("Desc_Water_C");
+    private static readonly ItemId UraniumWaste = new("Desc_NuclearWaste_C");
+
+    private static readonly GeneratorProfile[] AllGenerators = new GeneratorProfile[]
+    {
+        // Biomass Burner: 30 MW; fuel rates vary by biomass type. Energy
+        // density per the wiki: Wood=100 MJ, Leaves=15 MJ, Biomass=180 MJ,
+        // Solid Biofuel=450 MJ. Per-minute = MW × 60 / MJ-per-unit.
+        new(GeneratorKind.Biomass, new ItemId("Desc_Wood_C"),         30 * 60 / 100.0,  30, 0, Array.Empty<ItemAmount>()),
+        new(GeneratorKind.Biomass, new ItemId("Desc_Leaves_C"),       30 * 60 / 15.0,   30, 0, Array.Empty<ItemAmount>()),
+        new(GeneratorKind.Biomass, new ItemId("Desc_GenericBiomass_C"),30 * 60 / 180.0, 30, 0, Array.Empty<ItemAmount>()),
+        new(GeneratorKind.Biomass, new ItemId("Desc_Biofuel_C"),      30 * 60 / 450.0,  30, 0, Array.Empty<ItemAmount>()),
+        // Coal Generator: 75 MW, 15 coal/min + 45 water/min.
+        new(GeneratorKind.Coal,    new ItemId("Desc_Coal_C"),                  15, 75, 45, Array.Empty<ItemAmount>()),
+        new(GeneratorKind.Coal,    new ItemId("Desc_CompactedCoal_C"),       8.57, 75, 45, Array.Empty<ItemAmount>()),
+        new(GeneratorKind.Coal,    new ItemId("Desc_PetroleumCoke_C"),         25, 75, 45, Array.Empty<ItemAmount>()),
+        // Fuel Generator: 250 MW, 20 liquid fuel/min (or alt fuels).
+        new(GeneratorKind.Fuel,    new ItemId("Desc_LiquidFuel_C"),     20, 250, 0, Array.Empty<ItemAmount>()),
+        new(GeneratorKind.Fuel,    new ItemId("Desc_LiquidTurboFuel_C"), 7.5, 250, 0, Array.Empty<ItemAmount>()),
+        // Nuclear: 2500 MW, 0.2 fuel rod/min + 240 water/min, 10 waste/min as byproduct.
+        new(GeneratorKind.Nuclear, new ItemId("Desc_NuclearFuelRod_C"), 0.2, 2500, 240,
+            new[] { new ItemAmount(UraniumWaste, 10) }),
+    };
+
     private readonly ICatalogProvider _catalog;
     private readonly ILogger<OrToolsRecipePlanner>? _logger;
 
@@ -89,6 +126,23 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
             foreach (var o in r.Outputs) items.Add(o.Item);
         }
 
+        // Expand the item universe BEFORE creating per-item vars so every
+        // item gets matching raw / short variables. Nodes (#92) and
+        // generators (#137) both bring in items that may not appear in
+        // recipes or user availability.
+        var nodes = query.Nodes ?? Array.Empty<NodeAvailability>();
+        foreach (var n in nodes) items.Add(n.Resource);
+        var powerTarget = query.PowerTargetMw ?? 0m;
+        if (powerTarget > 0)
+        {
+            foreach (var g in AllGenerators)
+            {
+                items.Add(g.Fuel);
+                if (g.WaterPerMinute > 0) items.Add(Water);
+                foreach (var bp in g.Byproducts) items.Add(bp.Item);
+            }
+        }
+
         // Decision variables.
         var xVars = recipes.ToDictionary(
             r => r.Id,
@@ -109,10 +163,6 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
         // provided, the LP picks which miner tier (out of AvailableTiers) to
         // place on the node. One miner per node — enforced by the per-node
         // sum-of-tier-fractions ≤ 1 constraint below.
-        var nodes = query.Nodes ?? Array.Empty<NodeAvailability>();
-        // Include node-supplied resources in the item universe so their
-        // supply constraints get built later in the foreach (var i in items).
-        foreach (var n in nodes) items.Add(n.Resource);
 
         // nodeVars: keyed by (NodeReference, MinerTier). Each represents the
         // activation fraction of that tier of miner on that node.
@@ -135,6 +185,22 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
         var nodesByResource = nodes
             .GroupBy(n => n.Resource)
             .ToDictionary(g => g.Key, g => g.ToList());
+
+        // Generator vars (#137). One per (generator-kind, fuel) combo. Each
+        // variable's units are "buildings of that generator running flat-out".
+        // Their fuel + water inputs flow into the existing item supply
+        // constraints. Byproducts (nuclear waste) credit their item's supply.
+        var generatorVars = new Dictionary<(GeneratorKind Kind, ItemId Fuel), Variable>();
+        if (powerTarget > 0)
+        {
+            foreach (var g in AllGenerators)
+            {
+                var v = solver.MakeNumVar(
+                    0.0, double.PositiveInfinity,
+                    $"gen_{g.Kind}_{SanitiseRef(g.Fuel.Value)}");
+                generatorVars[(g.Kind, g.Fuel)] = v;
+            }
+        }
 
         // Supply ≥ Demand constraint per item:
         //   raw_i + Σ_r x_r·(out_rate(r,i) − in_rate(r,i))
@@ -169,7 +235,44 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
                     }
                 }
             }
+            // Generator contributions (#137). For each (kind, fuel) generator
+            // var: negative coefficient on its fuel + water inputs (drains
+            // supply), positive on its byproducts (credits supply).
+            if (generatorVars.Count > 0)
+            {
+                foreach (var g in AllGenerators)
+                {
+                    if (!generatorVars.TryGetValue((g.Kind, g.Fuel), out var v)) continue;
+                    if (g.Fuel == i)
+                        c.SetCoefficient(v, -g.FuelPerMinute);
+                    else if (i == Water && g.WaterPerMinute > 0)
+                        c.SetCoefficient(v, -g.WaterPerMinute);
+                    foreach (var bp in g.Byproducts)
+                        if (bp.Item == i)
+                            c.SetCoefficient(v, (double)bp.Quantity);
+                }
+            }
             supplyConstraints[i] = c;
+        }
+
+        // Power supply constraint (#137). Σ_g gen_g·PowerMw_g ≥ PowerTargetMw.
+        // Only added when the user supplied PowerTargetMw > 0.
+        Constraint? powerConstraint = null;
+        Variable? powerShortfallVar = null;
+        if (powerTarget > 0)
+        {
+            powerConstraint = solver.MakeConstraint(
+                (double)powerTarget, double.PositiveInfinity, "power_supply");
+            foreach (var g in AllGenerators)
+            {
+                if (generatorVars.TryGetValue((g.Kind, g.Fuel), out var v))
+                    powerConstraint.SetCoefficient(v, g.PowerMw);
+            }
+            // Shortfall var on power lets the LP report "couldn't produce
+            // enough" rather than INFEASIBLE-out. Same large-penalty pattern
+            // as item shortfalls.
+            powerShortfallVar = solver.MakeNumVar(0, double.PositiveInfinity, "short_power");
+            powerConstraint.SetCoefficient(powerShortfallVar, 1);
         }
 
         // Objective: minimise total base power (Σ_r x_r · basePower(r)) plus
@@ -207,6 +310,19 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
         {
             obj.SetCoefficient(v, MinerPower(tier));
         }
+        // Per-generator building cost (#137). Tiny coefficient that makes the
+        // LP prefer fewer generators — which naturally favours higher-power-
+        // density choices (Nuclear over Coal) when fuel allows it, without
+        // overriding the fuel-availability constraints when it doesn't. Value
+        // is small enough not to compete with the recipe-power objective for
+        // factory-side decisions.
+        const double GeneratorBuildingCost = 0.5;
+        foreach (var v in generatorVars.Values)
+            obj.SetCoefficient(v, GeneratorBuildingCost);
+        // Power shortfall — same heavy penalty pattern as item shortfalls so
+        // the LP only leaves power short when truly infeasible.
+        if (powerShortfallVar is not null)
+            obj.SetCoefficient(powerShortfallVar, ShortfallPenaltyForProduced);
         obj.SetMinimization();
 
         var status = solver.Solve();
@@ -268,6 +384,47 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
         var sensitivity = BuildSensitivity(
             supplyConstraints, xVars, rawVars, shortVars, items, targets, recipes);
 
+        // Generator allocations (#137). For each non-zero generator var,
+        // emit a row with the chosen (kind, fuel) and how much power it
+        // contributes at the optimum.
+        var genAllocations = new List<GeneratorAllocation>();
+        foreach (var g in AllGenerators)
+        {
+            if (!generatorVars.TryGetValue((g.Kind, g.Fuel), out var v)) continue;
+            var count = v.SolutionValue();
+            if (count <= Epsilon) continue;
+            genAllocations.Add(new GeneratorAllocation(
+                Kind: g.Kind,
+                Fuel: g.Fuel,
+                BuildingCount: (decimal)count,
+                PowerMw: (decimal)(count * g.PowerMw)));
+        }
+
+        // Power-deficit warning (#137 auto-detect). Compare the plan's total
+        // recipe power draw against what the user has declared in Available
+        // plus what generators produce. If short, surface a one-line warning
+        // so the user notices even when they didn't set an explicit
+        // PowerTargetMw (target-only mode covers explicit; this covers the
+        // user-asks-without-targeting case).
+        var warnings = PowerVarianceWarning.Build(steps).ToList();
+        var generatedPowerMw = genAllocations.Sum(a => a.PowerMw);
+        var consumedPowerMw = steps.Sum(s => s.PowerMw)
+            + (decimal)(allocations.Sum(a => MinerPower(a.Tier) * (double)a.MinerFraction));
+        if (powerTarget > 0 && powerShortfallVar is not null)
+        {
+            var pShort = (decimal)powerShortfallVar.SolutionValue();
+            if (pShort > (decimal)Epsilon)
+                warnings.Add($"Power short by {pShort:F1} MW — generator fuel supply is the binding constraint.");
+        }
+        else if (consumedPowerMw > 0)
+        {
+            // No explicit power target — check if the user even has enough
+            // headroom in their declared availability. We can't see real
+            // generators on hand, but if they declared 0 power somewhere,
+            // surface the gap as informational.
+            warnings.Add($"Plan draws {consumedPowerMw:F1} MW. Add a PowerTargetMw to have the planner size the generator chain.");
+        }
+
         return new ProductionPlan(
             Targets: query.Targets,
             Available: query.Available,
@@ -275,9 +432,10 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
             RawInputsConsumed: rawConsumed,
             MissingInputs: InfeasibilityDiagnostics.Build(missingByItem, _catalog, steps),
             ExtractorAllocations: allocations,
-            Warnings: PowerVarianceWarning.Build(steps),
+            Warnings: warnings,
             FluidPipes: FluidPipeRequirements.Build(steps, rawConsumed),
-            Sensitivity: sensitivity);
+            Sensitivity: sensitivity,
+            GeneratorAllocations: genAllocations);
     }
 
     /// <summary>

@@ -26,7 +26,8 @@ public sealed record ProductionPlan(
     IReadOnlyList<ExtractorAllocation>? ExtractorAllocations = null,
     IReadOnlyList<string>? Warnings = null,
     IReadOnlyList<FluidPipeRequirement>? FluidPipes = null,
-    LpSensitivity? Sensitivity = null)
+    LpSensitivity? Sensitivity = null,
+    IReadOnlyList<GeneratorAllocation>? GeneratorAllocations = null)
 {
     public IReadOnlyList<string> WarningsOrEmpty => Warnings ?? Array.Empty<string>();
 
@@ -46,4 +47,11 @@ public sealed record ProductionPlan(
     /// </summary>
     public IReadOnlyList<FluidPipeRequirement> Pipes =>
         FluidPipes ?? Array.Empty<FluidPipeRequirement>();
+
+    /// <summary>
+    /// Non-null shorthand for <see cref="GeneratorAllocations"/>. Empty for
+    /// plans that didn't set a <c>PowerTargetMw</c>.
+    /// </summary>
+    public IReadOnlyList<GeneratorAllocation> Generators =>
+        GeneratorAllocations ?? Array.Empty<GeneratorAllocation>();
 }

@@ -236,6 +236,107 @@ public class OrToolsRecipePlannerTests
     }
 
     [Fact]
+    public void Power_target_picks_coal_generator_when_coal_and_water_available()
+    {
+        // PowerTargetMw = 75 → exactly one Coal Generator (15 coal/min + 45
+        // water/min). User supplies plenty of both as raw availability.
+        var coal = new ItemId("Desc_Coal_C");
+        var water = new ItemId("Desc_Water_C");
+        var catalog = new FakeCatalog(
+            buildings: [],
+            recipes: [],
+            items: [new Item(coal, "Coal"), new Item(water, "Water")]);
+
+        var planner = new OrToolsRecipePlanner(catalog);
+        var plan = planner.Plan(new PlanProductionQuery(
+            Targets: [],
+            Available: [
+                new ResourceAvailability(coal, 30),
+                new ResourceAvailability(water, 100),
+            ],
+            PowerTargetMw: 75));
+
+        Assert.True(plan.IsFeasible);
+        var coalGen = Assert.Single(plan.Generators);
+        Assert.Equal(GeneratorKind.Coal, coalGen.Kind);
+        Assert.Equal(coal, coalGen.Fuel);
+        Assert.InRange(coalGen.BuildingCount, 1m - Tol, 1m + Tol);
+        Assert.InRange(coalGen.PowerMw, 75m - Tol, 75m + Tol);
+    }
+
+    [Fact]
+    public void Power_target_reports_fuel_shortage_when_fuel_unavailable()
+    {
+        // PowerTargetMw = 100 with zero fuel available. The LP picks the
+        // cheapest fuel-shortfall option to satisfy power demand (which is
+        // correct LP behaviour given the penalty math — fabricating fuel
+        // is cheaper than skipping power). The user-facing surface is what
+        // matters: at least one of the fuels surfaces as MissingInputs,
+        // telling the user "you need this fuel to actually run the plan".
+        var catalog = new FakeCatalog(buildings: [], recipes: [], items: []);
+        var planner = new OrToolsRecipePlanner(catalog);
+        var plan = planner.Plan(new PlanProductionQuery(
+            Targets: [],
+            Available: [],
+            PowerTargetMw: 100));
+
+        // Plan is "infeasible" in the user sense — some fuel is short.
+        Assert.False(plan.IsFeasible);
+        var fuelItems = plan.MissingInputs.Select(m => m.Item.Value).ToList();
+        Assert.NotEmpty(fuelItems);
+        // The LP should have flagged the fuel for the picked generator —
+        // exactly which one depends on penalty arithmetic, but one of the
+        // canonical fuels has to appear.
+        var knownFuels = new[] {
+            "Desc_Wood_C", "Desc_Leaves_C", "Desc_GenericBiomass_C", "Desc_Biofuel_C",
+            "Desc_Coal_C", "Desc_CompactedCoal_C", "Desc_PetroleumCoke_C",
+            "Desc_LiquidFuel_C", "Desc_LiquidTurboFuel_C", "Desc_NuclearFuelRod_C",
+        };
+        Assert.True(fuelItems.Any(f => knownFuels.Contains(f)),
+            $"Expected a known fuel in MissingInputs; got: {string.Join(", ", fuelItems)}");
+    }
+
+    [Fact]
+    public void Power_target_with_fuel_recipe_chains_generator_fuel_back_to_raw()
+    {
+        // LP chains: Coal Generator needs 15 coal/min, no raw coal available
+        // but a synthetic Ore→Coal recipe is in the catalogue with iron ore
+        // raw. LP should run the recipe to produce coal, which feeds the
+        // generator.
+        var ore = new ItemId("Desc_OreIron_C");
+        var coal = new ItemId("Desc_Coal_C");
+        var water = new ItemId("Desc_Water_C");
+        var smelter = new BuildingId("Build_SmelterMk1_C");
+        var oreToCoalRecipe = new Recipe(
+            new RecipeId("Recipe_FakeOreToCoal_C"),
+            "Fake Ore-to-Coal",
+            smelter,
+            Inputs: [new ItemAmount(ore, 1)],
+            Outputs: [new ItemAmount(coal, 1)],
+            Duration: TimeSpan.FromSeconds(2));
+        var catalog = new FakeCatalog(
+            buildings: [new Building(smelter, "Smelter", BasePowerMw: 4)],
+            recipes: [oreToCoalRecipe],
+            items: [new Item(ore, "Iron Ore"), new Item(coal, "Coal"), new Item(water, "Water")]);
+
+        var planner = new OrToolsRecipePlanner(catalog);
+        var plan = planner.Plan(new PlanProductionQuery(
+            Targets: [],
+            Available: [
+                new ResourceAvailability(ore, 100),
+                new ResourceAvailability(water, 100),
+            ],
+            PowerTargetMw: 75));
+
+        Assert.True(plan.IsFeasible);
+        var coalGen = Assert.Single(plan.Generators);
+        Assert.Equal(GeneratorKind.Coal, coalGen.Kind);
+        // Recipe produces 30 coal/min/building; gen needs 15 → 0.5 buildings.
+        var oreToCoalStep = plan.Steps.Single(s => s.Recipe.Id == oreToCoalRecipe.Id);
+        Assert.InRange(oreToCoalStep.BuildingCount, 0.5m - Tol, 0.5m + Tol);
+    }
+
+    [Fact]
     public void Byproducts_Reduce_Demand_On_Primary_Producer()
     {
         // Refinery recipe "Plastic" produces plastic + heavy oil residue as

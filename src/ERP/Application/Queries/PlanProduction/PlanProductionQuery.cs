@@ -6,7 +6,8 @@ namespace ERP.Application.Queries.PlanProduction;
 public sealed record PlanProductionQuery(
     IReadOnlyList<ProductionTarget> Targets,
     IReadOnlyList<ResourceAvailability> Available,
-    IReadOnlyList<NodeAvailability>? Nodes = null);
+    IReadOnlyList<NodeAvailability>? Nodes = null,
+    decimal? PowerTargetMw = null);
 
 /// <summary>
 /// Wolverine handler entry point. The planning logic itself lives behind
