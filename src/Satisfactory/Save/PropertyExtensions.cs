@@ -1,5 +1,6 @@
 using SatisfactorySaveNet.Abstracts.Model;
 using SatisfactorySaveNet.Abstracts.Model.Properties;
+using System.Collections.Generic;
 
 namespace Satisfactory.Save;
 
@@ -29,6 +30,14 @@ public static class PropertyExtensions
     /// <summary>Reads an int property by name.</summary>
     public static int? TryGetInt(this ComponentObject actor, string name)
         => FindRaw(actor, name)?.IntValue;
+
+    /// <summary>
+    /// Reads an ArrayProperty&lt;StructProperty&gt; by name (e.g. <c>mSplineData</c>
+    /// on pipe/belt actors). Returns each element's inner property list, or null
+    /// if absent / not an array-of-struct shape.
+    /// </summary>
+    public static IReadOnlyList<StructElementValue>? TryGetArrayStructValues(this ComponentObject actor, string name)
+        => FindRaw(actor, name)?.ArrayStructValues;
 
     /// <summary>
     /// Returns the trailing class segment of a class path

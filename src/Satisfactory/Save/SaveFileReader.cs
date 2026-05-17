@@ -2,6 +2,7 @@ using ERP.Domain;
 using SatisfactorySaveNet;
 using SatisfactorySaveNet.Abstracts.Extra;
 using SatisfactorySaveNet.Abstracts.Model;
+using SatisfactorySaveNet.Abstracts.Model.Properties;
 
 namespace Satisfactory.Save;
 
@@ -92,12 +93,8 @@ public sealed class SaveFileReader
             }
             else if (BuildingIdentifiers.PipelineTier(typePath) is { } pipeTier)
             {
-                // Polyline stays null until the vendored fork can parse the
-                // pipe actor's `mSplineData` (Array<Struct<FSplinePointData>>);
-                // see Pipeline.cs xmldoc + issue #65 for the wiring rationale.
-                // Once the fork lands the new property reader, populate here
-                // from the FSplinePointData entries.
-                pipelines.Add(new Pipeline(reference, pipeTier, position, Polyline: null));
+                var polyline = ExtractPipePolyline(actor);
+                pipelines.Add(new Pipeline(reference, pipeTier, position, polyline));
             }
             else if (BuildingIdentifiers.GeneratorKind(typePath) is { } genKind)
             {
@@ -162,6 +159,48 @@ public sealed class SaveFileReader
             }
         }
         return lookup;
+    }
+
+    /// <summary>
+    /// Pulls the polyline geometry from a pipe actor's <c>mSplineData</c>
+    /// (<c>Array&lt;Struct&lt;FSplinePointData&gt;&gt;</c>). Each element exposes a
+    /// <c>Location</c> StructProperty whose value is a 3-doubles vector.
+    /// Returns null when the property is absent (saves predating the fork's
+    /// v1.2 Array&lt;Struct&gt; reader, or pipe actors that legitimately have no
+    /// spline data) — callers fall back to point-only geometry.
+    /// </summary>
+    private static IReadOnlyList<Position>? ExtractPipePolyline(ActorObject actor)
+    {
+        var splineData = actor.TryGetArrayStructValues("mSplineData");
+        if (splineData is null || splineData.Count == 0) return null;
+
+        var points = new List<Position>(splineData.Count);
+        foreach (var element in splineData)
+        {
+            if (TryFindLocationVector(element.Properties) is { } xyz)
+                points.Add(new Position((float)xyz[0], (float)xyz[1], (float)xyz[2]));
+        }
+        return points.Count > 0 ? points : null;
+    }
+
+    /// <summary>
+    /// Finds the <c>Location</c> StructProperty inside one FSplinePointData
+    /// element and returns its (X, Y, Z) doubles. Falls back to null when the
+    /// element omits Location or when its StructValue isn't a 3-element vector.
+    /// </summary>
+    private static double[]? TryFindLocationVector(IReadOnlyList<Property> properties)
+    {
+        foreach (var p in properties)
+        {
+            if (p is RawProperty raw
+                && raw.Name == "Location"
+                && raw.StructValue?.Value is double[] xyz
+                && xyz.Length == 3)
+            {
+                return xyz;
+            }
+        }
+        return null;
     }
 
     private ResourceNode BuildResourceNode(string typePath, string reference, Position position)

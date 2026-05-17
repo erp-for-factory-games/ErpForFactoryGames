@@ -8,8 +8,8 @@
       vendor/SatisfactorySaveNet stays for local fork iteration but is no
       longer on the build path.
     -->
-    <PackageReference Include="SatisfactorySaveNet" Version="4.1.2" />
-    <PackageReference Include="SatisfactorySaveNet.Abstracts" Version="4.1.2" />
+    <PackageReference Include="SatisfactorySaveNet" Version="4.1.3" />
+    <PackageReference Include="SatisfactorySaveNet.Abstracts" Version="4.1.3" />
   </ItemGroup>
 
   <PropertyGroup>
