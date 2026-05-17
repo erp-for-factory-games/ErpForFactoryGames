@@ -62,6 +62,21 @@ public class PlannerApiClient(HttpClient httpClient)
         return new FactoryIngestResult(false, null, error);
     }
 
+    // ----- Factory alerts (#116, surfaced on the dashboard via #131) -----------
+
+    public async Task<FactoryAlertView[]> GetFactoryAlertsAsync(CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<FactoryAlertView[]>("/factory/alerts", ct) ?? [];
+
+    /// <summary>
+    /// Marks an alert dismissed. Server is idempotent on the dismiss path —
+    /// re-calling on an already-dismissed alert is a 204, not an error.
+    /// </summary>
+    public async Task<bool> DismissAlertAsync(Guid id, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsync($"/factory/alerts/{id}/dismiss", content: null, ct);
+        return response.IsSuccessStatusCode;
+    }
+
     /// <summary>
     /// Upserts a manual resource + purity override for the given node
     /// reference. The API resolves the node's position from current state
@@ -265,6 +280,18 @@ public sealed record FactoryStateViewModel(
     IReadOnlyList<string> Warnings);
 
 public sealed record FactoryIngestResult(bool Success, FactoryStateViewModel? State, string? Error);
+
+/// <summary>Wire shape of <c>GET /factory/alerts</c> (#116).
+/// Severity is the enum name (string) for clean JSON + ADA pattern-matching.</summary>
+public sealed record FactoryAlertView(
+    Guid Id,
+    string Key,
+    string Severity,
+    string Source,
+    string Title,
+    string Detail,
+    string Fix,
+    DateTime CreatedUtc);
 
 public sealed record DetectedSaveViewModel(string Path, string Name, DateTime LastWriteTimeUtc, long SizeBytes);
 

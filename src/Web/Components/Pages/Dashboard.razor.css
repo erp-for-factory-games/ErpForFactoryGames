@@ -1,0 +1,32 @@
+/* Dashboard page (#131) — designed for a narrow side window (~600px).
+   Keeps chrome minimal and content compact so the user can keep this open
+   while the game has the bulk of the screen. */
+
+.fx-dashboard {
+    max-width: 720px;
+    padding-right: 0.5rem;
+}
+
+.fx-dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.fx-dashboard-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.fx-dashboard-alert {
+    /* MudAlert wraps content in a flex container; keep our block intact. */
+    display: block;
+}
+
+.fx-dashboard-source {
+    font-size: 0.75rem;
+    word-break: break-all;
+}
