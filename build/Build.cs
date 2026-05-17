@@ -246,7 +246,14 @@ class Build : NukeBuild
 
     Target Release => _ => _
         .Description("Creates a GitHub release for the current commit. Auto-runs on push to main.")
-        .DependsOn(Test)
+        // No test dep — CI's release job is gated on the `build-and-test`,
+        // `lint`, `migration-drift`, and `postgres-smoke` jobs via `needs:`,
+        // so the tests already ran. Depending on `Test` here would
+        // redundantly install Playwright + Chromium on the release runner
+        // and hang on the host-deps step. Re-add a `DependsOn(TestNoUi)`
+        // if/when we want this target to be safe to invoke locally.
+        // Backlog issue tracks running UI tests in CI proper.
+        .DependsOn(Compile)
         .OnlyWhenStatic(() => IsServerBuild
                               && GitHubActions is not null
                               && GitHubActions.Ref == "refs/heads/main"
