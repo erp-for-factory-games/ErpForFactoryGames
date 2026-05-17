@@ -246,6 +246,7 @@ public sealed record CountViewModel(string Key, int Count);
 
 public sealed record BuildingGroupViewModel(
     string Building,
+    string? BuildingName,
     string? Recipe,
     string? RecipeName,
     int Count);

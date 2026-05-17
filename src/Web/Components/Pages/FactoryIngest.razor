@@ -298,7 +298,16 @@ else
                 @foreach (var row in rows)
                 {
                     <tr>
-                        <td><code>@row.Building</code></td>
+                        <td title="@row.Building">
+                            @if (row.BuildingName is not null)
+                            {
+                                <span>@row.BuildingName</span>
+                            }
+                            else
+                            {
+                                <code>@row.Building</code>
+                            }
+                        </td>
                         <td>
                             @if (row.RecipeName is not null)
                             {

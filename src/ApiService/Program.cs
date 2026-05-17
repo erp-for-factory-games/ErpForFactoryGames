@@ -626,6 +626,7 @@ public sealed record CountView(string Key, int Count);
 /// <summary>One row in the "buildings by type × recipe" table on /factory/ingest.</summary>
 public sealed record BuildingGroupView(
     string Building,
+    string? BuildingName,
     string? Recipe,
     string? RecipeName,
     int Count);
@@ -669,6 +670,7 @@ public sealed record FactoryStateView(
                 .GroupBy(b => (Building: b.Building.Value, Recipe: b.Recipe?.Value))
                 .Select(g => new BuildingGroupView(
                     Building: g.Key.Building,
+                    BuildingName: catalog.FindBuilding(new BuildingId(g.Key.Building))?.Name,
                     Recipe: g.Key.Recipe,
                     RecipeName: g.Key.Recipe is { Length: > 0 } r
                         ? catalog.FindRecipe(new RecipeId(r))?.Name
@@ -758,7 +760,15 @@ public sealed record FactoryStateGeoJson(
         var features = new List<GeoFeature>();
 
         foreach (var n in s.ResourceNodes)
-            features.Add(GeoFeature.Make("resource-node", n.Reference, n.Position, new()
+        {
+            // #125 — Deposits (small destructible scenery piles, ~hundreds per
+            // save) get their own category so the map can hide them by default
+            // via a layer toggle. Mining nodes / geysers / fracking cores stay
+            // under `resource-node` (visible by default).
+            var category = n.Kind == ResourceNodeKind.Deposit
+                ? "resource-deposit"
+                : "resource-node";
+            features.Add(GeoFeature.Make(category, n.Reference, n.Position, new()
             {
                 ["nodeKind"] = n.Kind.ToString(),
                 ["purity"] = n.Purity.ToString(),
@@ -767,6 +777,7 @@ public sealed record FactoryStateGeoJson(
                     ? catalog.FindItem(id)?.Name
                     : null,
             }));
+        }
 
         foreach (var m in s.Miners)
             features.Add(GeoFeature.Make("miner", m.Reference, m.Position, new()
@@ -778,6 +789,7 @@ public sealed record FactoryStateGeoJson(
         foreach (var b in s.Buildings)
             features.Add(GeoFeature.Make("building", b.Building.Value, b.Position, new()
             {
+                ["buildingName"] = catalog.FindBuilding(b.Building)?.Name,
                 ["recipe"] = b.Recipe?.Value,
                 ["recipeName"] = b.Recipe is { Value: { Length: > 0 } } id
                     ? catalog.FindRecipe(id)?.Name

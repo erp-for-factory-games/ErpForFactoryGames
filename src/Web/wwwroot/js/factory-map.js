@@ -15,16 +15,20 @@ let backdropLayer = null;
 let dotNetCallback = null; // Optional Blazor handle for resource-node clicks (#42).
 
 const STYLE = {
-    'resource-node': { color: '#FFC53D', radius: 3.5, opacity: 0.85, label: 'Resource nodes' },
-    'miner':         { color: '#FA9549', radius: 6,   opacity: 1.0,  label: 'Miners' },
-    'building':      { color: '#5FB0C9', radius: 5,   opacity: 1.0,  label: 'Production buildings' },
-    'belt':          { color: '#7BB66B', radius: 1.8, opacity: 0.5,  label: 'Conveyor belts' },
-    'generator':     { color: '#E5604A', radius: 6,   opacity: 1.0,  label: 'Generators' },
+    'resource-node':    { color: '#FFC53D', radius: 3.5, opacity: 0.85, label: 'Resource nodes' },
+    // Deposits (#125) — small destructible scenery piles, ~hundreds per save.
+    // Same renderer as resource-node (grey dots from NODE_KIND_FALLBACK) but
+    // their own category so the layer toggle can hide them by default.
+    'resource-deposit': { color: '#9A9AA0', radius: 3,   opacity: 0.6,  label: 'Loose deposits', defaultOff: true },
+    'miner':            { color: '#FA9549', radius: 6,   opacity: 1.0,  label: 'Miners' },
+    'building':         { color: '#5FB0C9', radius: 5,   opacity: 1.0,  label: 'Production buildings' },
+    'belt':             { color: '#7BB66B', radius: 1.8, opacity: 0.5,  label: 'Conveyor belts' },
+    'generator':        { color: '#E5604A', radius: 6,   opacity: 1.0,  label: 'Generators' },
     // Flora (#62) — Bacon Agaric / Paleberry / Beryl Nut / Mycelia. Off by
     // default (lots of plants — clutters the map). Markers use per-species
     // item icons from /assets/icons/items/ (ADR-0016); the color below is
     // just the legend swatch + fallback dot tint when an icon is missing.
-    'flora':         { color: '#9CCC65', radius: 4,   opacity: 0.9,  label: 'Flora', defaultOff: true },
+    'flora':            { color: '#9CCC65', radius: 4,   opacity: 0.9,  label: 'Flora', defaultOff: true },
 };
 
 // Fallback styling for resource nodes whose resource isn't known yet (no
@@ -438,6 +442,19 @@ function tooltipText(feature) {
     // the category prefix isn't useful since the icon already conveys it.
     if (p.category === 'flora') {
         return p.speciesName ?? shortName(p.species ?? p.kind);
+    }
+    // Resource nodes + deposits (#124): prefer the catalog display name of
+    // the resource over the raw actor class. Falls back to the kind's short
+    // name when the resource isn't known yet (mod actors, unmapped nodes).
+    if (p.category === 'resource-node' || p.category === 'resource-deposit') {
+        const name = p.resourceName ?? shortName(p.kind);
+        return `${p.category} · ${name}`;
+    }
+    // Buildings (#126): prefer the catalog display name of the building over
+    // the raw class id (Build_AssemblerMk1_C → "Assembler Mk.1").
+    if (p.category === 'building') {
+        const name = p.buildingName ?? shortName(p.kind);
+        return `${p.category} · ${name}`;
     }
     return `${p.category} · ${shortName(p.kind)}`;
 }
