@@ -158,12 +158,12 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
                 rawConsumed.Add(new ItemAmount(i, (decimal)amount));
         }
 
-        var missing = new List<ItemAmount>();
+        var missingByItem = new Dictionary<ItemId, decimal>();
         foreach (var i in items)
         {
             var amount = shortVars[i].SolutionValue();
             if (amount > Epsilon)
-                missing.Add(new ItemAmount(i, (decimal)amount));
+                missingByItem[i] = (decimal)amount;
         }
 
         return new ProductionPlan(
@@ -171,7 +171,7 @@ public sealed class OrToolsRecipePlanner : IRecipePlanner
             Available: query.Available,
             Steps: steps,
             RawInputsConsumed: rawConsumed,
-            MissingInputs: missing);
+            MissingInputs: InfeasibilityDiagnostics.Build(missingByItem, _catalog, steps));
     }
 
     private static double NetRatePerMinute(Recipe r, ItemId item)

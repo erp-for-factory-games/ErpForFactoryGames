@@ -5,7 +5,7 @@ public sealed record ProductionPlan(
     IReadOnlyList<ResourceAvailability> Available,
     IReadOnlyList<ProductionStep> Steps,
     IReadOnlyList<ItemAmount> RawInputsConsumed,
-    IReadOnlyList<ItemAmount> MissingInputs)
+    IReadOnlyList<InfeasibleItem> MissingInputs)
 {
     public bool IsFeasible => MissingInputs.Count == 0;
 }

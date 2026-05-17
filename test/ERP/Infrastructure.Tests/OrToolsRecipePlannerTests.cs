@@ -94,7 +94,8 @@ public class OrToolsRecipePlannerTests
         // only 10 ore — shortfall 20.
         var catalog = new FakeCatalog(
             buildings: [new Building(SmelterId, "Smelter", BasePowerMw: 4)],
-            recipes: [IronIngotRecipe]);
+            recipes: [IronIngotRecipe],
+            items: [new Item(IronOre, "Iron Ore"), new Item(IronIngot, "Iron Ingot")]);
 
         var planner = new OrToolsRecipePlanner(catalog);
         var plan = planner.Plan(new PlanProductionQuery(
@@ -104,8 +105,12 @@ public class OrToolsRecipePlannerTests
         Assert.False(plan.IsFeasible);
         var missing = plan.MissingInputs;
         Assert.Contains(missing, m => m.Item == IronOre);
-        var oreShort = missing.Single(m => m.Item == IronOre).Quantity;
-        Assert.InRange(oreShort, 20m - Tol, 20m + Tol);
+        var oreEntry = missing.Single(m => m.Item == IronOre);
+        Assert.InRange(oreEntry.QuantityShort, 20m - Tol, 20m + Tol);
+        // Iron ore is a raw with no producer in this catalogue — diagnostic
+        // should reflect that.
+        Assert.Empty(oreEntry.CouldBeProducedBy);
+        Assert.Contains("Iron Ore", oreEntry.Reason);
     }
 
     [Fact]

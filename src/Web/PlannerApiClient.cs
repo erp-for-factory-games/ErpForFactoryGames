@@ -207,7 +207,22 @@ public sealed record PlanResponse(
     IReadOnlyList<StepView> Steps,
     decimal TotalPowerMw,
     IReadOnlyList<AmountView> RawInputsConsumed,
-    IReadOnlyList<AmountView> MissingInputs);
+    IReadOnlyList<MissingInputView> MissingInputs);
+
+/// <summary>Per-item diagnostic for an unsatisfied target (#8).
+/// <c>ItemId</c> + <c>ItemName</c> + <c>ItemsPerMinute</c> match the previous
+/// <see cref="AmountView"/> shape so anything that just rendered the bare
+/// list keeps working; <c>Reason</c>, <c>CouldBeProducedBy</c>, and
+/// <c>TopConsumers</c> are the new actionable surface.</summary>
+public sealed record MissingInputView(
+    string ItemId,
+    string ItemName,
+    decimal ItemsPerMinute,
+    string Reason,
+    IReadOnlyList<RecipeRefView> CouldBeProducedBy,
+    IReadOnlyList<RecipeRefView> TopConsumers);
+
+public sealed record RecipeRefView(string Id, string Name);
 
 public sealed record CatalogueStatusView(
     bool IsLoaded,

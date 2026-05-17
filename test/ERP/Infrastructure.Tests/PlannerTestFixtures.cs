@@ -51,20 +51,25 @@ internal static class PlannerTestFixtures
     {
         private readonly Dictionary<BuildingId, Building> _buildings;
         private readonly List<Recipe> _recipes;
+        private readonly Dictionary<ItemId, Item> _items;
 
-        public FakeCatalog(IEnumerable<Building> buildings, IEnumerable<Recipe> recipes)
+        public FakeCatalog(
+            IEnumerable<Building> buildings,
+            IEnumerable<Recipe> recipes,
+            IEnumerable<Item>? items = null)
         {
             _buildings = buildings.ToDictionary(b => b.Id);
             _recipes = recipes.ToList();
+            _items = (items ?? []).ToDictionary(i => i.Id);
         }
 
         public bool IsLoaded => true;
         public string? Source => "fake";
-        public IReadOnlyList<Item> Items => [];
+        public IReadOnlyList<Item> Items => _items.Values.ToList();
         public IReadOnlyList<Building> Buildings => _buildings.Values.ToList();
         public IReadOnlyList<Recipe> Recipes => _recipes;
 
-        public Item? FindItem(ItemId id) => null;
+        public Item? FindItem(ItemId id) => _items.TryGetValue(id, out var item) ? item : null;
         public Building? FindBuilding(BuildingId id) =>
             _buildings.TryGetValue(id, out var b) ? b : null;
         public Recipe? FindRecipe(RecipeId id) =>

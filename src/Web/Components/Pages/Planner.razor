@@ -332,18 +332,35 @@ else
     @if (plan.MissingInputs.Count > 0)
     {
         <MudText Typo="Typo.h5" Color="Color.Error" Class="mt-4 mb-1">Missing inputs</MudText>
-        <MudText Typo="Typo.caption" Color="Color.Default" Class="d-block mb-2">No recipe and no source available.</MudText>
-        <div class="fx-amount-list">
-            @foreach (var amount in plan.MissingInputs)
-            {
-                <span class="fx-amount fx-amount-missing" title="@amount.ItemName">
-                    <img src="/assets/icons/items/@(amount.ItemId).png"
+        <MudText Typo="Typo.caption" Color="Color.Default" Class="d-block mb-2">
+            The planner couldn't fully cover these items. Each row lists the shortfall, why it happened, and any alternate recipes that could unblock it.
+        </MudText>
+        @foreach (var missing in plan.MissingInputs)
+        {
+            <div class="fx-missing-row mt-2">
+                <span class="fx-amount fx-amount-missing" title="@missing.ItemName">
+                    <img src="/assets/icons/items/@(missing.ItemId).png"
                          onerror="this.style.visibility='hidden'"
                          alt="" />
-                    <span class="fx-amount-text">@FormatRate(amount.ItemsPerMinute) @amount.ItemName / min</span>
+                    <span class="fx-amount-text">@FormatRate(missing.ItemsPerMinute) @missing.ItemName / min</span>
                 </span>
-            }
-        </div>
+                <MudText Typo="Typo.body2" Class="ml-1 mt-1">@missing.Reason</MudText>
+                @if (missing.CouldBeProducedBy.Count > 0)
+                {
+                    <MudText Typo="Typo.caption" Class="d-block ml-1">
+                        <strong>Alternates:</strong>
+                        @string.Join(", ", missing.CouldBeProducedBy.Select(r => r.Name))
+                    </MudText>
+                }
+                @if (missing.TopConsumers.Count > 0)
+                {
+                    <MudText Typo="Typo.caption" Class="d-block ml-1">
+                        <strong>Top consumers:</strong>
+                        @string.Join(", ", missing.TopConsumers.Select(r => r.Name))
+                    </MudText>
+                }
+            </div>
+        }
     }
 }
 

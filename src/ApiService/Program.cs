@@ -877,17 +877,43 @@ public sealed record SavedPlanDto(
             p.Available.Select(a => new AvailabilityDto(a.Item.Value, a.ItemsPerMinute)).ToList());
 }
 
+/// <summary>Diagnostic entry for an item the planner couldn't supply (#8).
+/// Existing <c>ItemId</c>, <c>ItemName</c>, <c>ItemsPerMinute</c> fields kept
+/// so older JSON readers keep working; new <c>Reason</c> + alternate-recipe
+/// + top-consumer arrays surface the actionable info.</summary>
+public sealed record MissingInputDto(
+    string ItemId,
+    string ItemName,
+    decimal ItemsPerMinute,
+    string Reason,
+    IReadOnlyList<RecipeRefDto> CouldBeProducedBy,
+    IReadOnlyList<RecipeRefDto> TopConsumers);
+
+public sealed record RecipeRefDto(string Id, string Name);
+
 public sealed record PlanDto(
     bool IsFeasible,
     IReadOnlyList<StepDto> Steps,
     decimal TotalPowerMw,
     IReadOnlyList<AmountDto> RawInputsConsumed,
-    IReadOnlyList<AmountDto> MissingInputs)
+    IReadOnlyList<MissingInputDto> MissingInputs)
 {
     public static PlanDto From(ProductionPlan plan, ICatalogProvider catalog)
     {
         AmountDto ToAmount(ItemAmount a) =>
             new(a.Item.Value, catalog.FindItem(a.Item)?.Name ?? a.Item.Value, Math.Round(a.Quantity, 4));
+
+        RecipeRefDto ToRecipeRef(RecipeId id) =>
+            new(id.Value, catalog.FindRecipe(id)?.Name ?? id.Value);
+
+        MissingInputDto ToMissing(InfeasibleItem m) =>
+            new(
+                ItemId: m.Item.Value,
+                ItemName: catalog.FindItem(m.Item)?.Name ?? m.Item.Value,
+                ItemsPerMinute: Math.Round(m.QuantityShort, 4),
+                Reason: m.Reason,
+                CouldBeProducedBy: m.CouldBeProducedBy.Select(ToRecipeRef).ToList(),
+                TopConsumers: m.TopConsumers.Select(ToRecipeRef).ToList());
 
         var steps = plan.Steps.Select(s => new StepDto(
             s.Recipe.Id.Value,
@@ -904,6 +930,6 @@ public sealed record PlanDto(
             Steps: steps,
             TotalPowerMw: Math.Round(steps.Sum(s => s.PowerMw), 4),
             RawInputsConsumed: plan.RawInputsConsumed.Select(ToAmount).ToList(),
-            MissingInputs: plan.MissingInputs.Select(ToAmount).ToList());
+            MissingInputs: plan.MissingInputs.Select(ToMissing).ToList());
     }
 }
