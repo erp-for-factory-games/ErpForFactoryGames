@@ -2,11 +2,38 @@
 
 [![CI](https://github.com/ChrisonSimtian/ERP.Satisfactory/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisonSimtian/ERP.Satisfactory/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/ChrisonSimtian/ERP.Satisfactory?label=release)](https://github.com/ChrisonSimtian/ERP.Satisfactory/releases/latest)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dot.net)
+[![Wiki](https://img.shields.io/badge/wiki-pages-blue)](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki)
 
 A .NET 10 / Blazor / Aspire application that helps you plan factories in the game
 [*Satisfactory*](https://www.satisfactorygame.com/) given the inputs you have and the
 outputs you need. It also ingests your live `.sav` file so it can plan around what's
 already placed in your world.
+
+> 📖 **Deep-dive docs live in the [GitHub Wiki](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki).**
+> Start with [Getting Started](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Getting-Started),
+> [Architecture](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Architecture),
+> [Save File Parsing](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Save-File-Parsing),
+> or [LP Planner](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/LP-Planner).
+
+## What's new in v0.4 — *Pipe polylines milestone*
+
+- **Pipe polylines** — `mSplineData` is now deep-parsed end-to-end; pipes render
+  as LineStrings on the map alongside conveyor belts (#138).
+- **Generator-aware planning** — pass a `PowerTargetMw` and the LP picks
+  generator kinds + fuels freely; missing fuel surfaces as a `MissingInput`
+  rather than infeasibility (#137).
+- **LP sensitivity** — shadow prices on supply constraints + reduced costs on
+  inactive recipes, surfaced in the planner UI (#129).
+- **Fluid throughput constraints** — per-item pipe requirements with
+  recommended tier on the resulting plan (#90).
+- **Variance warnings** for plans bottlenecked by miner/extractor allocation (#91).
+- **`/dashboard` page** — glance-able snapshot, auto-refresh, in-game-browser friendly (#131).
+- **Auto-ingest** — TickerQ background scheduler picks up newer `.sav` files
+  without manual reload (#115).
+
+See the full backlog at [milestones](https://github.com/ChrisonSimtian/ERP.Satisfactory/milestones)
+or the wiki [Roadmap](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Roadmap).
 
 ## Fancy Charts
 
@@ -18,13 +45,26 @@ Requires the .NET SDK pinned in [`global.json`](global.json) (currently .NET 10
 preview). Get it from [dot.net](https://dot.net) or
 `winget install Microsoft.DotNet.SDK.Preview`.
 
-```powershell
-git clone --recurse-submodules https://github.com/ChrisonSimtian/ERP.Satisfactory.git
+You also need the [GitHub CLI](https://cli.github.com/) — the build restores
+`SatisfactorySaveNet` from the fork's GitHub Packages feed, which always
+requires auth (even for public packages). One-time:
+
+```bash
+gh auth refresh -h github.com -s read:packages
+```
+
+Then:
+
+```bash
+git clone https://github.com/ChrisonSimtian/ERP.Satisfactory.git
 cd ERP.Satisfactory
+export GITHUB_TOKEN=$(gh auth token)
 dotnet run --project src/AppHost
 ```
 
 The Aspire dashboard URL prints in the console — open it and click `webfrontend`.
+
+For more detail, see the wiki's [Getting Started](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Getting-Started) page.
 
 ## Build / test / format
 
@@ -104,8 +144,9 @@ same chain as the catalogue (`ERP_SATISFACTORY_SAVE_PATH` env var → app config
 
 The `.sav` parser is a forked, v1.2-patched copy of
 [`R3dByt3/SatisfactorySaveNet`](https://github.com/R3dByt3/SatisfactorySaveNet)
-vendored at `vendor/SatisfactorySaveNet/` (see
-[ADR-0014](docs/adr/0014-pure-csharp-save-ingestion-via-fork.md)).
+— see the [Save File Parsing](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Save-File-Parsing)
+wiki page or [ADR-0014](docs/adr/0014-pure-csharp-save-ingestion-via-fork.md)
+for the lineage and rationale.
 
 ## Architecture
 
@@ -126,6 +167,50 @@ Notable ones:
 | [0009](docs/adr/0009-runtime-ingestion-of-game-catalogue.md) | Runtime catalogue ingestion |
 | [0010](docs/adr/0010-game-agnostic-catalogue-contract.md) | Game-agnostic contract |
 | [0014](docs/adr/0014-pure-csharp-save-ingestion-via-fork.md) | Pure-C# save ingestion |
+
+## Built on
+
+The headline libraries powering ERP.Satisfactory. The
+[wiki pages](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki) go deeper
+into how each one is wired.
+
+| Library | Role |
+|---------|------|
+| [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/) | Local-dev orchestrator — `dotnet run --project src/AppHost` |
+| [Blazor](https://learn.microsoft.com/en-us/aspnet/core/blazor/) + [MudBlazor](https://mudblazor.com/) | Server-side UI ([ADR-0002](docs/adr/0002-use-blazor-for-ui.md), [ADR-0017](docs/adr/0017-mudblazor-as-ui-framework.md)) |
+| [Wolverine](https://wolverinefx.net/) | In-process CQRS mediator ([ADR-0006](docs/adr/0006-use-wolverine-as-mediator.md)) |
+| [Google OR-Tools](https://developers.google.com/optimization) (GLOP) | The LP planner under [`OrToolsRecipePlanner`](src/ERP/Infrastructure/OrToolsRecipePlanner.cs) |
+| [TickerQ](https://github.com/Arcenox-co/TickerQ) | Background scheduler — auto-ingest, plan re-optimisation ([ADR-0019](docs/adr/0019-tickerq-background-scheduler.md)) |
+| [EF Core](https://learn.microsoft.com/en-us/ef/core/) + [Npgsql](https://www.npgsql.org/efcore/) | Dual-provider persistence (SQLite default, Postgres opt-in) ([ADR-0018](docs/adr/0018-persistence-stack.md)) |
+| [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) | Version stamping from git height + `version.json` |
+| [Playwright](https://playwright.dev/dotnet/) | UI tests against a real Chromium build ([ADR-0008](docs/adr/0008-use-playwright-for-ui-tests.md)) |
+| [xUnit](https://xunit.net/) + [FluentAssertions](https://fluentassertions.com/) | Unit + integration testing |
+| [OpenTelemetry](https://opentelemetry.io/) | Traces / metrics / logs from Aspire defaults |
+| [NUKE](https://nuke.build/) | Build automation — same targets locally + in CI |
+
+### Forks we maintain
+
+We rely on one library that needed game-format work upstream couldn't take
+on the same cadence as the Satisfactory team's releases — so we maintain a
+patched fork on GitHub Packages:
+
+| Library | Upstream | Our fork | What we added |
+|---------|----------|----------|---------------|
+| `SatisfactorySaveNet` | [R3dByt3/SatisfactorySaveNet](https://github.com/R3dByt3/SatisfactorySaveNet) | [ChrisonSimtian/SatisfactorySaveNet](https://github.com/ChrisonSimtian/SatisfactorySaveNet) (currently `4.1.3` on [GitHub Packages](https://github.com/users/ChrisonSimtian/packages?repo_name=SatisfactorySaveNet)) | Save format v1.2 (SaveVersion 60) TOC + Data Blob structure; deep-parse for `ObjectProperty`, `ArrayProperty<ObjectProperty>`, `ArrayProperty<StructProperty>` (incl. pipe `mSplineData`), `StrProperty`; chain-actor v1.2 fallback; continuous publish workflow. See [ADR-0014](docs/adr/0014-pure-csharp-save-ingestion-via-fork.md) and the [Save File Parsing wiki page](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Save-File-Parsing). |
+
+The fork is consumed as a `PackageReference` from the fork's GitHub Packages
+feed (see [`nuget.config`](nuget.config)). GitHub Packages NuGet *always*
+requires auth, even for public packages — set `GITHUB_TOKEN` before
+restoring:
+
+```bash
+export GITHUB_TOKEN=$(gh auth token)   # token needs read:packages
+dotnet build ERP.Satisfactory.slnx
+```
+
+The submodule at `vendor/SatisfactorySaveNet/` is an optional local drop-in
+for fork iteration; it's marked `update = none` + `ignore = all` and not
+required for the main build path.
 
 ## Project layout
 
@@ -181,4 +266,5 @@ commit becomes `vX.Y.0`. Patch increments per commit automatically.
 
 Repo-level Claude conventions live in [`CLAUDE.md`](CLAUDE.md) and
 [`.claude/`](.claude/README.md) — repo layout, onion rules, the ADA in-game
-assistant agent.
+assistant agent. Contributor workflow (branch names, commit style, CI gates)
+lives on the wiki: [Contributing](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Contributing).
