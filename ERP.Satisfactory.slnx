@@ -31,9 +31,7 @@
     <Project Path="src/Satisfactory/Save/Satisfactory.Save.csproj" />
   </Folder>
   <Folder Name="/test/" />
-  <Folder Name="/test/ApiService.Tests/">
-    <Project Path="test/ApiService.Tests/ApiService.Tests.csproj" />
-  </Folder>
+  <Folder Name="/test/ApiService.Tests/" />
   <Folder Name="/test/ERP/" />
   <Folder Name="/test/ERP/Application.Tests/">
     <Project Path="test/ERP/Application.Tests/ERP.Application.Tests.csproj" />
