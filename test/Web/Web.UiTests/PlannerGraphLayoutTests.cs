@@ -15,7 +15,8 @@ public class PlannerGraphLayoutTests
             Steps: [],
             TotalPowerMw: 0,
             RawInputsConsumed: [],
-            MissingInputs: []);
+            MissingInputs: [],
+            ExtractorAllocations: []);
 
         var layout = PlannerGraphLayout.Build(plan);
 
@@ -41,7 +42,7 @@ public class PlannerGraphLayoutTests
             BuildingCount: 1m, PowerMw: 4m,
             Inputs:  [new AmountView("ingot", "Iron Ingot", 30m)],
             Outputs: [new AmountView("plate", "Iron Plate", 20m)]);
-        var plan = new PlanResponse(true, [ingot, plate], 8m, [], []);
+        var plan = new PlanResponse(true, [ingot, plate], 8m, [], [], []);
 
         var layout = PlannerGraphLayout.Build(plan);
 
@@ -75,7 +76,7 @@ public class PlannerGraphLayoutTests
             Inputs:  [new AmountView("mid2", "Mid2", 10)],
             Outputs: [new AmountView("final", "Final", 10)]);
 
-        var layout = PlannerGraphLayout.Build(new PlanResponse(true, [a, b, c], 3, [], []));
+        var layout = PlannerGraphLayout.Build(new PlanResponse(true, [a, b, c], 3, [], [], []));
 
         var xs = new[] { "A", "B", "C" }
             .Select(id => layout.Nodes.Single(n => n.Step.RecipeId == id).X)
@@ -93,7 +94,7 @@ public class PlannerGraphLayoutTests
             Inputs:  [new AmountView("ore", "Ore", 10)],
             Outputs: [new AmountView("out", "Out", 10)]);
         var soloLayout = PlannerGraphLayout.Build(
-            new PlanResponse(true, [solo], 1, [], []));
+            new PlanResponse(true, [solo], 1, [], [], []));
 
         var a = new StepView("A", "A", "b", "B", 1, 1,
             Inputs:  [new AmountView("ore", "Ore", 10)],
@@ -105,7 +106,7 @@ public class PlannerGraphLayoutTests
             Inputs:  [new AmountView("m2", "M2", 10)],
             Outputs: [new AmountView("out", "Out", 10)]);
         var chainLayout = PlannerGraphLayout.Build(
-            new PlanResponse(true, [a, b, c], 3, [], []));
+            new PlanResponse(true, [a, b, c], 3, [], [], []));
 
         Assert.True(chainLayout.Width > soloLayout.Width,
             $"Chained layout ({chainLayout.Width}) should be wider than solo ({soloLayout.Width}).");

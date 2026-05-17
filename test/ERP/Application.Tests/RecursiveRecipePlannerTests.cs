@@ -96,6 +96,63 @@ public class RecursiveRecipePlannerTests
         Assert.Equal(0m, step.PowerMw);
     }
 
+    // ---- #91 v1: variance warning for plans that include miners --------------
+
+    private static readonly BuildingId MinerMk1Id = new("Build_MinerMk1_C");
+
+    // Synthetic "mine iron ore" recipe — the catalogue parser exposes node
+    // extraction the same way (a recipe whose building is a miner BPID, no
+    // inputs, ore as output). Power is variable in-game, but the catalogue
+    // exposes only BasePowerMw so the planner reports base × count.
+    private static readonly Recipe MineIronOreRecipe = new(
+        new RecipeId("Recipe_MineIron_C"),
+        "Mine Iron Ore",
+        MinerMk1Id,
+        Inputs: [],
+        Outputs: [new ItemAmount(IronOre, 1)],
+        Duration: TimeSpan.FromSeconds(1));
+
+    [Fact]
+    public void Plan_With_Miner_Gets_Variance_Warning()
+    {
+        // No availability → planner has to use the miner recipe → step uses a
+        // variable-power building → warning attaches.
+        var catalog = new FakeCatalog(
+            buildings: [
+                new Building(SmelterId, "Smelter", BasePowerMw: 4),
+                new Building(MinerMk1Id, "Miner Mk.1", BasePowerMw: 5),
+            ],
+            recipes: [IronIngotRecipe, MineIronOreRecipe]);
+
+        var planner = new RecursiveRecipePlanner(catalog);
+        var plan = planner.Plan(new PlanProductionQuery(
+            Targets: [new ProductionTarget(IronIngot, 30)],
+            Available: []));
+
+        var warning = Assert.Single(plan.Warnings);
+        Assert.Equal(PowerVarianceWarning.MinerVarianceAdvisory, warning);
+    }
+
+    [Fact]
+    public void Plan_Without_Miner_Has_No_Warning()
+    {
+        // Iron ore comes from raw availability, not from a miner → no variable-
+        // power building in the plan → no warning. Guards against false-positives
+        // where the advisory pops up for plans that don't include miners.
+        var catalog = new FakeCatalog(
+            buildings: [
+                new Building(SmelterId, "Smelter", BasePowerMw: 4),
+            ],
+            recipes: [IronIngotRecipe]);
+
+        var planner = new RecursiveRecipePlanner(catalog);
+        var plan = planner.Plan(new PlanProductionQuery(
+            Targets: [new ProductionTarget(IronIngot, 30)],
+            Available: [new ResourceAvailability(IronOre, 30)]));
+
+        Assert.Empty(plan.Warnings);
+    }
+
     /// <summary>
     /// Minimal in-memory catalogue stand-in. The planner only calls
     /// <see cref="FindDefaultProducerOf"/> and <see cref="FindBuilding"/>, so

@@ -974,7 +974,8 @@ public sealed record PlanDto(
     decimal TotalPowerMw,
     IReadOnlyList<AmountDto> RawInputsConsumed,
     IReadOnlyList<MissingInputDto> MissingInputs,
-    IReadOnlyList<ExtractorAllocationDto> ExtractorAllocations)
+    IReadOnlyList<ExtractorAllocationDto> ExtractorAllocations,
+    IReadOnlyList<string> Warnings)
 {
     public static PlanDto From(ProductionPlan plan, ICatalogProvider catalog)
     {
@@ -1019,6 +1020,7 @@ public sealed record PlanDto(
             TotalPowerMw: Math.Round(steps.Sum(s => s.PowerMw), 4),
             RawInputsConsumed: plan.RawInputsConsumed.Select(ToAmount).ToList(),
             MissingInputs: plan.MissingInputs.Select(ToMissing).ToList(),
-            ExtractorAllocations: plan.Allocations.Select(ToAllocation).ToList());
+            ExtractorAllocations: plan.Allocations.Select(ToAllocation).ToList(),
+            Warnings: plan.WarningsOrEmpty);
     }
 }

@@ -46,7 +46,8 @@ public sealed class RecursiveRecipePlanner : IRecipePlanner
             Available: query.Available,
             Steps: steps,
             RawInputsConsumed: rawConsumed.Select(kv => new ItemAmount(kv.Key, kv.Value)).ToList(),
-            MissingInputs: InfeasibilityDiagnostics.Build(missing, _catalog, steps));
+            MissingInputs: InfeasibilityDiagnostics.Build(missing, _catalog, steps),
+            Warnings: PowerVarianceWarning.Build(steps));
     }
 
     private void Expand(

@@ -261,6 +261,18 @@ else
         }
     </div>
 
+    @if (plan.Warnings.Count > 0)
+    {
+        @* Plan-wide advisories (#91 v1). Today: variable-power buildings (miners,
+           extractors) where the displayed PowerMw is base × count, not peak. *@
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3" Icon="@Icons.Material.Filled.Bolt">
+            @foreach (var warning in plan.Warnings)
+            {
+                <div>@warning</div>
+            }
+        </MudAlert>
+    }
+
     @if (plan.Steps.Count == 0)
     {
         <MudText><em>No production steps required (everything covered by sources, or no targets given).</em></MudText>

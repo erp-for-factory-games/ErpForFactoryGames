@@ -236,7 +236,18 @@ public sealed record PlanResponse(
     decimal TotalPowerMw,
     IReadOnlyList<AmountView> RawInputsConsumed,
     IReadOnlyList<MissingInputView> MissingInputs,
-    IReadOnlyList<ExtractorAllocationView> ExtractorAllocations);
+    IReadOnlyList<ExtractorAllocationView> ExtractorAllocations,
+    IReadOnlyList<string>? Warnings = null)
+{
+    /// <summary>
+    /// Plan-wide advisory strings (e.g. the variable-power-buildings notice
+    /// from #91 v1). Older API builds won't include this field — the nullable
+    /// default keeps the JSON binder happy, and the property below normalises
+    /// to an empty list so render-side code can call <c>.Count</c> without a
+    /// null check.
+    /// </summary>
+    public IReadOnlyList<string> WarningsOrEmpty => Warnings ?? Array.Empty<string>();
+}
 
 /// <summary>Per-node extraction breakdown (#92). Empty when the request
 /// didn't include any node bindings.</summary>
