@@ -238,7 +238,8 @@ public sealed record PlanResponse(
     IReadOnlyList<MissingInputView> MissingInputs,
     IReadOnlyList<ExtractorAllocationView> ExtractorAllocations,
     IReadOnlyList<string>? Warnings = null,
-    IReadOnlyList<FluidPipeRequirementView>? FluidPipeRequirements = null)
+    IReadOnlyList<FluidPipeRequirementView>? FluidPipeRequirements = null,
+    LpSensitivityView? Sensitivity = null)
 {
     /// <summary>
     /// Plan-wide advisory strings (e.g. the variable-power-buildings notice
@@ -277,6 +278,23 @@ public sealed record FluidPipeRequirementView(
     string ItemName,
     decimal MaxRatePerMinute,
     string RecommendedTier);
+
+/// <summary>LP sensitivity surface (#129). Null on plans produced by the
+/// recursive engine; populated by the OR-Tools engine.</summary>
+public sealed record LpSensitivityView(
+    IReadOnlyList<ItemShadowPriceView> SupplyConstraints,
+    IReadOnlyList<RecipeReducedCostView> ProductionRecipes);
+
+public sealed record ItemShadowPriceView(
+    string ItemId,
+    string ItemName,
+    decimal ShadowPrice,
+    decimal Slack);
+
+public sealed record RecipeReducedCostView(
+    string RecipeId,
+    string RecipeName,
+    decimal ReducedCost);
 
 /// <summary>Per-item diagnostic for an unsatisfied target (#8).
 /// <c>ItemId</c> + <c>ItemName</c> + <c>ItemsPerMinute</c> match the previous

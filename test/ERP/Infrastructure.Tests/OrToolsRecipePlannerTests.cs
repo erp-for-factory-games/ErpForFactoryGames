@@ -9,6 +9,40 @@ public class OrToolsRecipePlannerTests
     private const decimal Tol = 0.001m;
 
     [Fact]
+    public void Sensitivity_binding_constraint_has_positive_shadow_price()
+    {
+        // Setup deliberately exactly-binding: target 30 ingots, available
+        // 30 ore — the planner runs the recipe at scale 1 and consumes all
+        // available ore. Both the ingot (target) and ore (raw cap) supply
+        // constraints are binding (slack ≈ 0) and should carry positive
+        // shadow prices.
+        var catalog = new FakeCatalog(
+            buildings: [new Building(SmelterId, "Smelter", BasePowerMw: 4)],
+            recipes: [IronIngotRecipe],
+            items: [new Item(IronOre, "Iron Ore"), new Item(IronIngot, "Iron Ingot")]);
+
+        var planner = new OrToolsRecipePlanner(catalog);
+        var plan = planner.Plan(new PlanProductionQuery(
+            Targets: [new ProductionTarget(IronIngot, 30)],
+            Available: [new ResourceAvailability(IronOre, 30)]));
+
+        Assert.True(plan.IsFeasible);
+        Assert.NotNull(plan.Sensitivity);
+
+        var ingotShadow = plan.Sensitivity!.SupplyConstraints.Single(sp => sp.Item == IronIngot);
+        // Binding: slack ≈ 0, shadow price > 0
+        Assert.InRange(ingotShadow.Slack, 0m - Tol, 0m + Tol);
+        Assert.True(ingotShadow.ShadowPrice > 0m,
+            $"Expected positive shadow price on binding ingot constraint, got {ingotShadow.ShadowPrice}.");
+
+        // Recursive planner should NOT populate Sensitivity (LP-only field).
+        var recursivePlan = new RecursiveRecipePlanner(catalog).Plan(new PlanProductionQuery(
+            Targets: [new ProductionTarget(IronIngot, 30)],
+            Available: [new ResourceAvailability(IronOre, 30)]));
+        Assert.Null(recursivePlan.Sensitivity);
+    }
+
+    [Fact]
     public void Picks_Cheaper_Alt_Recipe_When_Available()
     {
         // Two recipes for iron ingot:

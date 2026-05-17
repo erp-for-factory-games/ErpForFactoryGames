@@ -25,7 +25,8 @@ public sealed record ProductionPlan(
     IReadOnlyList<InfeasibleItem> MissingInputs,
     IReadOnlyList<ExtractorAllocation>? ExtractorAllocations = null,
     IReadOnlyList<string>? Warnings = null,
-    IReadOnlyList<FluidPipeRequirement>? FluidPipes = null)
+    IReadOnlyList<FluidPipeRequirement>? FluidPipes = null,
+    LpSensitivity? Sensitivity = null)
 {
     public IReadOnlyList<string> WarningsOrEmpty => Warnings ?? Array.Empty<string>();
 
