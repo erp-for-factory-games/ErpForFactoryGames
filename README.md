@@ -2,8 +2,13 @@
 
 [![CI](https://github.com/ChrisonSimtian/ERP.Satisfactory/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisonSimtian/ERP.Satisfactory/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/ChrisonSimtian/ERP.Satisfactory?label=release)](https://github.com/ChrisonSimtian/ERP.Satisfactory/releases/latest)
+[![GitHub last commit](https://img.shields.io/github/last-commit/ChrisonSimtian/ERP.Satisfactory)](https://github.com/ChrisonSimtian/ERP.Satisfactory/commits/main)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dot.net)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Wiki](https://img.shields.io/badge/wiki-pages-blue)](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki)
+[![Open issues](https://img.shields.io/github/issues/ChrisonSimtian/ERP.Satisfactory)](https://github.com/ChrisonSimtian/ERP.Satisfactory/issues)
+[![Open PRs](https://img.shields.io/github/issues-pr/ChrisonSimtian/ERP.Satisfactory)](https://github.com/ChrisonSimtian/ERP.Satisfactory/pulls)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/ChrisonSimtian?label=sponsor&logo=githubsponsors&color=EA4AAA)](https://github.com/sponsors/ChrisonSimtian)
 
 A .NET 10 / Blazor / Aspire application that helps you plan factories in the game
 [*Satisfactory*](https://www.satisfactorygame.com/) given the inputs you have and the
@@ -155,6 +160,54 @@ for the lineage and rationale.
   adapters).
 - **Aspire** orchestrates local dev across `ApiService`, `Web`, and
   `ServiceDefaults`.
+
+```mermaid
+flowchart TB
+    subgraph CR["Composition root"]
+        Aspire["AppHost — Aspire"]
+        Api["ApiService — Minimal API"]
+        Web["Web — Blazor + MudBlazor"]
+    end
+    subgraph Infra["ERP.Infrastructure"]
+        ORTools["OrToolsRecipePlanner"]
+        EF["EF Core<br/>SQLite · Postgres"]
+        Ticker["TickerQ jobs"]
+        SaveAdapter["SatisfactorySaveNet adapter"]
+    end
+    subgraph App["ERP.Application"]
+        Ports["IRecipePlanner · IFactoryStateProvider · IPlanRepository"]
+        Wolverine["Wolverine handlers"]
+    end
+    subgraph Dom["ERP.Domain"]
+        Domain["ProductionPlan · ProductionTarget · ..."]
+    end
+    Aspire --> Api & Web
+    Api --> Wolverine
+    Web --> Api
+    Wolverine --> Ports
+    Ports -.->|adapters| ORTools & SaveAdapter & EF
+    Ticker --> Wolverine
+    App --> Dom
+    Infra --> Dom
+```
+
+And here's what happens when you ingest a save and ask for a plan:
+
+```mermaid
+flowchart LR
+    Sav[".sav file"] --> Reader["SaveFileReader"]
+    Reader --> State["IFactoryStateProvider"]
+    Docs["Docs.json"] --> Catalog["Catalog parser"]
+    User["User input<br/>Targets · Available · PowerMW"] --> Query["PlanProductionQuery"]
+    State --> Query
+    Catalog --> Query
+    Query --> Bus["Wolverine bus"]
+    Bus --> LP["OrToolsRecipePlanner<br/>GLOP solver"]
+    LP --> Plan["ProductionPlan"]
+    Plan --> ApiOut["GET /plan"]
+    ApiOut --> UI["Blazor — /planner · /dashboard"]
+    AutoIngest["TickerQ auto-ingest"] -.watches.-> Sav
+```
 
 All architecturally significant decisions live in [`docs/adr/`](docs/adr/README.md).
 Notable ones:
