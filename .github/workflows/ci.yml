@@ -82,10 +82,9 @@ jobs:
   lint:
     name: Lint (dotnet format)
     needs: changes
-    # `self-hosted` rather than `ubuntu-latest` so the lint-pool comes off
-    # our own runner. `setup-dotnet@v4` provides .NET on demand so no
-    # additional host setup is needed beyond the runner agent itself.
-    runs-on: self-hosted
+    # GH-hosted: trade marginal warm-cache speed for runner uptime. `setup-dotnet@v4`
+    # provides .NET on demand; nothing else is needed beyond the runner image.
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Skip (doc-only change)
@@ -103,10 +102,7 @@ jobs:
         run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
 
       - name: Cache NuGet packages
-        # GH-hosted only — persistent self-hosted runners keep
-        # ~/.nuget/packages warm between runs, so the remote cache
-        # store roundtrip is pure overhead there.
-        if: needs.changes.outputs.code == 'true' && runner.environment != 'self-hosted'
+        if: needs.changes.outputs.code == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
@@ -137,10 +133,10 @@ jobs:
   build-and-test:
     name: Build & Test
     needs: changes
-    # Self-hosted — `dotnet test` only needs the SDK that `setup-dotnet@v4`
-    # installs. The CI test slice (`TestNoUi`) excludes Playwright so no
-    # extra host packages are needed.
-    runs-on: self-hosted
+    # GH-hosted: `dotnet test` only needs the SDK that `setup-dotnet@v4` installs.
+    # The CI test slice (`TestNoUi`) excludes Playwright so no extra host packages
+    # are needed.
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
@@ -159,10 +155,7 @@ jobs:
         run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
 
       - name: Cache NuGet packages
-        # GH-hosted only — persistent self-hosted runners keep
-        # ~/.nuget/packages warm between runs, so the remote cache
-        # store roundtrip is pure overhead there.
-        if: needs.changes.outputs.code == 'true' && runner.environment != 'self-hosted'
+        if: needs.changes.outputs.code == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
@@ -204,10 +197,10 @@ jobs:
     name: Migration drift (SQLite + Postgres)
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    # Self-hosted — `dotnet ef migrations has-pending-model-changes` reads
-    # the migrations snapshot offline, no live DB needed. SQLite + Postgres
-    # providers both ship in the SDK packages, nothing else to install.
-    runs-on: self-hosted
+    # GH-hosted: `dotnet ef migrations has-pending-model-changes` reads the
+    # migrations snapshot offline. SQLite + Postgres providers ship in the SDK
+    # packages, nothing else to install.
+    runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
@@ -220,10 +213,6 @@ jobs:
         run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
 
       - name: Cache NuGet packages
-        # GH-hosted only — persistent self-hosted runners keep
-        # ~/.nuget/packages warm between runs, so the remote cache
-        # store roundtrip is pure overhead there.
-        if: runner.environment != 'self-hosted'
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
@@ -251,10 +240,8 @@ jobs:
     name: Postgres migration smoke
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    # Stays on `ubuntu-latest` — the `services: postgres:16` block needs
-    # Docker on the host and the GH-hosted runners already have it. Move
-    # this to self-hosted only after Docker (and the `psql` CLI for the
-    # diagnostic step) is provisioned on that host.
+    # `services: postgres:16` needs Docker on the host, which GH-hosted runners
+    # already provide.
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -283,10 +270,6 @@ jobs:
         run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
 
       - name: Cache NuGet packages
-        # GH-hosted only — persistent self-hosted runners keep
-        # ~/.nuget/packages warm between runs, so the remote cache
-        # store roundtrip is pure overhead there.
-        if: runner.environment != 'self-hosted'
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
@@ -316,9 +299,6 @@ jobs:
   publish-test-results:
     name: Publish test results
     needs: [changes, build-and-test]
-    # Stays on `ubuntu-latest` — the EnricoMi action shells out to a
-    # Python venv at runtime and the self-hosted host doesn't have
-    # python3 + venv provisioned. Move once those land on the host.
     runs-on: ubuntu-latest
     if: always() && needs.changes.outputs.code == 'true'
     permissions:
@@ -349,9 +329,6 @@ jobs:
   release:
     name: Release
     needs: [changes, lint, build-and-test, migration-drift, postgres-smoke]
-    # Stays on `ubuntu-latest` — `./build.sh Release` shells out to the
-    # `gh` CLI which the GH-hosted runners ship preinstalled. Move to
-    # self-hosted once `gh` is provisioned on that host.
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.code == 'true'
     timeout-minutes: 15
