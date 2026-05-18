@@ -19,12 +19,14 @@ dotnet build ERP.Satisfactory.slnx
 dotnet run --project src/AppHost
 ```
 
-ERP consumes `SatisfactorySaveNet` via `PackageReference` from the fork's
-GitHub Packages feed — see `nuget.config`. GitHub Packages NuGet *always*
-requires auth (even for public packages), so set `GITHUB_TOKEN` before
-restoring. Your `gh` CLI token needs the `read:packages` scope: one-time
-`gh auth refresh -h github.com -s read:packages`. CI does the same thing
-via `secrets.GITHUB_TOKEN` (the workflow grants `packages: read`).
+ERP consumes `SatisfactorySaveNet` *and* the `Nuke.*` build packages via
+`PackageReference` from the `ChrisonSimtian` GitHub Packages feed — see
+`nuget.config` (Nuke is dogfooded from [ChrisonSimtian/nuke](https://github.com/ChrisonSimtian/nuke)).
+GitHub Packages NuGet *always* requires auth (even for public packages),
+so set `GITHUB_TOKEN` before restoring. Your `gh` CLI token needs the
+`read:packages` scope: one-time `gh auth refresh -h github.com -s read:packages`.
+CI does the same thing via `secrets.GITHUB_TOKEN` (the workflow grants
+`packages: read`).
 
 The repo has two submodules under `vendor/` (`SatisfactorySaveNet`, `CUE4Parse`),
 both marked `update = none` + `ignore = all` in `.gitmodules`. They are *not*
