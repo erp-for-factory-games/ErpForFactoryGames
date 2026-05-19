@@ -34,7 +34,8 @@
         "Release",
         "Restore",
         "Test",
-        "TestNoUi"
+        "TestNoUi",
+        "TestUi"
       ]
     },
     "Verbosity": {

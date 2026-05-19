@@ -128,6 +128,27 @@ class Build : NukeBuild
             Log.Information("TRX results written to {Dir} (Web.UiTests excluded — run `./build.sh Test` locally to include them)", TestResultsDirectory);
         });
 
+    Target TestUi => _ => _
+        .Description("Runs ONLY Web.UiTests (the Playwright slice). Mirror of TestNoUi — used by the label-gated ui-tests CI workflow (#128).")
+        .DependsOn(Compile)
+        .DependsOn(InstallPlaywrightBrowsers)
+        .Executes(() =>
+        {
+            TestResultsDirectory.CreateOrCleanDirectory();
+            // Inverted filter from TestNoUi — only tests whose FQN contains
+            // Web.UiTests run. The rest of the suite is skipped.
+            DotNetTest(s => s
+                .SetProjectFile(Solution)
+                .SetConfiguration(Configuration)
+                .EnableNoBuild()
+                .EnableNoRestore()
+                .SetResultsDirectory(TestResultsDirectory)
+                .AddLoggers("trx;LogFilePrefix=test-ui")
+                .AddLoggers("console;verbosity=normal")
+                .SetFilter("FullyQualifiedName~Web.UiTests"));
+            Log.Information("TRX results written to {Dir} (Web.UiTests only)", TestResultsDirectory);
+        });
+
     // -------------------------------------------------------------------------
     // Migration-drift guard (ADR-0018 follow-up, issue #81).
     //
