@@ -1,7 +1,13 @@
-# ERP.Satisfactory
+# ERP for Factory Games
 
-ERP-style production planner for the game *Satisfactory*. Primary objective:
+ERP-style production planner for factory games. Primary objective:
 **help the user plan a factory based on the inputs they have and the outputs they need.**
+
+Currently implements **Satisfactory** as the first supported game; the planning core,
+persistence, and UI are game-agnostic and additional games slot in as sibling modules
+alongside `src/Satisfactory/`. See
+[ADR-0020](docs/adr/0020-rebrand-to-erp-for-factory-games.md) for the rebrand decision
+and what's deliberately out of scope (UI rebrand, namespace refactor).
 
 ## Where things live
 
@@ -15,7 +21,7 @@ ERP-style production planner for the game *Satisfactory*. Primary objective:
 
 ```powershell
 export GITHUB_TOKEN=$(gh auth token)   # nuget.config reads it for GitHub Packages
-dotnet build ERP.Satisfactory.slnx
+dotnet build ErpForFactoryGames.slnx
 dotnet run --project src/AppHost
 ```
 
