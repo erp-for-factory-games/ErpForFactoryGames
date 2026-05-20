@@ -6,8 +6,10 @@
 
 ## Context
 
-ERP.Satisfactory is a brand-new .NET application. We need to choose a target framework
-that gives us the longest feature/support runway and the best Aspire/Blazor support.
+ERP.Satisfactory (since rebranded to **ERP for Factory Games** — see
+[ADR-0020](0020-rebrand-to-erp-for-factory-games.md)) is a brand-new .NET application.
+We need to choose a target framework that gives us the longest feature/support runway
+and the best Aspire/Blazor support.
 
 ## Decision
 

@@ -50,8 +50,8 @@ Concretely:
 - Naming: rename the existing `IRecipeCatalog` to something broader (e.g.
   `ICatalogProvider` or `IGameCatalogue`) when widening — see the issue under
   milestone #9.
-- The contract grows over time as new epics land: fluids ([Fluids epic](https://github.com/ChrisonSimtian/ERP.Satisfactory/milestone/10)),
-  extractors and resource nodes ([Extractors epic](https://github.com/ChrisonSimtian/ERP.Satisfactory/milestone/11)),
+- The contract grows over time as new epics land: fluids ([Fluids epic](https://github.com/ChrisonSimtian/ErpForFactoryGames/milestone/10)),
+  extractors and resource nodes ([Extractors epic](https://github.com/ChrisonSimtian/ErpForFactoryGames/milestone/11)),
   schematics, etc. Each addition is a contract change shared across adapters.
 - Game-specific concepts that don't generalize (e.g. Satisfactory's
   Somersloops, Factorio's modules) live in adapter-side extensions, not the
