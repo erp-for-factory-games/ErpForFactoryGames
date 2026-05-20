@@ -10,7 +10,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 // ReSharper disable AllUnderscoreLocalParameterName
 
 /// <summary>
-/// ERP.Satisfactory build pipeline.
+/// ErpForFactoryGames build pipeline.
 ///
 /// Local usage:
 ///   ./build.ps1               (default target — Compile)
