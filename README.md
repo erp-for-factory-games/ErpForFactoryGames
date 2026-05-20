@@ -1,25 +1,32 @@
-# ERP.Satisfactory
+# ERP for Factory Games
 
-[![CI](https://github.com/ChrisonSimtian/ERP.Satisfactory/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisonSimtian/ERP.Satisfactory/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/ChrisonSimtian/ERP.Satisfactory?label=release)](https://github.com/ChrisonSimtian/ERP.Satisfactory/releases/latest)
-[![GitHub last commit](https://img.shields.io/github/last-commit/ChrisonSimtian/ERP.Satisfactory)](https://github.com/ChrisonSimtian/ERP.Satisfactory/commits/main)
+[![CI](https://github.com/ChrisonSimtian/ErpForFactoryGames/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisonSimtian/ErpForFactoryGames/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/ChrisonSimtian/ErpForFactoryGames?label=release)](https://github.com/ChrisonSimtian/ErpForFactoryGames/releases/latest)
+[![GitHub last commit](https://img.shields.io/github/last-commit/ChrisonSimtian/ErpForFactoryGames)](https://github.com/ChrisonSimtian/ErpForFactoryGames/commits/main)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dot.net)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Wiki](https://img.shields.io/badge/wiki-pages-blue)](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki)
-[![Open issues](https://img.shields.io/github/issues/ChrisonSimtian/ERP.Satisfactory)](https://github.com/ChrisonSimtian/ERP.Satisfactory/issues)
-[![Open PRs](https://img.shields.io/github/issues-pr/ChrisonSimtian/ERP.Satisfactory)](https://github.com/ChrisonSimtian/ERP.Satisfactory/pulls)
+[![Wiki](https://img.shields.io/badge/wiki-pages-blue)](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki)
+[![Open issues](https://img.shields.io/github/issues/ChrisonSimtian/ErpForFactoryGames)](https://github.com/ChrisonSimtian/ErpForFactoryGames/issues)
+[![Open PRs](https://img.shields.io/github/issues-pr/ChrisonSimtian/ErpForFactoryGames)](https://github.com/ChrisonSimtian/ErpForFactoryGames/pulls)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/ChrisonSimtian?label=sponsor&logo=githubsponsors&color=EA4AAA)](https://github.com/sponsors/ChrisonSimtian)
 
-A .NET 10 / Blazor / Aspire application that helps you plan factories in the game
-[*Satisfactory*](https://www.satisfactorygame.com/) given the inputs you have and the
-outputs you need. It also ingests your live `.sav` file so it can plan around what's
-already placed in your world.
+An ERP-style production planner for factory games — **starting with
+[*Satisfactory*](https://www.satisfactorygame.com/)**. It plans factories from the
+inputs you have to the outputs you need, and ingests your live `.sav` file so it can
+plan around what's already placed in your world. The planner, persistence, and UI are
+game-agnostic; per-game adapters (catalogue parsing, save parsing) live in their own
+module so additional factory games can slot in next to Satisfactory.
 
-> 📖 **Deep-dive docs live in the [GitHub Wiki](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki).**
-> Start with [Getting Started](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Getting-Started),
-> [Architecture](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Architecture),
-> [Save File Parsing](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Save-File-Parsing),
-> or [LP Planner](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/LP-Planner).
+🌐 **Web home**: [erp-for-factory.games](https://erp-for-factory.games) (each supported
+game gets a subdomain — `satisfactory.erp-for-factory.games` is the first). See
+[ADR-0020](docs/adr/0020-rebrand-to-erp-for-factory-games.md) for the rebrand decision
+and what's deliberately out of scope (UI rebrand, namespace refactor).
+
+> 📖 **Deep-dive docs live in the [GitHub Wiki](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki).**
+> Start with [Getting Started](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Getting-Started),
+> [Architecture](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Architecture),
+> [Save File Parsing](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Save-File-Parsing),
+> or [LP Planner](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/LP-Planner).
 
 ## What's new in v0.4 — *Pipe polylines milestone*
 
@@ -37,8 +44,8 @@ already placed in your world.
 - **Auto-ingest** — TickerQ background scheduler picks up newer `.sav` files
   without manual reload (#115).
 
-See the full backlog at [milestones](https://github.com/ChrisonSimtian/ERP.Satisfactory/milestones)
-or the wiki [Roadmap](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Roadmap).
+See the full backlog at [milestones](https://github.com/ChrisonSimtian/ErpForFactoryGames/milestones)
+or the wiki [Roadmap](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Roadmap).
 
 ## Fancy Charts
 
@@ -61,15 +68,15 @@ gh auth refresh -h github.com -s read:packages
 Then:
 
 ```bash
-git clone https://github.com/ChrisonSimtian/ERP.Satisfactory.git
-cd ERP.Satisfactory
+git clone https://github.com/ChrisonSimtian/ErpForFactoryGames.git
+cd ErpForFactoryGames
 export GITHUB_TOKEN=$(gh auth token)
 dotnet run --project src/AppHost
 ```
 
 The Aspire dashboard URL prints in the console — open it and click `webfrontend`.
 
-For more detail, see the wiki's [Getting Started](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Getting-Started) page.
+For more detail, see the wiki's [Getting Started](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Getting-Started) page.
 
 ## Build / test / format
 
@@ -149,7 +156,7 @@ same chain as the catalogue (`ERP_SATISFACTORY_SAVE_PATH` env var → app config
 
 The `.sav` parser is a forked, v1.2-patched copy of
 [`R3dByt3/SatisfactorySaveNet`](https://github.com/R3dByt3/SatisfactorySaveNet)
-— see the [Save File Parsing](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Save-File-Parsing)
+— see the [Save File Parsing](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Save-File-Parsing)
 wiki page or [ADR-0014](docs/adr/0014-pure-csharp-save-ingestion-via-fork.md)
 for the lineage and rationale.
 
@@ -223,8 +230,8 @@ Notable ones:
 
 ## Built on
 
-The headline libraries powering ERP.Satisfactory. The
-[wiki pages](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki) go deeper
+The headline libraries powering ERP for Factory Games. The
+[wiki pages](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki) go deeper
 into how each one is wired.
 
 | Library | Role |
@@ -249,7 +256,7 @@ patched fork on GitHub Packages:
 
 | Library | Upstream | Our fork | What we added |
 |---------|----------|----------|---------------|
-| `SatisfactorySaveNet` | [R3dByt3/SatisfactorySaveNet](https://github.com/R3dByt3/SatisfactorySaveNet) | [ChrisonSimtian/SatisfactorySaveNet](https://github.com/ChrisonSimtian/SatisfactorySaveNet) (currently `4.1.3` on [GitHub Packages](https://github.com/users/ChrisonSimtian/packages?repo_name=SatisfactorySaveNet)) | Save format v1.2 (SaveVersion 60) TOC + Data Blob structure; deep-parse for `ObjectProperty`, `ArrayProperty<ObjectProperty>`, `ArrayProperty<StructProperty>` (incl. pipe `mSplineData`), `StrProperty`; chain-actor v1.2 fallback; continuous publish workflow. See [ADR-0014](docs/adr/0014-pure-csharp-save-ingestion-via-fork.md) and the [Save File Parsing wiki page](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Save-File-Parsing). |
+| `SatisfactorySaveNet` | [R3dByt3/SatisfactorySaveNet](https://github.com/R3dByt3/SatisfactorySaveNet) | [ChrisonSimtian/SatisfactorySaveNet](https://github.com/ChrisonSimtian/SatisfactorySaveNet) (currently `4.1.3` on [GitHub Packages](https://github.com/users/ChrisonSimtian/packages?repo_name=SatisfactorySaveNet)) | Save format v1.2 (SaveVersion 60) TOC + Data Blob structure; deep-parse for `ObjectProperty`, `ArrayProperty<ObjectProperty>`, `ArrayProperty<StructProperty>` (incl. pipe `mSplineData`), `StrProperty`; chain-actor v1.2 fallback; continuous publish workflow. See [ADR-0014](docs/adr/0014-pure-csharp-save-ingestion-via-fork.md) and the [Save File Parsing wiki page](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Save-File-Parsing). |
 
 The fork is consumed as a `PackageReference` from the fork's GitHub Packages
 feed (see [`nuget.config`](nuget.config)). GitHub Packages NuGet *always*
@@ -258,7 +265,7 @@ restoring:
 
 ```bash
 export GITHUB_TOKEN=$(gh auth token)   # token needs read:packages
-dotnet build ERP.Satisfactory.slnx
+dotnet build ErpForFactoryGames.slnx
 ```
 
 The submodule at `vendor/SatisfactorySaveNet/` is an optional local drop-in
@@ -311,8 +318,8 @@ commit becomes `vX.Y.0`. Patch increments per commit automatically.
 
 ## Backlog
 
-- Epics → [milestones](https://github.com/ChrisonSimtian/ERP.Satisfactory/milestones)
-- Stories / bugs → [issues](https://github.com/ChrisonSimtian/ERP.Satisfactory/issues)
+- Epics → [milestones](https://github.com/ChrisonSimtian/ErpForFactoryGames/milestones)
+- Stories / bugs → [issues](https://github.com/ChrisonSimtian/ErpForFactoryGames/issues)
 - *In-game* state + TODOs → [`.satisfactory/`](.satisfactory/) — **not** the project backlog
 
 ## Conventions
@@ -320,4 +327,4 @@ commit becomes `vX.Y.0`. Patch increments per commit automatically.
 Repo-level Claude conventions live in [`CLAUDE.md`](CLAUDE.md) and
 [`.claude/`](.claude/README.md) — repo layout, onion rules, the ADA in-game
 assistant agent. Contributor workflow (branch names, commit style, CI gates)
-lives on the wiki: [Contributing](https://github.com/ChrisonSimtian/ERP.Satisfactory/wiki/Contributing).
+lives on the wiki: [Contributing](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Contributing).
