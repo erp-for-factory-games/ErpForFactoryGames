@@ -60,6 +60,6 @@ dependencies. Domain logic must not leak into Infrastructure or Web.
 ## Build & run
 
 ```powershell
-dotnet build ERP.Satisfactory.sln
+dotnet build ErpForFactoryGames.slnx
 dotnet run --project src/AppHost
 ```
