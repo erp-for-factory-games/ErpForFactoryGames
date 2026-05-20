@@ -1,0 +1,188 @@
+name: UI tests
+
+# Label-gated Playwright runs for PRs (#128). Heavy: a chromium install +
+# `--with-deps` apt-get is ~150MB plus host-package churn, so we don't run
+# UI tests on every push. Add the `run-ui-tests` label to a PR to opt in.
+#
+# Trigger fires on label add (so adding the label kicks the workflow), on
+# new pushes to the PR (so subsequent commits re-run while the label is
+# present), and on opened/reopened (so a PR opened with the label already
+# attached runs immediately).
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write          # publish-unit-test-result-action
+  pull-requests: write   # auto-label job needs this (currently disabled)
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+concurrency:
+  group: ui-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Decide whether to run. Two signals:
+  #   1. `run-ui-tests` label present on the PR → manual opt-in.
+  #   2. Web paths changed (src/Web/**, test/Web/**) → auto-detected.
+  # Either signal flips `run=true`. The path check is wired now even though
+  # the auto-add-label job below is disabled, so a path-touching PR still
+  # gets UI coverage if the human forgets the label.
+  # ---------------------------------------------------------------------------
+  decide:
+    name: Decide
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+      label-present: ${{ steps.gate.outputs.label-present }}
+      paths-changed: ${{ steps.filter.outputs.web }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect web paths
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web:
+              - 'src/Web/**'
+              - 'test/Web/**'
+
+      - name: Compute gate
+        id: gate
+        env:
+          LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+          PATHS_CHANGED: ${{ steps.filter.outputs.web }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          label_present=false
+          if echo "$LABELS" | grep -q '"run-ui-tests"'; then
+            label_present=true
+          fi
+          echo "label-present=$label_present" >> "$GITHUB_OUTPUT"
+
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$label_present" = "true" ] || [ "$PATHS_CHANGED" = "true" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Auto-add the `run-ui-tests` label when web paths change on a PR that
+  # doesn't already carry it. **Disabled for now** — flip `if: false` to
+  # `if: needs.decide.outputs.paths-changed == 'true' && needs.decide.outputs.label-present == 'false' && github.event_name == 'pull_request'`
+  # when ready. The tests still run from the path-changed signal alone, so
+  # disabling this is purely cosmetic — it just means the label won't
+  # auto-appear on the PR.
+  # ---------------------------------------------------------------------------
+  auto-label:
+    name: Auto-add run-ui-tests label
+    needs: decide
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Add label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr edit "$PR_NUMBER" --add-label run-ui-tests
+
+  # ---------------------------------------------------------------------------
+  # The actual Playwright run. Mirrors the existing `build-and-test` job
+  # structure (checkout + submodule + NuGet cache + setup-dotnet) and then
+  # calls the new `TestUi` Nuke target, which depends on
+  # `InstallPlaywrightBrowsers` (Nuke handles the `playwright.ps1 install
+  # --with-deps chromium` invocation).
+  # ---------------------------------------------------------------------------
+  ui-tests:
+    name: UI tests (Playwright)
+    needs: decide
+    if: needs.decide.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # NB.GV needs full history for version-height calc
+
+      - name: Initialize vendored SatisfactorySaveNet submodule
+        run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ubuntu-latest-nuget-${{ hashFiles('**/*.csproj', '**/global.json') }}
+          restore-keys: ubuntu-latest-nuget-
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: /home/runner/.dotnet
+        with:
+          dotnet-version: 8.0.x
+          global-json-file: global.json
+
+      - name: Run UI tests
+        run: ./build.sh TestUi
+
+      - name: Upload TRX test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: artifacts/test-results/*.trx
+          if-no-files-found: warn
+
+      - name: Upload Playwright traces / videos (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: |
+            test/Web/Web.UiTests/bin/**/playwright-traces/**
+            test/Web/Web.UiTests/bin/**/test-results/**
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Publish — same shape as the main CI workflow's publish-test-results job,
+  # scoped to the UI run.
+  # ---------------------------------------------------------------------------
+  publish-results:
+    name: Publish UI test results
+    needs: [decide, ui-tests]
+    if: always() && needs.decide.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
+    steps:
+      - name: Download TRX artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+          pattern: ui-test-results
+          merge-multiple: false
+
+      - name: Publish results to commit check
+        uses: EnricoMi/publish-unit-test-result-action/linux@v2
+        with:
+          files: test-results/**/*.trx
+          check_name: UI test results
+          comment_mode: changes in failures

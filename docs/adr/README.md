@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-This folder holds Architecture Decision Records (ADRs) for ERP.Satisfactory.
+This folder holds Architecture Decision Records (ADRs) for ERP for Factory Games.
 
 An ADR captures a single architecturally-significant decision: the context that made it
 necessary, the option that was chosen, and the consequences that follow. ADRs are
@@ -40,3 +40,4 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0017](0017-mudblazor-as-ui-framework.md) | MudBlazor as the UI component framework, Bootstrap removed | Accepted |
 | [0018](0018-persistence-stack.md) | Persistence stack: EF Core with SQLite default, Postgres opt-in | Accepted |
 | [0019](0019-tickerq-background-scheduler.md) | TickerQ as the background-job scheduler | Accepted |
+| [0020](0020-rebrand-to-erp-for-factory-games.md) | Rebrand to ERP for Factory Games | Accepted |
