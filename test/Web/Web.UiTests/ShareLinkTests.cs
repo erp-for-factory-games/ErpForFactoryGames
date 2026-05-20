@@ -49,11 +49,11 @@ public class ShareLinkTests(AspireAppFixture fixture) : IClassFixture<AspireAppF
     private static string FindRepoRoot(string start)
     {
         var dir = new DirectoryInfo(start);
-        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "ERP.Satisfactory.slnx")))
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "ErpForFactoryGames.slnx")))
         {
             dir = dir.Parent;
         }
         return dir?.FullName
-            ?? throw new InvalidOperationException("Could not locate ERP.Satisfactory.slnx walking up from " + start);
+            ?? throw new InvalidOperationException("Could not locate ErpForFactoryGames.slnx walking up from " + start);
     }
 }
