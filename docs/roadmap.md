@@ -1,11 +1,11 @@
 # Roadmap
 
-This doc captures the long-tail vision for ERP.Satisfactory — features that aren't
-scoped enough yet to be GitHub issues, but that should be visible so design choices
-made today don't accidentally close doors tomorrow.
+This doc captures the long-tail vision for **ERP for Factory Games** — features that
+aren't scoped enough yet to be GitHub issues, but that should be visible so design
+choices made today don't accidentally close doors tomorrow.
 
 Issues that already exist for near-term work live on
-[GitHub](https://github.com/ChrisonSimtian/ERP.Satisfactory/issues) under their
+[GitHub](https://github.com/ChrisonSimtian/ErpForFactoryGames/issues) under their
 milestones. This doc is for what's beyond the current backlog.
 
 The primary objective stays unchanged: **help the user plan a factory based on the
@@ -115,9 +115,11 @@ all of the above.
 
 ## V2 platform direction
 
-Eventually the goal is to graduate from "ERP for Satisfactory" to "ERP for
-factory games" — a generic platform that other games plug into. Two big
-threads tee this up: multi-game support and self-hosted deployment.
+The project-name graduation from "ERP for Satisfactory" to "ERP for Factory Games"
+has landed ([ADR-0020](adr/0020-rebrand-to-erp-for-factory-games.md)) — repo,
+solution, and domain (`erp-for-factory.games`) all reflect the broader scope. What
+the v2 *platform* direction now means is the underlying refactor work that makes
+multi-game real, plus self-hosted deployment. Two big threads tee this up.
 
 ### Multi-game support
 
@@ -149,9 +151,12 @@ What's not yet generic:
   ecosystem, less mature parser tooling.
 
 **Likely refactors:**
-- Rename / re-namespace: `ERP.Satisfactory` → `ERP.Core` + `ERP.Games.Satisfactory`
-  + `ERP.Games.CaptainOfIndustry` + `ERP.Games.DysonSphere`. Repo stays one;
-  per-game projects under `src/Games/`.
+- Re-namespace: today's `ERP.*` + `Satisfactory.*` projects → `ERP.Core` +
+  `ERP.Games.Satisfactory` + `ERP.Games.CaptainOfIndustry` + `ERP.Games.DysonSphere`.
+  Repo stays one; per-game projects under `src/Games/`. The repo/solution
+  rename ([ADR-0020](adr/0020-rebrand-to-erp-for-factory-games.md)) deliberately
+  deferred this — it touches every `.csproj` and `using` directive and is
+  better done when a second game implementation pushes the contracts into shape.
 - New ADR: "Game adapter contract" — what each adapter must implement
   (`ICatalogueLoader`, `ISaveParser`, `IWorldMapRenderer`, optional
   `ILiveStateProvider`).
