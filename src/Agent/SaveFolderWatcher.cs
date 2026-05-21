@@ -38,7 +38,7 @@ internal sealed class SaveFolderWatcher : BackgroundService
         _logger = logger;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var folder = _resolver.Resolve();
         var accessible = folder is not null && Directory.Exists(folder);
@@ -54,7 +54,8 @@ internal sealed class SaveFolderWatcher : BackgroundService
             // Sit idle until cancellation — the host still runs, status UI
             // can show the "not configured" state, and Win-service / systemd
             // will keep it alive until the user reconfigures + restarts.
-            return Task.Delay(Timeout.Infinite, stoppingToken);
+            await Task.Delay(Timeout.Infinite, stoppingToken).ConfigureAwait(false);
+            return;
         }
 
         if (!accessible)
@@ -62,15 +63,25 @@ internal sealed class SaveFolderWatcher : BackgroundService
             _logger.LogWarning(
                 "Save folder {Folder} is not accessible (does not exist or not readable). Idling.",
                 folder);
-            return Task.Delay(Timeout.Infinite, stoppingToken);
+            await Task.Delay(Timeout.Infinite, stoppingToken).ConfigureAwait(false);
+            return;
         }
 
         _logger.LogInformation("Watching {Folder} for *.sav changes", folder);
 
+        // IMPORTANT: must `await` the Task.Delay below, not `return` it. The
+        // watcher's lifetime is bound to this method's stack frame; a sync
+        // return disposes the watcher before any event can fire. Found on
+        // first end-to-end smoke — was the v1.0-blocker bug.
         using var watcher = new FileSystemWatcher(folder)
         {
             Filter = "*.sav",
-            IncludeSubdirectories = false,
+            // Satisfactory stores saves under SaveGames/<steam-user-id>/<save>.sav,
+            // so the watcher MUST recurse one level into the per-user folder.
+            // We watch the root (which auto-detects to %LocalAppData%/FactoryGame/Saved/SaveGames/)
+            // and let FSW recurse; rare configurations may have multiple users
+            // on one machine, which is fine — all of them upload from the same agent.
+            IncludeSubdirectories = true,
             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
             EnableRaisingEvents = true,
         };
@@ -80,7 +91,7 @@ internal sealed class SaveFolderWatcher : BackgroundService
         watcher.Renamed += (_, e) => Enqueue(e.FullPath, stoppingToken);
         watcher.Error += (_, e) => _logger.LogError(e.GetException(), "FileSystemWatcher error");
 
-        return Task.Delay(Timeout.Infinite, stoppingToken);
+        await Task.Delay(Timeout.Infinite, stoppingToken).ConfigureAwait(false);
     }
 
     private void Enqueue(string fullPath, CancellationToken hostCt)
