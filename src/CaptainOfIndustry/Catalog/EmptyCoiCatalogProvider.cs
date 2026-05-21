@@ -10,8 +10,17 @@ namespace CaptainOfIndustry.Catalog;
 /// </summary>
 public sealed class EmptyCoiCatalogProvider : ICatalogProvider
 {
+    private readonly CoiCatalogueOptions _options;
+
+    public EmptyCoiCatalogProvider() : this(new CoiCatalogueOptions()) { }
+
+    public EmptyCoiCatalogProvider(CoiCatalogueOptions options)
+    {
+        _options = options;
+    }
+
     public bool IsLoaded => false;
-    public string? Source => null;
+    public string? Source => CoiCataloguePathResolver.ResolveExisting(_options);
 
     public IReadOnlyList<Item> Items { get; } = Array.Empty<Item>();
     public IReadOnlyList<Building> Buildings { get; } = Array.Empty<Building>();
@@ -24,14 +33,30 @@ public sealed class EmptyCoiCatalogProvider : ICatalogProvider
     public Recipe? FindDefaultProducerOf(ItemId item) => null;
     public IReadOnlyList<Recipe> FindAllProducersOf(ItemId item) => Array.Empty<Recipe>();
 
-    public CatalogueStatus GetStatus() => new(
-        IsLoaded: false,
-        Source: null,
-        ItemCount: 0,
-        BuildingCount: 0,
-        RecipeCount: 0,
-        AlternateRecipeCount: 0,
-        Warnings: new[] { "Captain of Industry catalogue not yet implemented. Tracked under milestone #16." });
+    public CatalogueStatus GetStatus()
+    {
+        var existing = CoiCataloguePathResolver.ResolveExisting(_options);
+        var expected = CoiCataloguePathResolver.Resolve(_options);
+        var warnings = new List<string>
+        {
+            "Captain of Industry catalogue ingestion not yet implemented. Tracked under milestone #16.",
+        };
+        if (existing is null)
+            warnings.Add($"No catalogue JSON at '{expected}'. Run the extractor (tools/CaptainOfIndustryExtractor, #177) to generate one.");
 
-    public CatalogueStatus LoadFromPath(string docsJsonPath) => GetStatus();
+        return new CatalogueStatus(
+            IsLoaded: false,
+            Source: existing,
+            ItemCount: 0,
+            BuildingCount: 0,
+            RecipeCount: 0,
+            AlternateRecipeCount: 0,
+            Warnings: warnings);
+    }
+
+    public CatalogueStatus LoadFromPath(string docsJsonPath)
+    {
+        _options.CataloguePath = docsJsonPath;
+        return GetStatus();
+    }
 }
