@@ -111,7 +111,12 @@ jobs:
     needs: decide
     if: needs.decide.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 30 min was tight on a cold ubuntu-latest runner — NuGet restore + Playwright
+    # browser install + Aspire-orchestrated test suite was hitting the limit before
+    # `dotnet test` finished (TRX uploaded with the tests that did run all green,
+    # job itself killed at the timeout). 45 min gives breathing room without
+    # being absurd.
+    timeout-minutes: 45
 
     steps:
       - name: Checkout

@@ -81,7 +81,7 @@ public class SmokeTests(AspireAppFixture fixture) : IClassFixture<AspireAppFixtu
     private static string FindRepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "ERP.Satisfactory.slnx")))
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "ErpForFactoryGames.slnx")))
         {
             dir = dir.Parent;
         }
