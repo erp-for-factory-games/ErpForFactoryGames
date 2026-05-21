@@ -57,7 +57,7 @@ or the wiki [Roadmap](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/
 
 ## Fancy Charts
 
-![Alt](https://repobeats.axiom.co/api/embed/b5196b0f26128bfafc0dc68fcacd78d12882a641.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/0663f7324cf95e6bb97a97f26a463dc21be47b49.svg "Repobeats analytics image")
 
 ## Run it
 
