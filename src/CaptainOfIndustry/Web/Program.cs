@@ -1,6 +1,7 @@
 using CaptainOfIndustry.Web.Components;
 using CaptainOfIndustry.Catalog;
 using ERP.Application;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 
@@ -33,6 +34,35 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 app.MapStaticAssets();
+
+// .assets/coi/ is the dev's gitignored drop folder for CoI-derived art
+// (item icons fetched from wiki.coigame.com by tools/Download-CoiIcons.ps1,
+// per ADR-0015 / ADR-0016). Map at /assets/* so Razor templates can reference
+// <img src="/assets/coi/icons/items/{id}.png" /> without bundling MB of
+// external art into the repo. Silently no-ops when the folder doesn't exist.
+var assetsPath = app.Configuration["Assets:LocalPath"];
+if (string.IsNullOrWhiteSpace(assetsPath))
+{
+    var probe = app.Environment.ContentRootPath;
+    while (!string.IsNullOrEmpty(probe) && !Directory.Exists(Path.Combine(probe, ".assets")))
+    {
+        probe = Path.GetDirectoryName(probe);
+    }
+    if (!string.IsNullOrEmpty(probe)) assetsPath = Path.Combine(probe, ".assets");
+}
+if (!string.IsNullOrEmpty(assetsPath) && Directory.Exists(assetsPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(Path.GetFullPath(assetsPath)),
+        RequestPath = "/assets",
+    });
+    app.Logger.LogInformation("Serving .assets/ from {Path} at /assets/*", assetsPath);
+}
+else
+{
+    app.Logger.LogInformation(".assets/ folder not found — item icons will be missing (run tools/Download-CoiIcons.ps1).");
+}
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

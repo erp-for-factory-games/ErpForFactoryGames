@@ -17,10 +17,20 @@
     <MudTabPanel Text="@($"Items ({Catalog.Items.Count})")">
         <MudTable Items="Catalog.Items" Dense="true" Hover="true" Striped="true" Bordered="false" Class="mt-2">
             <HeaderContent>
+                <MudTh Style="width: 48px;"></MudTh>
                 <MudTh>Id</MudTh>
                 <MudTh>Name</MudTh>
             </HeaderContent>
             <RowTemplate>
+                <MudTd>
+                    @* onerror hides broken images so we silently fall back to text-only
+                       for items the wiki doesn't have an icon for (e.g. Aluminum_Scrap_Pressed).
+                       Icons come from .assets/coi/icons/items/ — see tools/Download-CoiIcons.ps1. *@
+                    <img src="@($"/assets/coi/icons/items/{context.Id.Value}.png")"
+                         alt=""
+                         width="32" height="32"
+                         onerror="this.style.visibility='hidden'" />
+                </MudTd>
                 <MudTd>@context.Id.Value</MudTd>
                 <MudTd>@context.Name</MudTd>
             </RowTemplate>
