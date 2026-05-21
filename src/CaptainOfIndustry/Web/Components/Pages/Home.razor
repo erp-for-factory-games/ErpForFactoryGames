@@ -1,0 +1,37 @@
+@page "/"
+@using ERP.Application
+@inject ICatalogProvider Catalog
+
+<PageTitle>ERP — Captain of Industry</PageTitle>
+
+<h1>Captain of Industry</h1>
+
+<MudText Class="mb-3">
+    Production planning for <em>Captain of Industry</em>. Sibling app to the Satisfactory planner
+    (<MudLink Href="https://satisfactory.erp-for-factory.games">satisfactory.erp-for-factory.games</MudLink>),
+    sharing the planning core but with its own isolated UI per
+    <MudLink Href="https://github.com/ChrisonSimtian/ErpForFactoryGames/blob/main/docs/adr/0022-captain-of-industry-support.md">ADR-0022</MudLink>.
+</MudText>
+
+@if (Catalog.IsLoaded)
+{
+    <MudAlert Severity="Severity.Success" Class="mb-3">
+        Catalogue loaded from <code>@Catalog.Source</code> —
+        @Catalog.Items.Count items, @Catalog.Recipes.Count recipes, @Catalog.Buildings.Count buildings.
+    </MudAlert>
+}
+else
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3">
+        No catalogue loaded. Run <code>dotnet run --project tools/CaptainOfIndustryExtractor -- --install &lt;CoI dir&gt;</code>
+        to generate one.
+    </MudAlert>
+    @foreach (var w in Catalog.GetStatus().Warnings)
+    {
+        <MudText Typo="Typo.body2" Class="mb-1"><em>@w</em></MudText>
+    }
+}
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Href="catalogue" Class="mt-3">
+    Browse catalogue
+</MudButton>

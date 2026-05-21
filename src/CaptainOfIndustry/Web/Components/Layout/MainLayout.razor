@@ -1,0 +1,24 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_theme" IsDarkMode="true" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h6">ERP for Factory Games — Captain of Industry</MudText>
+        <MudSpacer />
+        <MudLink Href="/" Color="Color.Inherit" Class="mx-2">Home</MudLink>
+        <MudLink Href="catalogue" Color="Color.Inherit" Class="mx-2">Catalogue</MudLink>
+    </MudAppBar>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private readonly MudTheme _theme = new();
+}

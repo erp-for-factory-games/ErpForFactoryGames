@@ -34,6 +34,9 @@
   <Folder Name="/src/CaptainOfIndustry/Catalog/">
     <Project Path="src/CaptainOfIndustry/Catalog/CaptainOfIndustry.Catalog.csproj" />
   </Folder>
+  <Folder Name="/src/CaptainOfIndustry/Web/">
+    <Project Path="src/CaptainOfIndustry/Web/CaptainOfIndustry.Web.csproj" />
+  </Folder>
   <Folder Name="/test/" />
   <Folder Name="/test/ApiService.Tests/" />
   <Folder Name="/test/ERP/" />
