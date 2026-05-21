@@ -29,6 +29,11 @@ builder.Services.AddErpPersistence(builder.Configuration);
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
+// Agent upload tracking + config. Server-side counterpart to the agent's
+// IAgentStatus. Singleton — atomic snapshot replacement per upload.
+builder.Services.Configure<AgentUploadOptions>(builder.Configuration.GetSection("AgentUploads"));
+builder.Services.AddSingleton<IAgentUploadStatus, AgentUploadStatus>();
+
 var app = builder.Build();
 
 // Apply pending plan-storage migrations on startup so the SQLite default Just
@@ -557,6 +562,138 @@ app.MapGet("/plans/shared/{token}", async (
 
     var plan = await plans.GetAsync(entity.PlanId, ct);
     return plan is null ? Results.NotFound() : Results.Ok(SavedPlanDto.From(plan));
+});
+
+// ---------------------------------------------------------------------------
+// Agent endpoints (#199). Wire shape per ADR-0024 §4 + §5.
+//
+//   POST /agent/savegames/satisfactory  — raw .sav body, three X-Agent-*
+//     headers. Token accepted as opaque (auth seam; future ADR-0025 wires
+//     real validation). Parser failures land 422 with the exception type +
+//     first-line of the message in the body.
+//
+//   GET  /agent/status                  — last upload snapshot for the
+//     Web UI status card (#200).
+// ---------------------------------------------------------------------------
+
+app.MapPost("/agent/savegames/satisfactory", async (
+    HttpRequest http,
+    IFactoryStateProvider provider,
+    IAgentUploadStatus uploadStatus,
+    Microsoft.Extensions.Options.IOptions<AgentUploadOptions> uploadOptions,
+    ILoggerFactory loggerFactory,
+    CancellationToken ct) =>
+{
+    var log = loggerFactory.CreateLogger("AgentUpload");
+
+    var token = http.Headers["X-Agent-Token"].ToString();
+    if (string.IsNullOrWhiteSpace(token))
+    {
+        // 401 (not 400/403) so the eventual real-auth ADR-0025 keeps the
+        // same status-code semantics — see ADR-0024 §5.
+        return Results.Json(new { error = "X-Agent-Token header is required." }, statusCode: 401);
+    }
+
+    if (!string.Equals(http.ContentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(
+            new { error = $"Content-Type must be application/octet-stream; got '{http.ContentType}'." },
+            statusCode: 415);
+    }
+
+    var opts = uploadOptions.Value;
+    if (http.ContentLength is { } len && len > opts.MaxUploadBytes)
+    {
+        return Results.Json(
+            new { error = $"Upload exceeds MaxUploadBytes ({opts.MaxUploadBytes})." },
+            statusCode: 413);
+    }
+
+    var fileNameHeader = http.Headers["X-Agent-FileName"].ToString();
+    var displayName = string.IsNullOrWhiteSpace(fileNameHeader)
+        ? "uploaded.sav"
+        : Uri.UnescapeDataString(fileNameHeader);
+    var agentVersion = http.Headers["X-Agent-Version"].ToString();
+    if (string.IsNullOrWhiteSpace(agentVersion)) agentVersion = null;
+
+    var uploadDir = opts.ResolveUploadDirectory();
+    Directory.CreateDirectory(uploadDir);
+    var targetPath = Path.Combine(uploadDir, "satisfactory-latest.sav");
+    var tempPath = targetPath + ".upload";
+
+    try
+    {
+        await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None,
+                         bufferSize: 64 * 1024, useAsync: true))
+        {
+            await http.Body.CopyToAsync(fs, ct).ConfigureAwait(false);
+        }
+        File.Move(tempPath, targetPath, overwrite: true);
+
+        var parsedAt = DateTimeOffset.UtcNow;
+        try
+        {
+            var status = provider.LoadFromPath(targetPath);
+            uploadStatus.Record(new UploadSnapshot(
+                FileName: displayName,
+                ParsedAt: parsedAt,
+                SaveVersion: status.SaveVersion,
+                BuildVersion: status.BuildVersion,
+                Succeeded: true,
+                StatusCode: 200,
+                Detail: null,
+                AgentVersion: agentVersion));
+            log.LogInformation(
+                "Agent upload {File} ({Bytes} bytes, agent v{Agent}) → save v{SaveVersion}, build {BuildVersion}",
+                displayName, http.ContentLength ?? -1, agentVersion ?? "?", status.SaveVersion, status.BuildVersion);
+            return Results.Ok(new
+            {
+                saveVersion = status.SaveVersion,
+                buildVersion = status.BuildVersion,
+                parsedAt,
+            });
+        }
+        catch (Exception parseEx)
+        {
+            uploadStatus.Record(new UploadSnapshot(
+                FileName: displayName,
+                ParsedAt: parsedAt,
+                SaveVersion: null,
+                BuildVersion: null,
+                Succeeded: false,
+                StatusCode: 422,
+                Detail: parseEx.GetType().Name + ": " + parseEx.Message,
+                AgentVersion: agentVersion));
+            log.LogWarning(parseEx, "Agent upload {File} parse failed", displayName);
+            return Results.Json(
+                new { error = "Save parse failed.", detail = parseEx.Message, type = parseEx.GetType().Name },
+                statusCode: 422);
+        }
+    }
+    catch (Exception ex)
+    {
+        log.LogError(ex, "Agent upload {File} threw before/after parse", displayName);
+        try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { /* best effort */ }
+        return Results.Problem(title: "Upload failed", detail: ex.Message, statusCode: 500);
+    }
+});
+
+app.MapGet("/agent/status", (IAgentUploadStatus status, TimeProvider clock) =>
+{
+    var latest = status.Latest;
+    // isStale = no upload in the last 10 minutes. The watcher only fires
+    // on save change; expect long quiet periods on a paused game. Tune
+    // later if the UI complains.
+    var stalenessThreshold = TimeSpan.FromMinutes(10);
+    var now = clock.GetUtcNow();
+    var isStale = latest is null || (now - latest.ParsedAt) > stalenessThreshold;
+
+    return Results.Ok(new
+    {
+        lastUpload = latest,
+        agentSeen = latest?.ParsedAt,
+        isStale,
+    });
 });
 
 app.MapDefaultEndpoints();
