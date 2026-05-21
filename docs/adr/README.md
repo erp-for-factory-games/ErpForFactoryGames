@@ -41,3 +41,4 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0018](0018-persistence-stack.md) | Persistence stack: EF Core with SQLite default, Postgres opt-in | Accepted |
 | [0019](0019-tickerq-background-scheduler.md) | TickerQ as the background-job scheduler | Accepted |
 | [0020](0020-rebrand-to-erp-for-factory-games.md) | Rebrand to ERP for Factory Games | Accepted |
+| [0021](0021-migrate-from-nuke-fork-to-fallout.md) | Migrate build system from private Nuke.* fork to Fallout.* on nuget.org | Accepted |
