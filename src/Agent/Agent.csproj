@@ -8,7 +8,34 @@
     <RootNamespace>Agent</RootNamespace>
     <AssemblyName>erp-agent</AssemblyName>
     <UserSecretsId>erp-agent-7c964c83-0170-4f31-8314-ae3569267de9</UserSecretsId>
+    <!-- Single-file self-contained publish per ADR-0024 §7. Set on the
+         command line via -r <RID>; this file just locks in the flags so
+         CI + local publish produce the same shape. -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- Trim is off — ILogger / Serilog / Microsoft.Extensions.* are
+         reflection-heavy and we'd spend weeks chasing trim warnings for
+         minimal size payoff on a single-file binary. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- Force ReadyToRun on so first-launch isn't a 3s JIT pause as
+         systemd / SCM watches the start-up notify. -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <!-- Embed symbols inside the exe so we get useful crash traces without
+         shipping a separate .pdb that confuses end-users. -->
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- These travel into the published output next to the binary so a
+         freshly-extracted zip has the user-facing docs + the template
+         config + the default-settings file right where the user looks.
+         The Worker SDK auto-includes appsettings.json; Microsoft.NET.Sdk
+         doesn't, so spell it out. -->
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="INSTALL.md" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="agent.json.example" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Generic host + service-host shims (see ADR-0024 §1). One binary,
