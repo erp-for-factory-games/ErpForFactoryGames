@@ -5,6 +5,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/src/">
+    <Project Path="src/Agent/Agent.csproj" />
     <Project Path="src/ApiService/ApiService.csproj" />
     <Project Path="src/AppHost/AppHost.csproj" />
     <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
@@ -38,6 +39,9 @@
     <Project Path="src/CaptainOfIndustry/Web/CaptainOfIndustry.Web.csproj" />
   </Folder>
   <Folder Name="/test/" />
+  <Folder Name="/test/Agent.Tests/">
+    <Project Path="test/Agent.Tests/Agent.Tests.csproj" />
+  </Folder>
   <Folder Name="/test/ApiService.Tests/" />
   <Folder Name="/test/ERP/" />
   <Folder Name="/test/ERP/Application.Tests/">

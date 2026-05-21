@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Agent</RootNamespace>
+    <AssemblyName>erp-agent</AssemblyName>
+    <UserSecretsId>erp-agent-7c964c83-0170-4f31-8314-ae3569267de9</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Generic host + service-host shims (see ADR-0024 §1). One binary,
+         three contexts (console / Windows service / systemd unit). -->
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+
+    <!-- Serilog file sink behind ILogger (ADR-0024 §2). App code uses
+         ILogger<T> only; Serilog stays at the boundary. -->
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>
