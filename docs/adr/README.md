@@ -43,3 +43,4 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0020](0020-rebrand-to-erp-for-factory-games.md) | Rebrand to ERP for Factory Games | Accepted |
 | [0021](0021-migrate-from-nuke-fork-to-fallout.md) | Migrate build system from private Nuke.* fork to Fallout.* on nuget.org | Accepted |
 | [0022](0022-captain-of-industry-support.md) | Captain of Industry as the second supported game | Accepted |
+| [0023](0023-hosting-deployment-approach.md) | Hosting + deployment via homelab Docker behind Cloudflare Tunnel | Accepted |
