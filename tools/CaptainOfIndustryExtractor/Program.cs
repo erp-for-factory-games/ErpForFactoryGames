@@ -148,14 +148,16 @@ internal sealed class Extractor
 
         var (protosDb, warnings) = RunRegistration();
 
+        var buildings = ExtractBuildings(protosDb, out var recipeToBuilding);
+
         return new CatalogueDto
         {
             ExtractorVersion = typeof(Extractor).Assembly.GetName().Version?.ToString() ?? "0.0.0",
             CoiVersion = coiVersion,
             ExtractedAt = DateTimeOffset.UtcNow,
             Items = ExtractProducts(protosDb),
-            Recipes = ExtractRecipes(protosDb),
-            Buildings = ExtractBuildings(protosDb),
+            Recipes = ExtractRecipes(protosDb, recipeToBuilding),
+            Buildings = buildings,
             Warnings = warnings,
         };
     }
@@ -354,16 +356,18 @@ internal sealed class Extractor
         return result.OrderBy(p => p.Id, StringComparer.Ordinal).ToList();
     }
 
-    private List<RecipeDto> ExtractRecipes(object protosDb)
+    private List<RecipeDto> ExtractRecipes(object protosDb, Dictionary<string, string> recipeToBuilding)
     {
         var recipeProtoT = _core.GetType("Mafi.Core.Factory.Recipes.RecipeProto")!;
         var result = new List<RecipeDto>();
         foreach (var recipe in EnumerateAll(protosDb, recipeProtoT))
         {
+            var id = ReadString(recipe, "Id") ?? "";
             result.Add(new RecipeDto
             {
-                Id = ReadString(recipe, "Id") ?? "",
+                Id = id,
                 Name = ReadString(ReadMember(recipe, "Strings"), "Name") ?? "",
+                Building = recipeToBuilding.GetValueOrDefault(id),
                 DurationTicks = ReadInt(ReadMember(recipe, "Duration"), "Ticks"),
                 Inputs = ExtractRecipeProducts(recipe, "AllInputs"),
                 Outputs = ExtractRecipeProducts(recipe, "AllOutputs"),
@@ -403,22 +407,53 @@ internal sealed class Extractor
         foreach (var item in arr) yield return item;
     }
 
-    private List<BuildingDto> ExtractBuildings(object protosDb)
+    /// <summary>
+    /// Iterate via BCL <c>IEnumerable</c> if available (works for arrays, lists,
+    /// <c>IReadOnlyList&lt;T&gt;</c>); else fall through to Mafi's
+    /// <c>ImmutableArray</c> protocol.
+    /// </summary>
+    private static IEnumerable<object?> EnumerateAny(object? collection)
+    {
+        if (collection is null) yield break;
+        if (collection is IEnumerable seq)
+        {
+            foreach (var item in seq) yield return item;
+            yield break;
+        }
+        foreach (var item in EnumerateMafiArray(collection)) yield return item;
+    }
+
+    private List<BuildingDto> ExtractBuildings(object protosDb, out Dictionary<string, string> recipeToBuilding)
     {
         // MachineProto is the most useful "building" type for the planner; the
         // wider StaticEntityProto includes terrain, vehicles, etc.
         var machineProtoT = _core.GetType("Mafi.Core.Factory.Machines.MachineProto")!;
+        recipeToBuilding = new Dictionary<string, string>(StringComparer.Ordinal);
         var result = new List<BuildingDto>();
         foreach (var building in EnumerateAll(protosDb, machineProtoT))
         {
+            var buildingId = ReadString(building, "Id") ?? "";
+            var recipeIds = new List<string>();
+            foreach (var recipe in EnumerateAny(ReadMember(building, "Recipes")))
+            {
+                var recipeId = ReadString(recipe, "Id");
+                if (string.IsNullOrEmpty(recipeId)) continue;
+                recipeIds.Add(recipeId);
+                // Each recipe is owned by exactly one machine in CoI's data model
+                // (T1 / T2 tiers are separate recipes), so first-wins is fine.
+                recipeToBuilding.TryAdd(recipeId, buildingId);
+            }
+            recipeIds.Sort(StringComparer.Ordinal);
+
             result.Add(new BuildingDto
             {
-                Id = ReadString(building, "Id") ?? "",
+                Id = buildingId,
                 Name = ReadString(ReadMember(building, "Strings"), "Name") ?? "",
                 ElectricityKw = ReadInt(ReadMember(building, "ElectricityConsumed"), "Value"),
+                Recipes = recipeIds,
             });
         }
-        Log($"  buildings: {result.Count}");
+        Log($"  buildings: {result.Count} ({recipeToBuilding.Count} recipes mapped to buildings)");
         return result.OrderBy(b => b.Id, StringComparer.Ordinal).ToList();
     }
 
@@ -494,6 +529,8 @@ internal sealed class RecipeDto
 {
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
+    /// <summary>Id of the machine that runs this recipe. Null if no machine claimed it.</summary>
+    public string? Building { get; set; }
     public int DurationTicks { get; set; }
     public List<RecipeProductDto> Inputs { get; set; } = new();
     public List<RecipeProductDto> Outputs { get; set; } = new();
@@ -510,4 +547,6 @@ internal sealed class BuildingDto
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public int ElectricityKw { get; set; }
+    /// <summary>Ids of recipes this building can run.</summary>
+    public List<string> Recipes { get; set; } = new();
 }
