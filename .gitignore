@@ -10,6 +10,7 @@ artifacts/
 
 # Claude Code agent worktrees (transient, never commit)
 .claude/worktrees/
+.claude/scheduled_tasks.lock
 
 # Rider / VS / VS Code
 .idea/
