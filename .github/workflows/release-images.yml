@@ -1,0 +1,79 @@
+# Builds + pushes runtime container images to GHCR on tag.
+#
+# Triggered by tags shaped `v*` (e.g. v0.5.0). Tags become the image
+# tag, and the always-moving `:latest` label is updated to match. Per
+# ADR-0023:
+#   - Satisfactory Web (src/Web/Dockerfile) -> ghcr.io/<owner>/erp-web
+#   - Planner ApiService (src/ApiService/Dockerfile) -> ghcr.io/<owner>/erp-api
+# CoI Web image is deliberately not built here yet; it's deferred to the
+# game-agent milestone which will solve catalogue distribution.
+
+name: Release images
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build-push:
+    name: Build + push ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: erp-web
+            dockerfile: src/Web/Dockerfile
+          - image: erp-api
+            dockerfile: src/ApiService/Dockerfile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # NB.GV needs git history for version-height calc
+
+      - name: Initialize vendored SatisfactorySaveNet submodule
+        run: git -c submodule.vendor/SatisfactorySaveNet.update=checkout submodule update --init --recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve tags
+        id: tags
+        run: |
+          ref_name="${GITHUB_REF_NAME}"
+          image_ref="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${{ matrix.image }}"
+          # On tag push: <image>:<tag> + :latest. On workflow_dispatch from main: :main + :latest.
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "tags=${image_ref}:${ref_name},${image_ref}:latest" >>"$GITHUB_OUTPUT"
+          else
+            echo "tags=${image_ref}:${GITHUB_REF_NAME//\//-},${image_ref}:latest" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Build + push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          # GitHub Packages NuGet auth — nuget.config reads %GITHUB_TOKEN%.
+          # Passed as a build secret so it never lands in an image layer.
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
+          # GHA cache backend keeps subsequent builds quick across runs.
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,scope=${{ matrix.image }},mode=max

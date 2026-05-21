@@ -52,10 +52,18 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: dorny/paths-filter@v3
         with:
+          # Match *UI-relevant* files only — Dockerfile, *.md, *.dockerignore
+          # don't change rendered output, so they shouldn't burn ~15 min of
+          # Playwright runner time. dorny/paths-filter supports `!neg`.
+          # Add more excludes here as new non-UI artefacts land under web dirs.
           filters: |
             web:
               - 'src/Web/**'
+              - 'src/CaptainOfIndustry/Web/**'
+              - 'src/Web.Shared/**'
               - 'test/Web/**'
+              - '!**/Dockerfile'
+              - '!**/*.md'
 
       - name: Compute gate
         id: gate

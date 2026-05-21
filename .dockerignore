@@ -1,0 +1,44 @@
+# Keep image builds fast and small. The build stages explicitly opt back into
+# .git/ (NB.GV needs it for version-height computation).
+
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/node_modules/
+**/TestResults/
+**/.playwright/
+
+# Build / IDE caches
+**/*.lscache
+**/*.user
+
+# Things we deliberately never ship
+.assets/
+.satisfactory/
+.coi/
+vendor/
+
+# Local-dev DBs / state
+**/plans.db*
+**/erp.db*
+
+# IDE / OS noise
+.DS_Store
+Thumbs.db
+
+# Tests don't need to be in the build context.
+test/
+
+# Tools are dev-only (extractors / icon downloaders). They build separately.
+tools/
+
+# Documentation isn't in the image.
+docs/
+
+# Don't leak the gitignored Claude scratch dir.
+.claude/
+
+# Misc
+*.log
