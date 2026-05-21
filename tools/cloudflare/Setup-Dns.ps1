@@ -1,75 +1,87 @@
 <#
 .SYNOPSIS
-    Configure Cloudflare DNS and redirects for erp-for-factory.games.
+    Configure Cloudflare DNS for erp-for-factory.games to serve from GitHub Pages.
 
 .DESCRIPTION
-    Idempotent setup script for the project's apex domain on Cloudflare. Sets up:
+    Idempotent setup script for the project's apex domain on Cloudflare. After
+    this runs, https://erp-for-factory.games and https://www.erp-for-factory.games
+    serve the GitHub Pages site sourced from this repo's `/docs/` folder.
 
-      1. A "parking" A record on apex + www, proxied through Cloudflare so a
-         redirect rule has DNS to attach to. Points at 192.0.2.1 (TEST-NET-1) —
-         the redirect fires at the Cloudflare edge, traffic never reaches the IP.
-      2. A "placeholder" A record on satisfactory.<apex>, also proxied.
-         Reserves the host convention from ADR-0020 without serving anything yet.
-      3. A Single Redirect rule: apex + www → the GitHub repo (until the app
-         has a hosted home).
-      4. Zone settings: Always-Use-HTTPS = on, Minimum TLS = 1.2.
+    DNS topology:
+      - Apex (erp-for-factory.games) — four A records pointing at GitHub Pages'
+        published IPs. Grey-cloud (proxy off) so GitHub Pages handles TLS via
+        Let's Encrypt directly. Re-enable orange-cloud later if you want
+        Cloudflare's CDN/WAF in front.
+      - www — CNAME to <user>.github.io (same grey-cloud reasoning).
+      - Per-game subdomains (e.g. satisfactory.erp-for-factory.games) are NOT
+        created here — they go in when their app is actually deployed. The host
+        convention is documented in ADR-0020.
+
+    Zone settings:
+      - Always-Use-HTTPS = on
+      - Minimum TLS = 1.2
 
     Defaults to **dry-run**. Pass -Apply to actually mutate Cloudflare.
 
 .PARAMETER Zone
     Domain registered on Cloudflare. Default: erp-for-factory.games.
 
-.PARAMETER RedirectTarget
-    URL the apex (and www) redirects to until the app has a hosted home.
-    Default: https://github.com/ChrisonSimtian/ErpForFactoryGames.
+.PARAMETER GhPagesHost
+    Hostname for the www CNAME — your GitHub Pages canonical host
+    (`<user>.github.io`). Default: chrisonsimtian.github.io.
 
 .PARAMETER Apply
     Actually call the Cloudflare API. Without this, the script only prints what
     *would* be done. Always run once without -Apply first.
-
-.PARAMETER PlaceholderIp
-    IPv4 address used for the proxied parking records. TEST-NET-1 (192.0.2.1)
-    is reserved for documentation and won't route — perfect for "DNS exists so
-    Cloudflare proxies, but nothing's actually hosted there yet".
 
 .NOTES
     Requires the CLOUDFLARE_API_TOKEN env var with permissions:
       - Zone.Zone:Read
       - Zone.DNS:Edit
       - Zone.Zone Settings:Edit
-      - Zone.Page Rules / Redirect Rules:Edit (Account level: Bulk URL Redirects:Edit)
 
-    Create a scoped token at:
-      https://dash.cloudflare.com/profile/api-tokens
-      → "Create Token" → "Edit zone DNS" template → restrict to this zone.
+    In CI this comes from the repo secret of the same name (see
+    .github/workflows/cloudflare-dns.yml).
 
-    Re-running with -Apply is safe: every operation checks existing state first.
+    Re-running with -Apply is safe: every operation checks existing state first
+    and only creates/updates/deletes what's needed to converge on the desired
+    state. Records on apex / www that don't match the desired set are removed.
 
 .EXAMPLE
-    # 1. Dry run — see what would happen
+    # 1. Dry run locally — see what would happen
+    $env:CLOUDFLARE_API_TOKEN = '...'
     pwsh tools/cloudflare/Setup-Dns.ps1
 
-    # 2. Apply for real
-    $env:CLOUDFLARE_API_TOKEN = '...'
+    # 2. Apply
     pwsh tools/cloudflare/Setup-Dns.ps1 -Apply
+
+    # 3. CI: trigger the cloudflare-dns workflow manually with apply=true.
 #>
 
 [CmdletBinding()]
 param(
     [string]$Zone = 'erp-for-factory.games',
-    [string]$RedirectTarget = 'https://github.com/ChrisonSimtian/ErpForFactoryGames',
-    [switch]$Apply,
-    [string]$PlaceholderIp = '192.0.2.1'
+    [string]$GhPagesHost = 'chrisonsimtian.github.io',
+    [switch]$Apply
 )
 
 $ErrorActionPreference = 'Stop'
+
+# GitHub Pages' published IPv4s for apex domains.
+# https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site#configuring-an-apex-domain
+$GhPagesIps = @(
+    '185.199.108.153',
+    '185.199.109.153',
+    '185.199.110.153',
+    '185.199.111.153'
+)
 
 # ---------------------------------------------------------------------------
 # Auth + helpers
 # ---------------------------------------------------------------------------
 
 if (-not $env:CLOUDFLARE_API_TOKEN) {
-    throw "CLOUDFLARE_API_TOKEN env var not set. Create a scoped token at https://dash.cloudflare.com/profile/api-tokens"
+    throw "CLOUDFLARE_API_TOKEN env var not set. In CI this comes from secrets.CLOUDFLARE_API_TOKEN; locally create a scoped token at https://dash.cloudflare.com/profile/api-tokens"
 }
 
 $headers = @{
@@ -84,15 +96,15 @@ function Invoke-Cf {
         [Parameter(Mandatory)][string]$Path,
         [object]$Body
     )
-    $args = @{
+    $invokeArgs = @{
         Method  = $Method
         Uri     = "$base$Path"
         Headers = $headers
     }
     if ($Body) {
-        $args.Body = ($Body | ConvertTo-Json -Depth 10 -Compress)
+        $invokeArgs.Body = ($Body | ConvertTo-Json -Depth 10 -Compress)
     }
-    Invoke-RestMethod @args
+    Invoke-RestMethod @invokeArgs
 }
 
 function Step {
@@ -101,6 +113,7 @@ function Step {
         'WOULD'   { 'Yellow' }
         'APPLIED' { 'Green' }
         'SKIP'    { 'DarkGray' }
+        'DELETE'  { 'Magenta' }
         default   { 'Cyan' }
     }
     Write-Host "[$Mode] $Message" -ForegroundColor $colour
@@ -117,103 +130,76 @@ if (-not $zoneInfo) {
     throw "Zone '$Zone' not found on this Cloudflare account. Is the API token scoped to it?"
 }
 $zoneId = $zoneInfo.id
-Step "Zone ID: $zoneId  (status: $($zoneInfo.status), nameservers: $($zoneInfo.name_servers -join ', '))"
+Step "Zone ID: $zoneId  (status: $($zoneInfo.status))"
 
 if ($zoneInfo.status -ne 'active') {
     Write-Warning "Zone is not 'active' yet (status: $($zoneInfo.status)). Nameservers may still be propagating; you can continue but Cloudflare won't serve traffic until status flips to active."
 }
 
 # ---------------------------------------------------------------------------
-# 1. DNS records — apex, www, satisfactory.<apex>
-#    Proxied parking records pointing at TEST-NET-1.
+# 1. Build desired DNS state
+#
+#    Apex: 4× A records pointing at GitHub Pages, grey-cloud (proxied=$false).
+#          Grey-cloud lets GH Pages issue/renew its own Let's Encrypt cert
+#          without the Cloudflare proxy interfering with the HTTP-01 challenge.
+#    www:  CNAME → <user>.github.io, also grey-cloud.
+#
+#    No satisfactory.<apex> record — that's added when the Satisfactory app
+#    actually ships (per ADR-0020's host convention).
+# ---------------------------------------------------------------------------
+
+$desired = @()
+foreach ($ip in $GhPagesIps) {
+    $desired += @{ type = 'A'; name = $Zone; content = $ip; proxied = $false; comment = 'GitHub Pages — apex' }
+}
+$desired += @{ type = 'CNAME'; name = "www.$Zone"; content = $GhPagesHost; proxied = $false; comment = 'GitHub Pages — www' }
+
+# Names we manage. Records under these names that don't match `$desired` get
+# removed (idempotency). Records under OTHER names are left alone.
+$managedNames = @($Zone, "www.$Zone")
+
+# ---------------------------------------------------------------------------
+# 2. Reconcile DNS records
 # ---------------------------------------------------------------------------
 
 $existingRecords = (Invoke-Cf -Method GET -Path "/zones/$zoneId/dns_records?per_page=100").result
 
-$desiredRecords = @(
-    @{ type = 'A'; name = $Zone;                      content = $PlaceholderIp; proxied = $true; comment = 'Apex parking — redirect rule attached' },
-    @{ type = 'A'; name = "www.$Zone";                content = $PlaceholderIp; proxied = $true; comment = 'www → apex via redirect rule' },
-    @{ type = 'A'; name = "satisfactory.$Zone";       content = $PlaceholderIp; proxied = $true; comment = 'Placeholder — host convention per ADR-0020. App not yet deployed.' }
-)
-
-foreach ($desired in $desiredRecords) {
-    $existing = $existingRecords | Where-Object { $_.type -eq $desired.type -and $_.name -eq $desired.name }
-    if ($existing) {
-        if ($existing.content -eq $desired.content -and $existing.proxied -eq $desired.proxied) {
-            Step "$($desired.name) ($($desired.type)) already correct — skip" 'SKIP'
-            continue
-        }
-        if ($Apply) {
-            Invoke-Cf -Method PUT -Path "/zones/$zoneId/dns_records/$($existing.id)" -Body $desired | Out-Null
-            Step "$($desired.name) ($($desired.type)) → updated" 'APPLIED'
-        } else {
-            Step "$($desired.name) ($($desired.type)) → would UPDATE to $($desired.content) (proxied=$($desired.proxied))" 'WOULD'
-        }
-    } else {
-        if ($Apply) {
-            Invoke-Cf -Method POST -Path "/zones/$zoneId/dns_records" -Body $desired | Out-Null
-            Step "$($desired.name) ($($desired.type)) → created" 'APPLIED'
-        } else {
-            Step "$($desired.name) ($($desired.type)) → would CREATE pointing at $($desired.content) (proxied=$($desired.proxied))" 'WOULD'
-        }
-    }
+function Test-RecordMatch {
+    param($Existing, $Desired)
+    return ($Existing.type -eq $Desired.type) `
+        -and ($Existing.name -eq $Desired.name) `
+        -and ($Existing.content -eq $Desired.content) `
+        -and ($Existing.proxied -eq $Desired.proxied)
 }
 
-# ---------------------------------------------------------------------------
-# 2. Single Redirect rule: apex + www → RedirectTarget
-#    Uses the http_request_dynamic_redirect phase ruleset (Cloudflare's
-#    modern "Single Redirects" feature). Falls back to creating the ruleset
-#    if it doesn't exist yet.
-# ---------------------------------------------------------------------------
+# 2a. Remove records under managed names that aren't in $desired.
+foreach ($existing in $existingRecords) {
+    if ($existing.name -notin $managedNames) { continue }
+    $stillWanted = $desired | Where-Object { Test-RecordMatch -Existing $existing -Desired $_ }
+    if ($stillWanted) { continue }
 
-$ruleDescription = 'Apex + www → GitHub repo (until app hosted)'
-$ruleExpression  = "(http.host eq `"$Zone`") or (http.host eq `"www.$Zone`")"
-$ruleAction = @{
-    action            = 'redirect'
-    action_parameters = @{
-        from_value = @{
-            status_code           = 301
-            target_url            = @{ value = $RedirectTarget }
-            preserve_query_string = $false
-        }
-    }
-    expression  = $ruleExpression
-    description = $ruleDescription
-    enabled     = $true
-}
-
-# Get the entrypoint ruleset for the redirect phase. 404 means "not created yet".
-try {
-    $entrypoint = Invoke-Cf -Method GET -Path "/zones/$zoneId/rulesets/phases/http_request_dynamic_redirect/entrypoint"
-    $existingRule = $entrypoint.result.rules | Where-Object { $_.description -eq $ruleDescription }
-} catch {
-    if ($_.Exception.Response.StatusCode -eq 404) {
-        $entrypoint = $null
-        $existingRule = $null
-    } else { throw }
-}
-
-if ($existingRule) {
-    Step "Redirect rule already present — skip (rule id $($existingRule.id))" 'SKIP'
-} else {
     if ($Apply) {
-        if ($entrypoint) {
-            # Update existing ruleset — append our rule.
-            $rules = @($entrypoint.result.rules) + $ruleAction
-            Invoke-Cf -Method PUT -Path "/zones/$zoneId/rulesets/$($entrypoint.result.id)" -Body @{ rules = $rules } | Out-Null
-        } else {
-            # Create entrypoint ruleset with our rule.
-            $body = @{
-                name  = 'default'
-                kind  = 'zone'
-                phase = 'http_request_dynamic_redirect'
-                rules = @($ruleAction)
-            }
-            Invoke-Cf -Method POST -Path "/zones/$zoneId/rulesets" -Body $body | Out-Null
-        }
-        Step "Redirect rule → created (apex + www → $RedirectTarget, 301)" 'APPLIED'
+        Invoke-Cf -Method DELETE -Path "/zones/$zoneId/dns_records/$($existing.id)" | Out-Null
+        Step "$($existing.name) ($($existing.type) → $($existing.content)) — deleted" 'DELETE'
     } else {
-        Step "Redirect rule → would CREATE: apex + www → $RedirectTarget (301)" 'WOULD'
+        Step "$($existing.name) ($($existing.type) → $($existing.content)) — would DELETE (proxied=$($existing.proxied))" 'WOULD'
+    }
+}
+
+# 2b. Create records in $desired that aren't already present.
+$existingRecords = (Invoke-Cf -Method GET -Path "/zones/$zoneId/dns_records?per_page=100").result
+foreach ($d in $desired) {
+    $alreadyThere = $existingRecords | Where-Object { Test-RecordMatch -Existing $_ -Desired $d }
+    if ($alreadyThere) {
+        Step "$($d.name) ($($d.type) → $($d.content)) — already correct" 'SKIP'
+        continue
+    }
+
+    if ($Apply) {
+        Invoke-Cf -Method POST -Path "/zones/$zoneId/dns_records" -Body $d | Out-Null
+        Step "$($d.name) ($($d.type) → $($d.content)) — created (proxied=$($d.proxied))" 'APPLIED'
+    } else {
+        Step "$($d.name) ($($d.type) → $($d.content)) — would CREATE (proxied=$($d.proxied))" 'WOULD'
     }
 }
 
@@ -249,8 +235,13 @@ if (-not $Apply) {
     Write-Host "Dry run complete. Re-run with -Apply to mutate Cloudflare." -ForegroundColor Yellow
 } else {
     Write-Host ""
-    Write-Host "Done. Verify with:" -ForegroundColor Green
-    Write-Host "  curl -sI https://$Zone        # expect 301 -> $RedirectTarget"
-    Write-Host "  curl -sI https://www.$Zone    # expect 301 -> $RedirectTarget"
-    Write-Host "  dig +short $Zone              # expect Cloudflare IPs (orange-cloud proxied)"
+    Write-Host "Done. Next steps:" -ForegroundColor Green
+    Write-Host "  1. In the GitHub repo: Settings → Pages → set Custom domain to '$Zone' (if not already)."
+    Write-Host "  2. Wait for the GH Pages 'DNS check' to go green (can take a few minutes)."
+    Write-Host "  3. Enable 'Enforce HTTPS' in the Pages settings once the cert is issued."
+    Write-Host ""
+    Write-Host "Verify:" -ForegroundColor Green
+    Write-Host "  dig +short $Zone        # expect: 185.199.108.153 (and three siblings)"
+    Write-Host "  dig +short www.$Zone    # expect: $GhPagesHost  → GH Pages IPs"
+    Write-Host "  curl -sI https://$Zone  # expect: 200 from GitHub Pages"
 }

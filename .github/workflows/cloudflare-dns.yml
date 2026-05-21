@@ -1,0 +1,53 @@
+name: Cloudflare DNS setup
+
+# Manual-only for now. Run from the Actions tab to dry-run (apply=false) or
+# apply (apply=true) the DNS config in `tools/cloudflare/Setup-Dns.ps1`.
+#
+# Wire `on: push` once the DNS config genuinely changes infrequently and we
+# trust the script to be safe under automation — the reconciliation deletes
+# records under the managed names that don't match desired state, so we want
+# human approval per run for now.
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Apply changes (false = dry-run only)'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-dns
+  cancel-in-progress: false   # serialise — never cancel an in-flight apply.
+
+jobs:
+  setup:
+    name: Setup-Dns.ps1 (apply=${{ inputs.apply }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify token is present
+        shell: bash
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN secret is not set on this repo."
+            exit 1
+          fi
+
+      - name: Run Setup-Dns.ps1
+        shell: pwsh
+        run: |
+          $scriptArgs = @{}
+          if ('${{ inputs.apply }}' -eq 'true') { $scriptArgs['Apply'] = $true }
+          ./tools/cloudflare/Setup-Dns.ps1 @scriptArgs
