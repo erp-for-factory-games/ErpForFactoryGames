@@ -16,3 +16,12 @@
 	# inspection. Same skip/ignore treatment.
 	ignore = all
 	update = none
+[submodule "deploy/Homelab.Stacks.ErpForFactoryGames"]
+	path = deploy/Homelab.Stacks.ErpForFactoryGames
+	url = https://github.com/ChrisonSimtian/Homelab.Stacks.ErpForFactoryGames.git
+	# Deploy stack — off the build graph. Operators who want to drive the
+	# homelab can `git submodule update --init --checkout
+	# deploy/Homelab.Stacks.ErpForFactoryGames` on demand. Same skip/ignore
+	# posture as vendor/* so a fresh checkout doesn't show pointer drift.
+	ignore = all
+	update = none

@@ -299,6 +299,7 @@ src/
 test/                     # xUnit projects per layer
 build/                    # NUKE C# build scripts
 vendor/SatisfactorySaveNet # Forked .sav parser submodule
+deploy/Homelab.Stacks.ErpForFactoryGames # Compose stack submodule (off the build graph)
 docs/adr/                 # Architecture decisions
 .claude/                  # Claude Code conventions for this repo
 ```
@@ -323,6 +324,24 @@ Bump the major/minor by editing [`version.json`](version.json) — the next
 commit becomes `vX.Y.0`. Patch increments per commit automatically.
 
 `main` is protected: PRs require all four matrix checks to pass before merging.
+
+## Self-hosting
+
+The Blazor apps run on Chris's homelab as Docker containers behind a
+Cloudflare Tunnel — see [ADR-0023](docs/adr/0023-hosting-deployment-approach.md)
+for the why and [`docs/operations/deploy.md`](docs/operations/deploy.md) for
+the tag-to-deploy runbook.
+
+The compose stack lives in a sibling repo,
+[`Homelab.Stacks.ErpForFactoryGames`](https://github.com/ChrisonSimtian/Homelab.Stacks.ErpForFactoryGames),
+attached here as a submodule at `deploy/Homelab.Stacks.ErpForFactoryGames/`.
+Like the `vendor/*` submodules it's off the build graph (`update = none`,
+`ignore = all`); fetch it explicitly only when you want to operate the
+homelab:
+
+```powershell
+git submodule update --init --checkout deploy/Homelab.Stacks.ErpForFactoryGames
+```
 
 ## Backlog
 
