@@ -30,6 +30,10 @@
   <Folder Name="/src/Satisfactory/Save/">
     <Project Path="src/Satisfactory/Save/Satisfactory.Save.csproj" />
   </Folder>
+  <Folder Name="/src/CaptainOfIndustry/" />
+  <Folder Name="/src/CaptainOfIndustry/Catalog/">
+    <Project Path="src/CaptainOfIndustry/Catalog/CaptainOfIndustry.Catalog.csproj" />
+  </Folder>
   <Folder Name="/test/" />
   <Folder Name="/test/ApiService.Tests/" />
   <Folder Name="/test/ERP/" />
@@ -51,6 +55,10 @@
   </Folder>
   <Folder Name="/test/Satisfactory/Save.Tests/">
     <Project Path="test/Satisfactory/Save.Tests/Satisfactory.Save.Tests.csproj" />
+  </Folder>
+  <Folder Name="/test/CaptainOfIndustry/" />
+  <Folder Name="/test/CaptainOfIndustry/Catalog.Tests/">
+    <Project Path="test/CaptainOfIndustry/Catalog.Tests/CaptainOfIndustry.Catalog.Tests.csproj" />
   </Folder>
   <Folder Name="/test/Web/" />
   <Folder Name="/test/Web/Web.UiTests/">
