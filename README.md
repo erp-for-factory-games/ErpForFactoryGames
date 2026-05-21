@@ -28,6 +28,14 @@ and what's deliberately out of scope (UI rebrand, namespace refactor).
 > [Save File Parsing](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Save-File-Parsing),
 > or [LP Planner](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/LP-Planner).
 
+## Sponsorship
+
+This project is OSS and runs on out-of-pocket spend. If you find it useful,
+[sponsor via GitHub Sponsors](https://github.com/sponsors/ChrisonSimtian) — every
+contribution goes back into keeping it running.
+
+See [where the money goes](costs.md) for the running list of project costs.
+
 ## What's new in v0.4 — *Pipe polylines milestone*
 
 - **Pipe polylines** — `mSplineData` is now deep-parsed end-to-end; pipes render
@@ -49,7 +57,7 @@ or the wiki [Roadmap](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/
 
 ## Fancy Charts
 
-![Alt](https://repobeats.axiom.co/api/embed/b5196b0f26128bfafc0dc68fcacd78d12882a641.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/0663f7324cf95e6bb97a97f26a463dc21be47b49.svg "Repobeats analytics image")
 
 ## Run it
 

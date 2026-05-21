@@ -105,13 +105,13 @@ with MudBlazor's utility classes (`d-flex`, `gap-*`, `mb-*`, `pa-*`,
 ## See also
 
 - [ADR 0002](0002-use-blazor-for-ui.md) — Use Blazor for the UI.
-- PRs [#48](https://github.com/ChrisonSimtian/ERP.Satisfactory/pull/48),
-  [#49](https://github.com/ChrisonSimtian/ERP.Satisfactory/pull/49),
-  [#51](https://github.com/ChrisonSimtian/ERP.Satisfactory/pull/51),
-  [#52](https://github.com/ChrisonSimtian/ERP.Satisfactory/pull/52),
-  [#53](https://github.com/ChrisonSimtian/ERP.Satisfactory/pull/53),
-  [#54](https://github.com/ChrisonSimtian/ERP.Satisfactory/pull/54),
-  [#55](https://github.com/ChrisonSimtian/ERP.Satisfactory/pull/55),
-  [#56](https://github.com/ChrisonSimtian/ERP.Satisfactory/pull/56),
-  [#57](https://github.com/ChrisonSimtian/ERP.Satisfactory/pull/57) — the
+- PRs [#48](https://github.com/ChrisonSimtian/ErpForFactoryGames/pull/48),
+  [#49](https://github.com/ChrisonSimtian/ErpForFactoryGames/pull/49),
+  [#51](https://github.com/ChrisonSimtian/ErpForFactoryGames/pull/51),
+  [#52](https://github.com/ChrisonSimtian/ErpForFactoryGames/pull/52),
+  [#53](https://github.com/ChrisonSimtian/ErpForFactoryGames/pull/53),
+  [#54](https://github.com/ChrisonSimtian/ErpForFactoryGames/pull/54),
+  [#55](https://github.com/ChrisonSimtian/ErpForFactoryGames/pull/55),
+  [#56](https://github.com/ChrisonSimtian/ErpForFactoryGames/pull/56),
+  [#57](https://github.com/ChrisonSimtian/ErpForFactoryGames/pull/57) — the
   migration phases.
