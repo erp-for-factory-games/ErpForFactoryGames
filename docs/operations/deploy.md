@@ -15,17 +15,21 @@ ghcr.io/chrisonsimtian/erp-api     :v0.5.0  + :latest
        │  Watchtower polls every 6h, pulls :latest
        ▼
 Homelab Docker host (one of three Proxmox nodes)
-   └─ Homelab.Stacks.ErpForFactoryGames  (sibling repo)
+   └─ Homelab.Stacks.ErpForFactoryGames  (sibling repo — self-contained)
        ├─ erp-web         (Blazor Server, port 8080)
-       └─ erp-api         (Wolverine + EF Core, port 8080)
+       ├─ erp-api         (Wolverine + EF Core, port 8080)
+       └─ cloudflared     (tunnel + ingress rules live in this stack)
        │
-       │  internal HTTP via shared docker network
+       │  ingress: satisfactory.erp-for-factory.games → http://erp-web:8080
        ▼
-Cloudflared tunnel (running in Homelab.Stacks.Infrastructure)
-       │  ingress rules in cloudflare config
-       ▼
-satisfactory.erp-for-factory.games  →  http://erp-web:8080
+satisfactory.erp-for-factory.games
 ```
+
+> The ERP stack runs its own `cloudflared` container with a dedicated
+> tunnel (not the shared one in `Homelab.Stacks.Infrastructure`). Keeps
+> deploy state for ERP in one place — minor deviation from ADR-0023's
+> "reuse existing tunnel" wording; revisit if a second deviation
+> appears.
 
 The CoI app (`captain-of-industry.erp-for-factory.games`) is **not yet
 deployed** — see the game-agent milestone for what's blocking it.
@@ -54,12 +58,15 @@ deployed** — see the game-agent milestone for what's blocking it.
 
 Tracked in `Homelab.Stacks.ErpForFactoryGames`. Outline:
 
-- `compose.yml` declares two services (`erp-web`, `erp-api`),
-  references the GHCR images, joins the shared `cloudflared` network.
+- `compose.yml` declares three services (`erp-web`, `erp-api`,
+  `cloudflared`) on an internal docker network. References the GHCR
+  images by tag.
 - ApiService gets the production database connection string via env
   var or a docker secret (see ADR-0018 for the persistence picture).
-- Cloudflare Tunnel ingress rules (in the tunnel config file or
-  dashboard) route the subdomain to `http://erp-web:8080`.
+- A dedicated Cloudflare Tunnel — created once via
+  `cloudflared tunnel create erp-for-factory-games` — provides the
+  credentials JSON. Ingress rules live in `config.yml` in the sister
+  repo and route the subdomain to `http://erp-web:8080`.
 
 ## When things break
 
