@@ -6,11 +6,12 @@
 
 ## Context
 
-ERP.Satisfactory needs to persist user-created plans (and, later, other
-write-side state — saved overrides, snapshots of catalogues, etc.). The project
-is open-source, single-user by default, occasionally run as a hosted demo, and
-must keep contribution friction low (zero install, `dotnet run` should "just
-work").
+ERP.Satisfactory (since rebranded to **ERP for Factory Games** — see
+[ADR-0020](0020-rebrand-to-erp-for-factory-games.md)) needs to persist user-created
+plans (and, later, other write-side state — saved overrides, snapshots of catalogues,
+etc.). The project is open-source, single-user by default, occasionally run as a
+hosted demo, and must keep contribution friction low (zero install, `dotnet run`
+should "just work").
 
 Storage requirements:
 

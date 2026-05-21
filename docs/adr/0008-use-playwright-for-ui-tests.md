@@ -41,5 +41,5 @@ distributed app through `Aspire.Hosting.Testing` so they exercise the real
 - The Playwright **MCP server** (`@playwright/mcp`) is a separate, optional
   developer tool for ad-hoc browser-driving during a Claude Code session. It is
   **not** part of the test suite or CI and does not replace `Microsoft.Playwright`.
-- Future work: once the Planner UI exists ([milestone 4](https://github.com/ChrisonSimtian/ERP.Satisfactory/milestone/4)),
+- Future work: once the Planner UI exists ([milestone 4](https://github.com/ChrisonSimtian/ErpForFactoryGames/milestone/4)),
   add scenario tests for the golden planning path (enter target → see plan).
