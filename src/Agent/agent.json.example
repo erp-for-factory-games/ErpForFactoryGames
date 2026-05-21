@@ -1,0 +1,7 @@
+{
+  "Agent": {
+    "ApiBaseUrl": "https://satisfactory.erp-for-factory.games",
+    "AgentToken": "paste-any-non-empty-string-here-for-v1",
+    "SaveFolderPath": null
+  }
+}
