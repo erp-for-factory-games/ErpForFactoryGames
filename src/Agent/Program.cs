@@ -6,6 +6,28 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 
+// ---------------------------------------------------------------------
+// CLI entry — handle --install / --uninstall / --help before any host
+// machinery boots. These flags do one thing and exit; the long-running
+// service path is the default when no flag is given.
+// ---------------------------------------------------------------------
+foreach (var arg in args)
+{
+    switch (arg)
+    {
+        case "--install":
+            return await ServiceRegistrar.InstallAsync().ConfigureAwait(false);
+        case "--uninstall":
+            return await ServiceRegistrar.UninstallAsync().ConfigureAwait(false);
+        case "--version" or "-v":
+            Console.WriteLine(typeof(Program).Assembly.GetName().Version?.ToString() ?? "0.0.0");
+            return 0;
+        case "--help" or "-h":
+            PrintUsage();
+            return 0;
+    }
+}
+
 var builder = Host.CreateApplicationBuilder(args);
 
 // ---------------------------------------------------------------------
@@ -88,6 +110,31 @@ if (string.IsNullOrWhiteSpace(options.AgentToken))
 }
 
 await host.RunAsync().ConfigureAwait(false);
+return 0;
+
+static void PrintUsage()
+{
+    Console.WriteLine("""
+        erp-agent — ERP for Factory Games local-data agent.
+
+        Usage:
+          erp-agent                  Run in the foreground (or as a registered
+                                     service when launched by the SCM / systemd).
+          erp-agent --install        Register as a Windows service (run elevated)
+                                     or a systemd --user unit.
+          erp-agent --uninstall      Reverse of --install.
+          erp-agent --version, -v    Print the agent version.
+          erp-agent --help, -h       This help.
+
+        Configuration:
+          appsettings.json next to the binary holds defaults.
+          agent.json under %LocalAppData%/ErpForFactoryGames/ (Windows) or
+          $XDG_CONFIG_HOME/ErpForFactoryGames/ (Linux) is the writeable
+          per-user override — that's where you put your API URL + token.
+
+        See INSTALL.md next to the binary for the full first-run guide.
+        """);
+}
 
 // Local helpers — file paths are OS-specific. See ADR-0024 §2.
 static string LogsDirectory()

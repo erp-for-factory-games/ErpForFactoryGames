@@ -1,12 +1,19 @@
-# Builds + pushes runtime container images to GHCR on tag.
+# Builds + pushes runtime container images to GHCR on tag, plus the
+# per-RID agent binaries attached to the GitHub Release.
 #
 # Triggered by tags shaped `v*` (e.g. v0.5.0). Tags become the image
-# tag, and the always-moving `:latest` label is updated to match. Per
-# ADR-0023:
+# tag, and the always-moving `:latest` label is updated to match.
+#
+# Container images (per ADR-0023):
 #   - Satisfactory Web (src/Web/Dockerfile) -> ghcr.io/<owner>/erp-web
 #   - Planner ApiService (src/ApiService/Dockerfile) -> ghcr.io/<owner>/erp-api
-# CoI Web image is deliberately not built here yet; it's deferred to the
-# game-agent milestone which will solve catalogue distribution.
+#   CoI Web image is deliberately not built here yet — agent milestone solves
+#   catalogue distribution first.
+#
+# Agent binaries (per ADR-0024 §7):
+#   - erp-agent-win-x64.zip   (Windows service-capable)
+#   - erp-agent-linux-x64.tar.gz   (systemd --user capable)
+#   Attached to the GitHub Release created from the tag.
 
 name: Release images
 
@@ -77,3 +84,78 @@ jobs:
           # GHA cache backend keeps subsequent builds quick across runs.
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+  # ---------------------------------------------------------------------------
+  # Agent — per-RID self-contained single-file publish. Skipped on
+  # workflow_dispatch (no release to attach to); only fires on tag push.
+  # ---------------------------------------------------------------------------
+  publish-agent:
+    name: Publish agent (${{ matrix.rid }})
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write   # gh release upload
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            runner: windows-latest
+            archive_ext: zip
+          - rid: linux-x64
+            runner: ubuntu-latest
+            archive_ext: tar.gz
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # NB.GV needs git history for version-height calc
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ matrix.runner }}-agent-nuget-${{ hashFiles('**/*.csproj', '**/global.json') }}
+          restore-keys: ${{ matrix.runner }}-agent-nuget-
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Publish
+        # The csproj already locks in PublishSingleFile / SelfContained / R2R;
+        # this just pins the RID and output dir for this run.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # nuget.config reads it
+        run: dotnet publish src/Agent/Agent.csproj -c Release -r ${{ matrix.rid }} -o publish/${{ matrix.rid }}
+
+      - name: Pack zip (Windows)
+        if: matrix.archive_ext == 'zip'
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          $name = "erp-agent-${{ matrix.rid }}-$version.zip"
+          Compress-Archive -Path publish/${{ matrix.rid }}/* -DestinationPath $name
+          "ARCHIVE_NAME=$name" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Pack tar.gz (Linux)
+        if: matrix.archive_ext == 'tar.gz'
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          name="erp-agent-${{ matrix.rid }}-${version}.tar.gz"
+          tar -czf "$name" -C publish/${{ matrix.rid }} .
+          echo "ARCHIVE_NAME=$name" >> "$GITHUB_ENV"
+
+      - name: Attach to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          # The tag push triggers the GitHub auto-release-from-tag flow; the
+          # release may or may not exist when this job lands depending on
+          # ordering. Create it if needed (idempotent), then upload.
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 \
+            || gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "See CHANGELOG / commit history. Container images on ghcr.io/${GITHUB_REPOSITORY_OWNER,,}."
+          gh release upload "${GITHUB_REF_NAME}" "${ARCHIVE_NAME}" --clobber
