@@ -158,7 +158,12 @@ public class JsonCoiCatalogProviderTests : IDisposable
     public void LoadFromPath_Replaces_State()
     {
         var path = WriteFixture(SampleCatalogue);
-        var provider = new JsonCoiCatalogProvider(new CoiCatalogueOptions());
+        // Point at a missing path so the provider starts unloaded regardless
+        // of whether the dev machine has a real catalogue at the default location.
+        var provider = new JsonCoiCatalogProvider(new CoiCatalogueOptions
+        {
+            CataloguePath = Path.Combine(_tempDir, "starts-missing.json"),
+        });
 
         Assert.False(provider.IsLoaded);
         provider.LoadFromPath(path);
