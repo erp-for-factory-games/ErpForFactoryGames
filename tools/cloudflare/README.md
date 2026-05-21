@@ -58,8 +58,9 @@ Zone resource: restrict to `erp-for-factory.games` only.
 After it applies, `erp-for-factory.games` serves the GitHub Pages site sourced
 from this repo's [`docs/`](../../docs/) folder.
 
-- **Apex** (`erp-for-factory.games`) — four A records pointing at GitHub Pages'
-  published IPs (`185.199.108.153`, `.109.153`, `.110.153`, `.111.153`).
+- **Apex** (`erp-for-factory.games`) — four `A` records (IPv4) plus four `AAAA`
+  records (IPv6) pointing at GitHub Pages' published addresses
+  (`185.199.108-111.153` and `2606:50c0:8000-8003::153`).
   Grey-cloud (proxy off) so GitHub Pages can issue/renew its Let's Encrypt
   certificate without the Cloudflare proxy interfering with the HTTP-01
   challenge.
