@@ -99,6 +99,30 @@ If you've moved your saves elsewhere, set
 `ERP_AGENT_SaveFolderPath` env var) to the directory containing your
 `.sav` files.
 
+## Log shipping (optional, on by default)
+
+The agent ships its local log file to the hosted planner once a minute
+so you can read recent agent activity in the Web UI at `/agent/logs`.
+Lines are buffered in memory on the server only (cleared on restart) —
+see [ADR-0024 §9](https://github.com/ChrisonSimtian/ErpForFactoryGames/blob/main/docs/adr/0024-agent-v1-shape.md).
+
+To disable or tune in `agent.json`:
+
+```json
+{
+  "Agent": {
+    "LogTail": {
+      "Enabled": true,
+      "Interval": "00:01:00",
+      "MaxLinesPerUpload": 500
+    }
+  }
+}
+```
+
+`Interval` is `HH:MM:SS`; `00:00:30` (30 s) is the minimum the agent
+honours. Set `Enabled: false` to opt out entirely.
+
 ## Troubleshooting
 
 - **Service installed but won't start**: check

@@ -1,0 +1,144 @@
+@* Shared logs card for the agent's recent stdout/file-sink output. Lives in
+   Web.Shared so any game's Web app can mount it. Styling slot via CssClass.
+
+   Pattern matches AgentStatusCard — HttpClient as a Parameter, polling loop,
+   no MudBlazor dependency. *@
+
+@implements IDisposable
+
+<div class="@CssClass">
+    <div class="@HeaderClass">
+        <strong>Agent logs</strong>
+        @if (_loading)
+        {
+            <span style="opacity:.65; margin-left:.5em;">checking…</span>
+        }
+        else if (_logs is null)
+        {
+            <span style="opacity:.65; margin-left:.5em;">unavailable</span>
+        }
+        else if (_logs.Lines.Count == 0)
+        {
+            <span style="opacity:.65; margin-left:.5em;">no lines yet</span>
+        }
+        else
+        {
+            <span style="opacity:.65; margin-left:.5em;">@_logs.Lines.Count of @_logs.TotalReceived shown</span>
+        }
+        @if (_logs?.AgentLastSeen is { } seen)
+        {
+            <span style="opacity:.55; margin-left:.75em; font-size:.85em;">
+                last seen @seen.ToLocalTime().ToString("HH:mm:ss")
+            </span>
+        }
+    </div>
+
+    @if (_logs is { Lines.Count: > 0 } logs)
+    {
+        <pre style="max-height: @MaxHeight; overflow-y: auto; margin: .5em 0 0; padding: .5em; background: #111; color: #ddd; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82em; line-height: 1.35; border-radius: 4px; white-space: pre-wrap; word-break: break-word;">@foreach (var line in logs.Lines)
+{
+<span style="@LevelColor(line.Text)">@line.Text</span>@Environment.NewLine}</pre>
+    }
+    else if (_logs is not null)
+    {
+        <div style="opacity:.85; margin-top:.5em;">
+            Agent log shipping is enabled in <code>agent.json</code> but no lines have
+            been received yet. Wait a minute for the next interval, or check the
+            agent's local log file at <code>%LocalAppData%/ErpForFactoryGames/agent-logs/</code>
+            (Windows) or <code>~/.local/state/ErpForFactoryGames/agent-logs/</code> (Linux).
+        </div>
+    }
+    else if (_error is not null)
+    {
+        <div style="color:#c0392b; font-size:.85em; margin-top:.5em;">
+            Couldn't reach agent logs endpoint: @_error
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>HttpClient pointed at the ApiService that hosts <c>/agent/logs</c>.</summary>
+    [Parameter, EditorRequired] public HttpClient Http { get; set; } = default!;
+
+    /// <summary>CSS class applied to the outer card container so the host app can theme it.</summary>
+    [Parameter] public string? CssClass { get; set; }
+
+    /// <summary>CSS class applied to the header row. Same idea.</summary>
+    [Parameter] public string? HeaderClass { get; set; }
+
+    /// <summary>Poll cadence for <c>GET /agent/logs</c>. Default 5s, same as AgentStatusCard.</summary>
+    [Parameter] public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>Max lines to request from the server. Default 500.</summary>
+    [Parameter] public int Limit { get; set; } = 500;
+
+    /// <summary>CSS max-height for the scrolling log pane. Default 24em.</summary>
+    [Parameter] public string MaxHeight { get; set; } = "24em";
+
+    private AgentLogsDto? _logs;
+    private string? _error;
+    private bool _loading = true;
+    private CancellationTokenSource? _cts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cts = new CancellationTokenSource();
+        await RefreshAsync(_cts.Token);
+        _ = PollLoopAsync(_cts.Token);
+    }
+
+    private async Task PollLoopAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(PollInterval, ct);
+                await RefreshAsync(ct);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (OperationCanceledException) { return; }
+            catch
+            {
+                // RefreshAsync already wrote _error; absorb and keep polling.
+            }
+        }
+    }
+
+    private async Task RefreshAsync(CancellationToken ct)
+    {
+        try
+        {
+            _logs = await Http.GetFromJsonAsync<AgentLogsDto>($"/agent/logs?limit={Limit}", ct);
+            _error = null;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logs = null;
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    // Best-effort level highlight from the Serilog default output template
+    // ("[HH:mm:ss INF]" / "[... WRN]" / "[... ERR]"). Falls back to neutral.
+    private static string LevelColor(string text)
+    {
+        if (text.Contains("ERR]", StringComparison.Ordinal) || text.Contains("FTL]", StringComparison.Ordinal))
+            return "color:#ff7675; display:block;";
+        if (text.Contains("WRN]", StringComparison.Ordinal))
+            return "color:#ffeaa7; display:block;";
+        if (text.Contains("DBG]", StringComparison.Ordinal) || text.Contains("VRB]", StringComparison.Ordinal))
+            return "color:#999; display:block;";
+        return "display:block;";
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

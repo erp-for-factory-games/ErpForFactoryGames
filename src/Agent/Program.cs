@@ -85,7 +85,20 @@ builder.Services.AddHttpClient<ISaveUploader, HttpSaveUploader>((sp, http) =>
     http.Timeout = TimeSpan.FromMinutes(2);
 });
 
+// Log-tail shipper (#210). Separate HttpClient so its 30-second timeout
+// doesn't fight the save uploader's larger one.
+builder.Services.AddHttpClient<ILogTailUploader, HttpLogTailUploader>((sp, http) =>
+{
+    var opts = sp.GetRequiredService<IOptions<AgentOptions>>().Value;
+    if (!string.IsNullOrWhiteSpace(opts.ApiBaseUrl))
+    {
+        http.BaseAddress = new Uri(opts.ApiBaseUrl, UriKind.Absolute);
+    }
+    http.Timeout = TimeSpan.FromSeconds(30);
+});
+
 builder.Services.AddHostedService<SaveFolderWatcher>();
+builder.Services.AddHostedService<LogTailBackgroundService>();
 
 var host = builder.Build();
 

@@ -177,6 +177,34 @@ New project sits at `src/Agent/Agent.csproj`, sibling to `src/Web/`
 and `src/ApiService/`. Not orchestrated by Aspire AppHost — the agent
 is a client of the API, not part of the dev orchestration graph.
 
+### 9. Log shipping — agent → API ring buffer (added 2026-05-22, issue #210)
+
+The agent ships newly-appended lines from its local Serilog file sink
+to the hosted API on a fixed interval so operators can see recent agent
+activity through the Web UI without having to SSH the user's machine.
+
+- **Trigger**: a separate `LogTailBackgroundService` ticks on a
+  configurable interval (default 60 s). Independent of save uploads —
+  log shipping happens even when no save activity is occurring.
+- **Wire shape**: `POST {ApiBaseUrl}/agent/logs` with
+  `Content-Type: application/json`, body `{ lines: ["..."], agentVersion?: "..." }`.
+  Same `X-Agent-Token` seam as §5.
+- **Position tracking**: in-memory only; on agent restart the reader
+  primes at EOF (no historical replay).
+- **Server storage**: in-memory ring buffer
+  (`AgentLogsOptions.MaxBufferLines`, default 2000). Lost on process
+  restart by design — durable, multi-source observability is the
+  follow-up issue (#212, SigNoz / OTel).
+- **Read endpoint**: `GET {ApiBaseUrl}/agent/logs?limit=N`.
+
+Rejected for v1: persistence (would need a migration just for
+observability data), structured log lines on the wire (Serilog's default
+text template is enough for an "what's the agent doing" UI), and
+piggybacking on save uploads (would only ship logs while the user is
+playing).
+
+Opt-out via `Agent:LogTail:Enabled=false` in `agent.json`.
+
 ## Alternatives considered
 
 **Hosting**
@@ -276,6 +304,8 @@ is a client of the API, not part of the dev orchestration graph.
   — `src/Web.Shared/` + `AgentStatusCard` per §6.
 - [#201](https://github.com/ChrisonSimtian/ErpForFactoryGames/issues/201)
   — `--install`/`--uninstall` flags + per-RID GitHub Release zips per §7.
+- [#210](https://github.com/ChrisonSimtian/ErpForFactoryGames/issues/210)
+  — agent → API log shipping per §9.
 
 A future ADR-0025 picks the auth scheme (anonymous-per-install vs.
 OAuth vs. magic-link) and replaces the unvalidated `X-Agent-Token`

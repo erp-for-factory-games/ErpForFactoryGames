@@ -2,6 +2,11 @@
   "Agent": {
     "ApiBaseUrl": "https://satisfactory.erp-for-factory.games",
     "AgentToken": "paste-any-non-empty-string-here-for-v1",
-    "SaveFolderPath": null
+    "SaveFolderPath": null,
+    "LogTail": {
+      "Enabled": true,
+      "Interval": "00:01:00",
+      "MaxLinesPerUpload": 500
+    }
   }
 }
