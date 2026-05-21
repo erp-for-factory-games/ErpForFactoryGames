@@ -1,0 +1,72 @@
+@page "/catalogue"
+@using ERP.Application
+@using ERP.Domain
+@inject ICatalogProvider Catalog
+
+<PageTitle>Catalogue — CoI</PageTitle>
+
+<h1>Catalogue</h1>
+
+@if (!Catalog.IsLoaded)
+{
+    <MudAlert Severity="Severity.Warning">No catalogue loaded — see the home page.</MudAlert>
+    return;
+}
+
+<MudTabs Elevation="0" Outlined="false" Class="mt-3">
+    <MudTabPanel Text="@($"Items ({Catalog.Items.Count})")">
+        <MudTable Items="Catalog.Items" Dense="true" Hover="true" Striped="true" Bordered="false" Class="mt-2">
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Name</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Id.Value</MudTd>
+                <MudTd>@context.Name</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudTabPanel>
+
+    <MudTabPanel Text="@($"Recipes ({Catalog.Recipes.Count})")">
+        <MudTable Items="Catalog.Recipes" Dense="true" Hover="true" Striped="true" Bordered="false" Class="mt-2">
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Building</MudTh>
+                <MudTh>Duration</MudTh>
+                <MudTh>Inputs → Outputs</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Id.Value</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Building.Value</MudTd>
+                <MudTd>@context.Duration.TotalSeconds.ToString("0.##")s</MudTd>
+                <MudTd>@FormatRecipe(context)</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudTabPanel>
+
+    <MudTabPanel Text="@($"Buildings ({Catalog.Buildings.Count})")">
+        <MudTable Items="Catalog.Buildings" Dense="true" Hover="true" Striped="true" Bordered="false" Class="mt-2">
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Power (MW)</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Id.Value</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.BasePowerMw.ToString("0.##")</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private static string FormatRecipe(Recipe r)
+    {
+        var inputs = string.Join(" + ", r.Inputs.Select(i => $"{i.Quantity}× {i.Item.Value}"));
+        var outputs = string.Join(" + ", r.Outputs.Select(o => $"{o.Quantity}× {o.Item.Value}"));
+        return string.IsNullOrEmpty(inputs) ? $"→ {outputs}" : $"{inputs} → {outputs}";
+    }
+}

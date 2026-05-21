@@ -16,4 +16,11 @@ builder.AddProject<Projects.Web>("webfrontend")
     .WithReference(apiService)
     .WaitFor(apiService);
 
+// Captain of Industry presentation app — runs independently of the Satisfactory
+// frontend per ADR-0022 (isolated apps, one per supported game). Reads its
+// catalogue in-process from the extractor's JSON; no ApiService dependency in v1.
+builder.AddProject<Projects.CaptainOfIndustry_Web>("coi-webfrontend")
+    .WithExternalHttpEndpoints()
+    .WithHttpHealthCheck("/health");
+
 builder.Build().Run();
