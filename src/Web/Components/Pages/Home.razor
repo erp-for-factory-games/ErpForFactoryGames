@@ -1,4 +1,5 @@
 @page "/"
+@inject IHttpClientFactory HttpFactory
 
 <PageTitle>ERP.Satisfactory</PageTitle>
 
@@ -58,3 +59,22 @@
         </MudPaper>
     </MudItem>
 </MudGrid>
+
+<MudPaper Class="fx-panel pa-4 mt-4" Elevation="0">
+    @* Agent live-save status — shared component in src/Web.Shared/, also
+       intended for the future CoI Web app. See ADR-0024 §6 and #200. *@
+    <Web.Shared.AgentStatusCard Http="@_agentClient" />
+</MudPaper>
+
+@code {
+    private HttpClient _agentClient = default!;
+
+    protected override void OnInitialized()
+    {
+        // Reuse the named "planner" client registered in Program.cs so the
+        // card hits the same `apiservice` Aspire reference as the rest of
+        // the app. AddHttpClient<PlannerApiClient> registers under the
+        // typed-client name (= "PlannerApiClient") which we mimic here.
+        _agentClient = HttpFactory.CreateClient(nameof(PlannerApiClient));
+    }
+}
