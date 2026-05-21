@@ -67,13 +67,19 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# GitHub Pages' published IPv4s for apex domains.
+# GitHub Pages' published apex addresses (both v4 and v6).
 # https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site#configuring-an-apex-domain
 $GhPagesIps = @(
     '185.199.108.153',
     '185.199.109.153',
     '185.199.110.153',
     '185.199.111.153'
+)
+$GhPagesIpv6s = @(
+    '2606:50c0:8000::153',
+    '2606:50c0:8001::153',
+    '2606:50c0:8002::153',
+    '2606:50c0:8003::153'
 )
 
 # ---------------------------------------------------------------------------
@@ -150,7 +156,10 @@ if ($zoneInfo.status -ne 'active') {
 
 $desired = @()
 foreach ($ip in $GhPagesIps) {
-    $desired += @{ type = 'A'; name = $Zone; content = $ip; proxied = $false; comment = 'GitHub Pages — apex' }
+    $desired += @{ type = 'A'; name = $Zone; content = $ip; proxied = $false; comment = 'GitHub Pages — apex (IPv4)' }
+}
+foreach ($ip in $GhPagesIpv6s) {
+    $desired += @{ type = 'AAAA'; name = $Zone; content = $ip; proxied = $false; comment = 'GitHub Pages — apex (IPv6)' }
 }
 $desired += @{ type = 'CNAME'; name = "www.$Zone"; content = $GhPagesHost; proxied = $false; comment = 'GitHub Pages — www' }
 
