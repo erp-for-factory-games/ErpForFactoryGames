@@ -1,65 +1,83 @@
 # Cloudflare setup scripts
 
-One-time DNS and redirect setup for `erp-for-factory.games`.
+DNS setup for `erp-for-factory.games`. Idempotent + dry-run by default.
 
 ## Scripts
 
 | Script | Purpose |
 |--------|---------|
-| [`Setup-Dns.ps1`](Setup-Dns.ps1) | Configures DNS records, the apex/www → GitHub redirect rule, and TLS zone settings. Idempotent + dry-run by default. |
+| [`Setup-Dns.ps1`](Setup-Dns.ps1) | Configures DNS for the apex + `www` to serve from GitHub Pages, plus zone-level TLS settings. |
 
-## One-time setup
+## How to run
 
-1. **Create a scoped API token** at <https://dash.cloudflare.com/profile/api-tokens>.
-   Permissions:
-   - `Zone.Zone:Read`
-   - `Zone.DNS:Edit`
-   - `Zone.Zone Settings:Edit`
-   - `Zone.Rulesets:Edit` (for Single Redirects)
+Two paths:
 
-   Restrict the token to the `erp-for-factory.games` zone only.
+### Option A — CI (preferred)
 
-2. **Dry-run** the setup script to see what would change:
+Trigger the `Cloudflare DNS setup` workflow manually:
+
+1. GitHub → **Actions** tab → **Cloudflare DNS setup** → **Run workflow**.
+2. Leave `apply` = `false` (default) → review the diff in the run log.
+3. Re-run with `apply` = `true` once the dry-run looks right.
+
+Token is read from the `CLOUDFLARE_API_TOKEN` repo secret. No local setup needed.
+
+### Option B — Local
+
+1. Create a Cloudflare API token (see "Token scopes" below), set it as
+   `CLOUDFLARE_API_TOKEN`:
 
    ```powershell
    $env:CLOUDFLARE_API_TOKEN = '...'
+   ```
+
+2. Dry-run:
+
+   ```powershell
    pwsh tools/cloudflare/Setup-Dns.ps1
    ```
 
-3. **Apply** when satisfied:
+3. Apply when satisfied:
 
    ```powershell
    pwsh tools/cloudflare/Setup-Dns.ps1 -Apply
    ```
 
-4. **Verify**:
+## Token scopes
 
-   ```powershell
-   curl.exe -sI https://erp-for-factory.games        # 301 -> GitHub repo
-   curl.exe -sI https://www.erp-for-factory.games    # 301 -> GitHub repo
-   ```
+When creating the token at <https://dash.cloudflare.com/profile/api-tokens>:
 
-## What it does
+- `Zone.Zone:Read`
+- `Zone.DNS:Edit`
+- `Zone.Zone Settings:Edit`
 
-- Creates proxied `A` records on `erp-for-factory.games`, `www.erp-for-factory.games`,
-  and `satisfactory.erp-for-factory.games` pointing at `192.0.2.1` (TEST-NET-1).
-  The redirect fires at the Cloudflare edge, so traffic never reaches the IP.
-- Creates a Single Redirect rule: apex + www → the GitHub repo (until the app
-  has a hosted home).
-- `satisfactory.erp-for-factory.games` is reserved with a proxied placeholder
-  record only — no redirect rule yet. Locks in the host convention from
-  [ADR-0020](../../docs/adr/0020-rebrand-to-erp-for-factory-games.md) without
-  serving anything until the app is deployed.
-- Sets `Always-Use-HTTPS = on` and `Minimum TLS = 1.2` on the zone.
+Zone resource: restrict to `erp-for-factory.games` only.
 
-## What it deliberately does NOT do
+## What the script does
 
-- **Deploy the app.** Hosting choice (GitHub Pages / Azure SWA / Cloudflare Pages
-  / Fly.io / Proxmox homelab) is out of scope until the rebrand milestone is
-  closed and ADR-0020's "follow-up" issues are picked up.
-- **Configure DNSSEC.** Worth doing once nameservers are stable; add as a
-  follow-up.
-- **Add per-game subdomains beyond `satisfactory.*`.** Done case-by-case as
-  each game lands.
-- **CAA records.** Cloudflare provides certificates via Universal SSL — adding
-  CAA pinned to Cloudflare's issuers is a hardening step for later.
+After it applies, `erp-for-factory.games` serves the GitHub Pages site sourced
+from this repo's [`docs/`](../../docs/) folder.
+
+- **Apex** (`erp-for-factory.games`) — four A records pointing at GitHub Pages'
+  published IPs (`185.199.108.153`, `.109.153`, `.110.153`, `.111.153`).
+  Grey-cloud (proxy off) so GitHub Pages can issue/renew its Let's Encrypt
+  certificate without the Cloudflare proxy interfering with the HTTP-01
+  challenge.
+- **www** — `CNAME` → `chrisonsimtian.github.io`. Same grey-cloud reasoning.
+- **Records on apex/www that don't match the desired state get deleted** —
+  the script reconciles, not just appends.
+- **Zone-level**: `Always-Use-HTTPS = on`, `Minimum TLS = 1.2`.
+
+## What the script deliberately does NOT do
+
+- **Create the GitHub Pages site itself.** Repo Settings → Pages → set source
+  to `main` branch `/docs` folder + custom domain `erp-for-factory.games`.
+  One-time, two clicks.
+- **Add per-game subdomains** (e.g. `satisfactory.erp-for-factory.games`).
+  Those get added when the corresponding app ships, per the host convention in
+  [ADR-0020](../../docs/adr/0020-rebrand-to-erp-for-factory-games.md).
+- **DNSSEC.** Worth doing once nameservers are stable; add as a follow-up.
+- **CAA records** pinning Let's Encrypt as the issuer. Hardening step for later.
+- **Turn the Cloudflare proxy back on.** Once GH Pages has a stable cert,
+  flipping to orange-cloud gives CDN + WAF — known dance, do it manually when
+  ready.

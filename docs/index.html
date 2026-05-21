@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ERP for Factory Games</title>
+    <meta name="description" content="An ERP-style production planner for factory games — starting with Satisfactory.">
+    <meta name="theme-color" content="#0b0d10">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23f7a40b'/%3E%3Cpath d='M12 18h40v8H22v8h22v8H22v8H12z' fill='%230b0d10'/%3E%3C/svg%3E">
+
+    <meta property="og:title" content="ERP for Factory Games">
+    <meta property="og:description" content="ERP-style production planner for factory games — starting with Satisfactory.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://erp-for-factory.games">
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #0b0d10;
+            --fg: #e8e6e3;
+            --muted: #8a8682;
+            --accent: #f7a40b;
+            --panel: #15181d;
+            --border: #2a2e35;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
+        main {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 64px 24px 96px;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 4vw, 2.75rem);
+            line-height: 1.15;
+            margin: 0 0 8px;
+            letter-spacing: -0.01em;
+        }
+
+        h1 .accent { color: var(--accent); }
+
+        .tagline {
+            color: var(--muted);
+            font-size: 1.125rem;
+            margin: 0 0 40px;
+        }
+
+        h2 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin: 40px 0 16px;
+        }
+
+        p { margin: 0 0 16px; }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.15s;
+        }
+
+        a:hover { border-bottom-color: var(--accent); }
+
+        .games {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+        }
+
+        .games li {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .games .name { font-weight: 500; }
+
+        .games .status {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--border);
+            color: var(--muted);
+        }
+
+        .games .status.live {
+            background: rgba(247, 164, 11, 0.12);
+            color: var(--accent);
+        }
+
+        .links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px 24px;
+        }
+
+        footer {
+            margin-top: 64px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>ERP <span class="accent">for Factory Games</span></h1>
+        <p class="tagline">
+            An ERP-style production planner for factory games — plan factories
+            from the inputs you have to the outputs you need.
+        </p>
+
+        <p>
+            The app isn't deployed here yet. This page is a placeholder; the
+            project is being built in the open.
+        </p>
+
+        <h2>Supported games</h2>
+        <ul class="games">
+            <li>
+                <span class="name">Satisfactory</span>
+                <span class="status live">In development</span>
+            </li>
+            <li>
+                <span class="name">Captain of Industry</span>
+                <span class="status">Planned</span>
+            </li>
+            <li>
+                <span class="name">Dyson Sphere Program</span>
+                <span class="status">Planned</span>
+            </li>
+        </ul>
+
+        <h2>Links</h2>
+        <ul class="links">
+            <li><a href="https://github.com/ChrisonSimtian/ErpForFactoryGames">GitHub repo</a></li>
+            <li><a href="https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki">Wiki</a></li>
+            <li><a href="https://github.com/sponsors/ChrisonSimtian">Sponsor</a></li>
+            <li><a href="https://github.com/ChrisonSimtian/ErpForFactoryGames/blob/main/costs.md">Where the money goes</a></li>
+        </ul>
+
+        <footer>
+            Built by <a href="https://github.com/ChrisonSimtian">Chris Simon</a> · MIT licensed.
+        </footer>
+    </main>
+</body>
+</html>
