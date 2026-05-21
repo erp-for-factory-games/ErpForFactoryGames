@@ -1,4 +1,4 @@
-# 0021. Captain of Industry as the second supported game
+# 0022. Captain of Industry as the second supported game
 
 - Status: Accepted
 - Date: 2026-05-21
