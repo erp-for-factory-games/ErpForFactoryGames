@@ -1,0 +1,119 @@
+@page "/planner"
+@using ERP.Application
+@using ERP.Application.Queries.PlanProduction
+@using ERP.Domain
+@inject ICatalogProvider Catalog
+@inject IRecipePlanner RecipePlanner
+
+<PageTitle>Planner — CoI</PageTitle>
+
+<h1>Planner</h1>
+
+@if (!Catalog.IsLoaded)
+{
+    <MudAlert Severity="Severity.Warning">No catalogue loaded — see the home page.</MudAlert>
+    return;
+}
+
+<MudGrid Spacing="2" Class="mb-4">
+    <MudItem xs="12" md="6">
+        <MudAutocomplete T="Item"
+                         @bind-Value="_target"
+                         Label="What do you want to produce?"
+                         SearchFunc="SearchItems"
+                         ToStringFunc="@(i => i is null ? "" : $"{i.Name} ({i.Id.Value})")"
+                         Variant="Variant.Outlined"
+                         Margin="Margin.Dense" />
+    </MudItem>
+    <MudItem xs="6" md="3">
+        <MudNumericField T="decimal"
+                         @bind-Value="_ratePerMinute"
+                         Label="Items / min"
+                         Min="0.01m" Step="1m"
+                         Variant="Variant.Outlined"
+                         Margin="Margin.Dense" />
+    </MudItem>
+    <MudItem xs="6" md="3" Class="d-flex align-end">
+        <MudButton OnClick="RunPlan" Disabled="@(_target is null)"
+                   Variant="Variant.Filled" Color="Color.Primary" FullWidth="true">
+            Plan
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+@if (_plan is not null)
+{
+    <MudText Typo="Typo.h6" Class="mb-2">
+        @(_plan.IsFeasible ? "Plan" : "Plan (incomplete — see missing inputs)")
+    </MudText>
+
+    @if (_plan.Steps.Count == 0)
+    {
+        <MudAlert Severity="Severity.Warning">No recipes found that produce this item.</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="_plan.Steps" Dense="true" Hover="true" Bordered="false">
+            <HeaderContent>
+                <MudTh>Recipe</MudTh>
+                <MudTh>Building</MudTh>
+                <MudTh Style="text-align: right;">Count</MudTh>
+                <MudTh Style="text-align: right;">Power (MW)</MudTh>
+                <MudTh>Inputs / min</MudTh>
+                <MudTh>Outputs / min</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Recipe.Name</MudTd>
+                <MudTd>@context.Recipe.Building.Value</MudTd>
+                <MudTd Style="text-align: right;">@context.BuildingCount.ToString("0.##")</MudTd>
+                <MudTd Style="text-align: right;">@context.PowerMw.ToString("0.##")</MudTd>
+                <MudTd>@FormatAmounts(context.InputsPerMinute)</MudTd>
+                <MudTd>@FormatAmounts(context.OutputsPerMinute)</MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <MudText Typo="Typo.body2" Class="mt-3">
+            <strong>Total power:</strong> @_plan.Steps.Sum(s => s.PowerMw).ToString("0.##") MW
+            &nbsp;•&nbsp;
+            <strong>Raw inputs:</strong> @FormatAmounts(_plan.RawInputsConsumed)
+        </MudText>
+    }
+
+    @if (!_plan.IsFeasible)
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-3">
+            <strong>Missing inputs:</strong>
+            @foreach (var m in _plan.MissingInputs)
+            {
+                <div>@m.Item.Value: @m.QuantityShort.ToString("0.##") / min — @m.Reason</div>
+            }
+        </MudAlert>
+    }
+}
+
+@code {
+    private Item? _target;
+    private decimal _ratePerMinute = 16;
+    private ProductionPlan? _plan;
+
+    private Task<IEnumerable<Item>> SearchItems(string query, CancellationToken _) =>
+        Task.FromResult(Catalog.Items
+            .Where(i => string.IsNullOrWhiteSpace(query)
+                     || i.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                     || i.Id.Value.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase)
+            .Take(50));
+
+    private void RunPlan()
+    {
+        if (_target is null) return;
+        // No availability supplied — the planner reports anything it can't
+        // source as a missing input, which is exactly what we want to show.
+        _plan = RecipePlanner.Plan(new PlanProductionQuery(
+            Targets: [new ProductionTarget(_target.Id, _ratePerMinute)],
+            Available: []));
+    }
+
+    private static string FormatAmounts(IEnumerable<ItemAmount> amounts) =>
+        string.Join(", ", amounts.Select(a => $"{a.Quantity.ToString("0.##")}× {a.Item.Value}"));
+}
