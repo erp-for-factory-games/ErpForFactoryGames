@@ -19,6 +19,7 @@ RUN --mount=type=secret,id=github_token \
 # Copy nuget config + build props + every csproj into the right layout first.
 COPY nuget.config Directory.Build.props version.json ./
 COPY src/Web/Web.csproj                                                src/Web/
+COPY src/Web.Shared/Web.Shared.csproj                                  src/Web.Shared/
 COPY src/ServiceDefaults/ServiceDefaults.csproj                        src/ServiceDefaults/
 COPY src/ApiService/ApiService.csproj                                  src/ApiService/
 COPY src/ERP/Application/ERP.Application.csproj                        src/ERP/Application/
