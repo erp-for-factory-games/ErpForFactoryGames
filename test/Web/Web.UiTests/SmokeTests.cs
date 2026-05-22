@@ -9,7 +9,7 @@ public class SmokeTests(AspireAppFixture fixture) : IClassFixture<AspireAppFixtu
     [Fact]
     public async Task Home_page_returns_200_and_renders_known_heading()
     {
-        var context = await fixture.Browser.NewContextAsync();
+        var context = await fixture.NewContextAsync();
         var page = await context.NewPageAsync();
 
         var response = await page.GotoAsync(fixture.WebFrontendUrl);
@@ -22,7 +22,7 @@ public class SmokeTests(AspireAppFixture fixture) : IClassFixture<AspireAppFixtu
     [Fact]
     public async Task Planner_page_renders_MudAutocomplete_pickers()
     {
-        var context = await fixture.Browser.NewContextAsync();
+        var context = await fixture.NewContextAsync();
         var page = await context.NewPageAsync();
         var consoleErrors = new List<string>();
         page.Console += (_, msg) => { if (msg.Type == "error") consoleErrors.Add(msg.Text); };
@@ -51,7 +51,7 @@ public class SmokeTests(AspireAppFixture fixture) : IClassFixture<AspireAppFixtu
     [Fact]
     public async Task Planner_restores_draft_from_localStorage_and_shows_snackbar()
     {
-        var context = await fixture.Browser.NewContextAsync();
+        var context = await fixture.NewContextAsync();
         var page = await context.NewPageAsync();
 
         var draftJson = JsonSerializer.Serialize(new

@@ -41,6 +41,26 @@ public sealed class AspireAppFixture : IAsyncLifetime
         Browser = await Playwright.Chromium.LaunchAsync();
     }
 
+    /// <summary>
+    /// Browser context with <c>IgnoreHTTPSErrors=true</c> applied. The Aspire-
+    /// orchestrated webfrontend redirects HTTP → HTTPS and serves the
+    /// self-signed ASP.NET dev cert. Chromium uses its own NSS-based trust
+    /// store (not the system CA bundle the dev cert is wired into for the
+    /// AppHost's own HttpClient), so without this flag every Playwright
+    /// navigation through the redirect fails with
+    /// <c>net::ERR_CERT_AUTHORITY_INVALID</c>.
+    ///
+    /// Tests pass their own <paramref name="options"/> for things like
+    /// viewport size; this method only sets the cert flag if the caller
+    /// hasn't already specified it.
+    /// </summary>
+    public Task<IBrowserContext> NewContextAsync(BrowserNewContextOptions? options = null)
+    {
+        options ??= new BrowserNewContextOptions();
+        options.IgnoreHTTPSErrors ??= true;
+        return Browser.NewContextAsync(options);
+    }
+
     public async Task DisposeAsync()
     {
         if (Browser is not null)
