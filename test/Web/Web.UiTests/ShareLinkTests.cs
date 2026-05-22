@@ -20,7 +20,7 @@ public class ShareLinkTests(AspireAppFixture fixture) : IClassFixture<AspireAppF
     [Fact]
     public async Task Planner_renders_share_button_and_writes_screenshot()
     {
-        var context = await fixture.Browser.NewContextAsync();
+        var context = await fixture.NewContextAsync();
         var page = await context.NewPageAsync();
         var consoleErrors = new List<string>();
         page.Console += (_, msg) => { if (msg.Type == "error") consoleErrors.Add(msg.Text); };

@@ -1,5 +1,6 @@
 namespace CaptainOfIndustry.Catalog.Tests;
 
+[Collection(nameof(CoiCatalogueEnvCollection))]
 public class CoiCataloguePathResolverTests : IDisposable
 {
     private readonly string? _originalEnv;

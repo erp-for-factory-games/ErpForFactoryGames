@@ -11,6 +11,7 @@ namespace CaptainOfIndustry.Catalog.Tests;
 /// flips red, the "planner is genuinely game-agnostic" claim from ADR-0022
 /// has regressed — investigate the catalogue mapping, not the planner.
 /// </summary>
+[Collection(nameof(CoiCatalogueEnvCollection))]
 public class PlannerSmokeTests : IDisposable
 {
     private readonly string? _originalEnv;

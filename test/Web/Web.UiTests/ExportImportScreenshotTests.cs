@@ -13,7 +13,7 @@ public class ExportImportScreenshotTests(AspireAppFixture fixture) : IClassFixtu
     [Fact]
     public async Task Planner_renders_export_and_import_buttons()
     {
-        var context = await fixture.Browser.NewContextAsync(new BrowserNewContextOptions
+        var context = await fixture.NewContextAsync(new BrowserNewContextOptions
         {
             ViewportSize = new ViewportSize { Width = 1400, Height = 900 },
         });
