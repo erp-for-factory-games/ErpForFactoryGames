@@ -34,6 +34,11 @@ builder.Services.AddOpenApi();
 builder.Services.Configure<AgentUploadOptions>(builder.Configuration.GetSection("AgentUploads"));
 builder.Services.AddSingleton<IAgentUploadStatus, AgentUploadStatus>();
 
+// Agent log-tail ring buffer (#210). In-memory only — see ADR-0024 §9.
+// Durable cross-process observability is the follow-up issue #212 (SigNoz / OTel).
+builder.Services.Configure<AgentLogsOptions>(builder.Configuration.GetSection("AgentLogs"));
+builder.Services.AddSingleton<IAgentLogsStore, AgentLogsStore>();
+
 var app = builder.Build();
 
 // Apply pending plan-storage migrations on startup so the SQLite default Just
@@ -696,6 +701,80 @@ app.MapGet("/agent/status", (IAgentUploadStatus status, TimeProvider clock) =>
     });
 });
 
+// ---- Agent log-tail (#210) ------------------------------------------------
+//
+//   POST /agent/logs — JSON body `{ lines: ["..."], agentVersion?: "..." }`.
+//     Same X-Agent-Token seam as the save upload (ADR-0024 §5).
+//
+//   GET  /agent/logs?limit=N — most-recent lines from the ring buffer.
+
+app.MapPost("/agent/logs", async (
+    HttpRequest http,
+    IAgentLogsStore store,
+    Microsoft.Extensions.Options.IOptions<AgentLogsOptions> logsOptions,
+    TimeProvider clock,
+    CancellationToken ct) =>
+{
+    var token = http.Headers["X-Agent-Token"].ToString();
+    if (string.IsNullOrWhiteSpace(token))
+    {
+        return Results.Json(new { error = "X-Agent-Token header is required." }, statusCode: 401);
+    }
+
+    if (!string.Equals(http.ContentType, "application/json", StringComparison.OrdinalIgnoreCase)
+        && http.ContentType?.StartsWith("application/json", StringComparison.OrdinalIgnoreCase) != true)
+    {
+        return Results.Json(
+            new { error = $"Content-Type must be application/json; got '{http.ContentType}'." },
+            statusCode: 415);
+    }
+
+    AgentLogsRequest? payload;
+    try
+    {
+        payload = await http.ReadFromJsonAsync<AgentLogsRequest>(ct).ConfigureAwait(false);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = "Invalid JSON body.", detail = ex.Message }, statusCode: 400);
+    }
+
+    if (payload is null || payload.Lines is null || payload.Lines.Count == 0)
+    {
+        return Results.Ok(new { received = 0 });
+    }
+
+    var cap = Math.Max(1, logsOptions.Value.MaxLinesPerRequest);
+    var lines = payload.Lines.Count > cap
+        ? payload.Lines.Take(cap).ToArray()
+        : (IEnumerable<string>)payload.Lines;
+
+    var agentVersion = http.Headers["X-Agent-Version"].ToString();
+    if (string.IsNullOrWhiteSpace(agentVersion)) agentVersion = payload.AgentVersion;
+    if (string.IsNullOrWhiteSpace(agentVersion)) agentVersion = null;
+
+    store.Append(lines, agentVersion, clock.GetUtcNow());
+
+    return Results.Ok(new { received = payload.Lines.Count, retained = store.TotalReceived });
+});
+
+app.MapGet("/agent/logs", (IAgentLogsStore store, int? limit) =>
+{
+    var take = limit is > 0 ? Math.Min(limit.Value, 5000) : 500;
+    var lines = store.ReadLatest(take);
+    return Results.Ok(new
+    {
+        lines = lines.Select(l => new
+        {
+            text = l.Text,
+            uploadedAt = l.UploadedAt,
+            agentVersion = l.AgentVersion,
+        }),
+        totalReceived = store.TotalReceived,
+        agentLastSeen = store.AgentLastSeen,
+    });
+});
+
 app.MapDefaultEndpoints();
 
 app.Run();
@@ -714,6 +793,11 @@ internal static class ShareTokenGenerator
 }
 
 public sealed record ShareTokenView(string Token, string Url, DateTime CreatedUtc, DateTime? ExpiresUtc);
+
+/// <summary>POST /agent/logs body (#210). Lines are raw text — server doesn't
+/// parse Serilog's output template, the Web component highlights levels on
+/// best-effort.</summary>
+public sealed record AgentLogsRequest(IReadOnlyList<string>? Lines, string? AgentVersion = null);
 
 public partial class Program { }
 

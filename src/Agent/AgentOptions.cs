@@ -34,4 +34,29 @@ public sealed class AgentOptions
     /// mid-write produces a truncated file.
     /// </summary>
     public TimeSpan WriteDebounce { get; set; } = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
+    /// Log-tail shipping: periodically POST recently-written log lines from
+    /// the local Serilog file sink to the hosted API so the Web UI can
+    /// surface them. See ADR-0024 §9 + issue #210.
+    /// </summary>
+    public LogTailOptions LogTail { get; set; } = new();
+}
+
+/// <summary>
+/// Bound from <c>Agent:LogTail</c>. Controls the
+/// <c>LogTailBackgroundService</c>'s read-and-ship loop.
+/// </summary>
+public sealed class LogTailOptions
+{
+    /// <summary>Master switch. Defaults to on; flip to false to opt out.</summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>How often the agent reads new lines from its log file
+    /// and POSTs them to <c>/agent/logs</c>. Default 60 seconds.</summary>
+    public TimeSpan Interval { get; set; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>Cap on lines shipped per interval. New lines beyond this
+    /// will be picked up on the next tick.</summary>
+    public int MaxLinesPerUpload { get; set; } = 500;
 }

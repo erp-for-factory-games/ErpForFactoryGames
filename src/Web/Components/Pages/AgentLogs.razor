@@ -1,0 +1,29 @@
+@page "/agent/logs"
+@inject IHttpClientFactory HttpFactory
+
+<PageTitle>Agent logs · ERP for Factory Games</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-2">Agent logs</MudText>
+<MudText Class="mb-3">
+    Recent stdout from the local agent on your gaming machine. The agent ships its log file
+    to this server every minute by default — see <code>Agent:LogTail</code> in <code>agent.json</code>
+    to change the cadence or disable. Lines are buffered in memory only (no disk persistence;
+    cleared on restart) per <a href="https://github.com/ChrisonSimtian/ErpForFactoryGames/blob/main/docs/adr/0024-agent-v1-shape.md" target="_blank">ADR-0024 §9</a>.
+</MudText>
+
+<MudPaper Class="fx-panel pa-4 mb-3" Elevation="0">
+    <Web.Shared.AgentStatusCard Http="@_apiClient" />
+</MudPaper>
+
+<MudPaper Class="fx-panel pa-4" Elevation="0">
+    <Web.Shared.AgentLogsCard Http="@_apiClient" MaxHeight="40em" />
+</MudPaper>
+
+@code {
+    private HttpClient _apiClient = default!;
+
+    protected override void OnInitialized()
+    {
+        _apiClient = HttpFactory.CreateClient(nameof(PlannerApiClient));
+    }
+}
