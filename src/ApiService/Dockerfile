@@ -39,6 +39,23 @@ RUN --mount=type=secret,id=github_token \
 # -----------------------------------------------------------------------------
 FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION} AS runtime
 WORKDIR /app
+
+# Pre-create volume mount points with the runtime user's ownership.
+#
+# Docker initialises empty named volumes by copying the *image's* contents
+# (and permissions) at the mount point — but if the mount point doesn't
+# exist in the image, Docker creates it on the fly as root:root. The
+# container then runs as `app` (uid 1654) and SQLite refuses to open the
+# DB with "unable to open database file" because /data is root-owned.
+#
+# Mount points exposed via compose.yml:
+#   /data                          -> SQLite plans DB (ADR-0018)
+#   /agent/savegames/satisfactory  -> agent .sav uploads (#199)
+#
+# Done BEFORE `USER app` because chown needs root.
+RUN mkdir -p /data /agent/savegames/satisfactory \
+    && chown -R app:app /data /agent
+
 USER app
 
 COPY --from=build --chown=app:app /app/publish ./
