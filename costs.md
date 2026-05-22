@@ -26,6 +26,23 @@ These are foreseeable but not yet paid:
   Listed here so the line item appears the moment we exceed it.
 - **NuGet GitHub Packages bandwidth** — free for public packages.
 
+## Wishlist — what sponsorship would unlock
+
+These are real items the project would benefit from but **can't currently
+justify out-of-pocket**. They're listed here so anyone considering sponsoring
+can see exactly what their contribution would buy back for users.
+
+| Item | Cost (NZD) | Cost (original currency) | Frequency | What it unlocks |
+|------|-----------:|-------------------------:|-----------|-----------------|
+| Apple Developer Program | ~$165 | USD $99 | Yearly | macOS `.pkg` notarization → installer opens without the Gatekeeper "unidentified developer" warning. Tracked in [#223](https://github.com/ChrisonSimtian/ErpForFactoryGames/issues/223). |
+| Windows Authenticode cert (OV) | ~$335 | USD $200 | Yearly | Windows MSI carries a real publisher identity → SmartScreen reputation builds over a few weeks of downloads. Tracked in [#223](https://github.com/ChrisonSimtian/ErpForFactoryGames/issues/223). |
+| Windows Authenticode cert (EV) | ~$670 | USD $400 | Yearly | *Alternative* to OV above (not additive): immediate SmartScreen trust day one. Useful if there's a sponsor-funded launch push. |
+
+Pick the OV path if any sponsorship lands; the EV upgrade is a stretch goal.
+
+**If everything on the wishlist were funded**: ~NZD $500/year added to the
+current ~$44/year domain spend (OV path), or ~$835/year (EV path).
+
 ## Keeping this current
 
 This list is the *current* state. When a new cost arises (or an existing one
