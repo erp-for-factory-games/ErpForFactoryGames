@@ -108,19 +108,23 @@ public static class Extensions
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
-        // Adding health checks endpoints to applications in non-development environments has security implications.
-        // See https://aka.ms/dotnet/aspire/healthchecks for details before enabling these endpoints in non-development environments.
-        if (app.Environment.IsDevelopment())
-        {
-            // All health checks must pass for app to be considered ready to accept traffic after starting
-            app.MapHealthChecks(HealthEndpointPath);
+        // /health + /alive are mapped unconditionally. The Aspire scaffold's
+        // default was IsDevelopment-only — meant to dodge the security note at
+        // https://aka.ms/dotnet/aspire/healthchecks — but our production deploy
+        // (homelab Docker + Cloudflare Tunnel, ADR-0023) genuinely needs these
+        // endpoints for the AppHost's WithHttpHealthCheck("/health") probe AND
+        // for Watchtower / cloudflared / future observability (#212) to know
+        // whether the container is up. The only registered check is the static
+        // "self" liveness from AddDefaultHealthChecks — no sensitive data
+        // leaks. If a real DB / external-dep check is added later that does
+        // surface internal state, gate that specific check, not the endpoint.
+        app.MapHealthChecks(HealthEndpointPath);
 
-            // Only health checks tagged with the "live" tag must pass for app to be considered alive
-            app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains("live")
-            });
-        }
+        // Only health checks tagged with the "live" tag must pass for app to be considered alive
+        app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("live")
+        });
 
         return app;
     }
