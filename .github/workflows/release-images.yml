@@ -86,12 +86,20 @@ jobs:
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
   # ---------------------------------------------------------------------------
-  # Agent — per-RID self-contained single-file publish. Skipped on
-  # workflow_dispatch (no release to attach to); only fires on tag push.
+  # Agent — per-RID self-contained single-file publish.
+  #
+  # Runs on BOTH tag push and workflow_dispatch:
+  #   - Tag push  → attach the archive to that tag's release.
+  #   - Dispatch  → attach to the most recent existing release (so the Home
+  #                 page's `/releases/latest/download/<stable-filename>` link
+  #                 just works without waiting for the next tag).
+  #
+  # Archive filenames are STABLE (no version in the name) so the website +
+  # docs can link to a predictable URL. The release page still surfaces the
+  # version via the release name + commit metadata.
   # ---------------------------------------------------------------------------
   publish-agent:
     name: Publish agent (${{ matrix.rid }})
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: write   # gh release upload
@@ -135,27 +143,46 @@ jobs:
         if: matrix.archive_ext == 'zip'
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart('v')
-          $name = "erp-agent-${{ matrix.rid }}-$version.zip"
-          Compress-Archive -Path publish/${{ matrix.rid }}/* -DestinationPath $name
+          $name = "erp-agent-${{ matrix.rid }}.zip"
+          Compress-Archive -Path publish/${{ matrix.rid }}/* -DestinationPath $name -Force
           "ARCHIVE_NAME=$name" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Pack tar.gz (Linux)
         if: matrix.archive_ext == 'tar.gz'
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          name="erp-agent-${{ matrix.rid }}-${version}.tar.gz"
+          name="erp-agent-${{ matrix.rid }}.tar.gz"
           tar -czf "$name" -C publish/${{ matrix.rid }} .
           echo "ARCHIVE_NAME=$name" >> "$GITHUB_ENV"
+
+      - name: Determine target release tag
+        id: target
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            # Tag push: attach to that tag's release.
+            echo "tag=${GITHUB_REF_NAME}" >>"$GITHUB_OUTPUT"
+          else
+            # workflow_dispatch: attach to the most recent release. There has
+            # always been at least one — the `release` job in ci.yml auto-creates
+            # one on every successful main push.
+            latest="$(gh release list --limit 1 --json tagName --jq '.[0].tagName')"
+            if [[ -z "$latest" ]]; then
+              echo "::error::No existing release found. Push a tag first, then re-dispatch."
+              exit 1
+            fi
+            echo "tag=${latest}" >>"$GITHUB_OUTPUT"
+          fi
 
       - name: Attach to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          # The tag push triggers the GitHub auto-release-from-tag flow; the
-          # release may or may not exist when this job lands depending on
-          # ordering. Create it if needed (idempotent), then upload.
-          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 \
-            || gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "See CHANGELOG / commit history. Container images on ghcr.io/${GITHUB_REPOSITORY_OWNER,,}."
-          gh release upload "${GITHUB_REF_NAME}" "${ARCHIVE_NAME}" --clobber
+          tag="${{ steps.target.outputs.tag }}"
+          # Tag push: GitHub may not have auto-created the release yet,
+          # depending on ordering. Create idempotently.
+          gh release view "$tag" >/dev/null 2>&1 \
+            || gh release create "$tag" --title "$tag" --notes "See CHANGELOG / commit history. Container images on ghcr.io/${GITHUB_REPOSITORY_OWNER,,}."
+          gh release upload "$tag" "${ARCHIVE_NAME}" --clobber

@@ -12,7 +12,7 @@
 </MudText>
 
 <MudGrid Spacing="3">
-    <MudItem xs="12" md="4">
+    <MudItem xs="12" sm="6" lg="3">
         <MudPaper Class="fx-panel pa-4 d-flex flex-column" Elevation="0" Style="height: 100%;">
             <MudText Typo="Typo.h5" Class="card-title mb-2">
                 <span class="fx-icon-inline fx-icon-wrench" aria-hidden="true"></span> Planner
@@ -28,7 +28,7 @@
         </MudPaper>
     </MudItem>
 
-    <MudItem xs="12" md="4">
+    <MudItem xs="12" sm="6" lg="3">
         <MudPaper Class="fx-panel pa-4 d-flex flex-column" Elevation="0" Style="height: 100%;">
             <MudText Typo="Typo.h5" Class="card-title mb-2">
                 <span class="fx-icon-inline fx-icon-gear" aria-hidden="true"></span> Factory state
@@ -44,7 +44,7 @@
         </MudPaper>
     </MudItem>
 
-    <MudItem xs="12" md="4">
+    <MudItem xs="12" sm="6" lg="3">
         <MudPaper Class="fx-panel pa-4 d-flex flex-column" Elevation="0" Style="height: 100%;">
             <MudText Typo="Typo.h5" Class="card-title mb-2">
                 <span class="fx-icon-inline fx-icon-screwdriver" aria-hidden="true"></span> Settings
@@ -56,6 +56,33 @@
                        Href="settings" Class="align-self-start">
                 Open settings
             </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    @* Agent download — runs on the user's gaming machine and shovels each
+       new save up to this server so the live-save card below shows real
+       state. ADR-0024 §7 ships the binary as a single-file self-contained
+       release. Stable filenames let us link to /releases/latest/download/...
+       without knowing the tag. *@
+    <MudItem xs="12" sm="6" lg="3">
+        <MudPaper Class="fx-panel pa-4 d-flex flex-column" Elevation="0" Style="height: 100%;">
+            <MudText Typo="Typo.h5" Class="card-title mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Class="mr-1" /> Get the agent
+            </MudText>
+            <MudText Class="flex-grow-1 mb-3">
+                Run the agent on your gaming machine to ship saves to this server automatically.
+                Single-file binary — no .NET install required.
+            </MudText>
+            <div class="d-flex flex-column" style="gap:.5em; align-items: stretch;">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                           Href="https://github.com/ChrisonSimtian/ErpForFactoryGames/releases/latest/download/erp-agent-win-x64.zip">
+                    Windows (x64)
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                           Href="https://github.com/ChrisonSimtian/ErpForFactoryGames/releases/latest/download/erp-agent-linux-x64.tar.gz">
+                    Linux (x64)
+                </MudButton>
+            </div>
         </MudPaper>
     </MudItem>
 </MudGrid>
