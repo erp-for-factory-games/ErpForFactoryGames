@@ -3,6 +3,7 @@ using ERP.Domain;
 
 namespace CaptainOfIndustry.Catalog.Tests;
 
+[Collection(nameof(CoiCatalogueEnvCollection))]
 public class JsonCoiCatalogProviderTests : IDisposable
 {
     private readonly string? _originalEnv;

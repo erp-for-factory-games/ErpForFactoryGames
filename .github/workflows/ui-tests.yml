@@ -155,6 +155,25 @@ jobs:
           dotnet-version: 8.0.x
           global-json-file: global.json
 
+      # Aspire AppHost's WithHttpHealthCheck("/health") probe hits the
+      # apiservice / webfrontend over HTTPS. The .NET dev cert isn't in the
+      # Linux runner's CA bundle by default, so HttpClient inside the
+      # AppHost rejects the cert with UntrustedRoot, /health is never
+      # reached, webfrontend stays Unhealthy forever, and the test fixture
+      # hangs in WaitForResourceHealthyAsync until the job timeout.
+      #
+      # `dotnet dev-certs https` generates the cert; `--trust` is a no-op
+      # for the system trust store on Linux, so we additionally export the
+      # cert as PEM and drop it into /usr/local/share/ca-certificates/.
+      # update-ca-certificates then rebuilds the system bundle that
+      # OpenSSL (and HttpClient via SslStream) consult.
+      - name: Trust ASP.NET Core HTTPS dev cert
+        run: |
+          dotnet dev-certs https
+          dotnet dev-certs https --export-path /tmp/aspnet-https.pem --format Pem --no-password
+          sudo cp /tmp/aspnet-https.pem /usr/local/share/ca-certificates/aspnet-https-dev.crt
+          sudo update-ca-certificates
+
       - name: Run UI tests
         run: ./build.sh TestUi
 
