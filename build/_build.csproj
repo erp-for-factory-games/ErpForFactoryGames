@@ -7,18 +7,18 @@
     <Nullable>enable</Nullable>
     <RootNamespace></RootNamespace>
 
-    <!-- NUKE conventions: build project sits in build/, scripts at the repo root. -->
-    <NukeRootDirectory>..</NukeRootDirectory>
-    <NukeScriptDirectory>..</NukeScriptDirectory>
-    <NukeTelemetryVersion>1</NukeTelemetryVersion>
+    <!-- Fallout conventions: build project sits in build/, scripts at the repo root. -->
+    <FalloutRootDirectory>..</FalloutRootDirectory>
+    <FalloutScriptDirectory>..</FalloutScriptDirectory>
+    <FalloutTelemetryVersion>1</FalloutTelemetryVersion>
 
-    <!-- Suppress noisy diagnostics common in NUKE build scripts. -->
+    <!-- Suppress noisy diagnostics common in Fallout build scripts. -->
     <NoWarn>CS0649;CS0169;CA1050;CA1822;CA2211;IDE0079;NU5104</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Fallout is the hard-fork successor to NUKE; published to nuget.org (ADR-0021). -->
-    <PackageReference Include="Fallout.Common" Version="10.2.15" />
+    <PackageReference Include="Fallout.Common" Version="10.3.5" />
   </ItemGroup>
 
 </Project>
