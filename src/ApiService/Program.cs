@@ -1049,7 +1049,9 @@ app.MapDelete("/players/{id:guid}/agent-tokens/{tokenId:guid}", async (
     return Results.NoContent();
 });
 
-app.MapGet("/me", async (
+// /api/me prefix per #245's routing rule — the agent reaches this through
+// the Cloudflare tunnel for pair validation, so it has to sit under /api/*.
+app.MapGet("/api/me", async (
     HttpRequest http,
     IAgentTokenAuthenticator authenticator,
     IPlayerRepository players,

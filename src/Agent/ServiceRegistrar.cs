@@ -1,6 +1,9 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+#pragma warning disable CA1416 // Each registry call is gated on OperatingSystem.IsWindows() at the call site.
+using Microsoft.Win32;
+#pragma warning restore CA1416
 
 namespace Agent;
 
@@ -107,9 +110,57 @@ internal static class ServiceRegistrar
             return start.ExitCode;
         }
 
+        // Register the erp-agent:// URL protocol handler (ADR-0025 §8) so the
+        // Web UI's "Open in agent" deep-link can launch this binary. HKCU
+        // rather than HKLM — works without admin from the user's side, even
+        // though --install itself is elevated.
+        RegisterProtocolHandlerWindows(binary);
+
         Console.Out.WriteLine($"Service '{ServiceName}' installed and started.");
-        Console.Out.WriteLine($"Set the API URL + token in {configPath} then restart the service.");
+        Console.Out.WriteLine($"Run 'erp-agent --setup' to pair this install, or pair via the web UI's deep-link.");
         return 0;
+    }
+
+    private static void RegisterProtocolHandlerWindows(string binary)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+#pragma warning disable CA1416
+        try
+        {
+            using var root = Registry.CurrentUser.CreateSubKey(@"Software\Classes\erp-agent", writable: true);
+            root.SetValue(string.Empty, "URL:ERP Agent Protocol");
+            root.SetValue("URL Protocol", string.Empty);
+
+            using var defaultIcon = root.CreateSubKey("DefaultIcon", writable: true);
+            defaultIcon.SetValue(string.Empty, $"\"{binary}\",0");
+
+            using var shellOpenCommand = root.CreateSubKey(@"shell\open\command", writable: true);
+            // "%1" is the full deep-link URL Windows passes through.
+            shellOpenCommand.SetValue(string.Empty, $"\"{binary}\" --pair \"%1\"");
+
+            Console.Out.WriteLine("Registered erp-agent:// protocol handler in HKCU.");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to register erp-agent:// protocol handler: {ex.Message}");
+            Console.Error.WriteLine("Service was installed; deep-link pairing won't work until this is fixed.");
+        }
+#pragma warning restore CA1416
+    }
+
+    private static void UnregisterProtocolHandlerWindows()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+#pragma warning disable CA1416
+        try
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\erp-agent", throwOnMissingSubKey: false);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to remove erp-agent:// protocol handler: {ex.Message}");
+        }
+#pragma warning restore CA1416
     }
 
     /// <summary>
@@ -185,6 +236,8 @@ internal static class ServiceRegistrar
             return del.ExitCode;
         }
 
+        UnregisterProtocolHandlerWindows();
+
         Console.Out.WriteLine($"Service '{ServiceName}' uninstalled.");
         return 0;
     }
@@ -253,11 +306,49 @@ internal static class ServiceRegistrar
             return enable.ExitCode;
         }
 
+        // Register the erp-agent:// URL protocol handler so the Web UI's
+        // "Open in agent" button works on Linux (ADR-0025 §8). Per-user
+        // .desktop file under $XDG_DATA_HOME/applications/ + a MIME default
+        // pointing at it. No root required.
+        await RegisterProtocolHandlerLinuxAsync(binary).ConfigureAwait(false);
+
         Console.Out.WriteLine($"Unit '{ServiceName}.service' installed and started.");
-        Console.Out.WriteLine("Configure the API URL + token at $XDG_CONFIG_HOME/ErpForFactoryGames/agent.json and restart with:");
-        Console.Out.WriteLine($"  systemctl --user restart {ServiceName}");
+        Console.Out.WriteLine("Run 'erp-agent --setup' to pair this install, or pair via the web UI's deep-link.");
         Console.Out.WriteLine("To survive logout, enable user lingering: loginctl enable-linger \"$USER\"");
         return 0;
+    }
+
+    private static async Task RegisterProtocolHandlerLinuxAsync(string binary)
+    {
+        var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME")
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
+        var appsDir = Path.Combine(dataHome, "applications");
+        Directory.CreateDirectory(appsDir);
+
+        var desktopPath = Path.Combine(appsDir, $"{ServiceName}.desktop");
+        var desktop = $"""
+            [Desktop Entry]
+            Type=Application
+            Name={DisplayName}
+            Exec={binary} --pair %u
+            Terminal=false
+            NoDisplay=true
+            MimeType=x-scheme-handler/erp-agent;
+            """;
+        await File.WriteAllTextAsync(desktopPath, desktop).ConfigureAwait(false);
+
+        // xdg-mime default registers the handler. Best-effort — if xdg-mime
+        // is absent (some minimal distros) the .desktop file still gets
+        // picked up by most DE-driven URL launchers automatically.
+        var setDefault = await RunAsync("xdg-mime", $"default {ServiceName}.desktop x-scheme-handler/erp-agent").ConfigureAwait(false);
+        if (setDefault.ExitCode != 0)
+        {
+            Console.Out.WriteLine("Wrote .desktop but xdg-mime not available; the DE may still discover the handler automatically.");
+        }
+        else
+        {
+            Console.Out.WriteLine($"Registered erp-agent:// protocol handler ({desktopPath}).");
+        }
     }
 
     private static async Task<int> UninstallSystemdUserAsync()
@@ -272,6 +363,17 @@ internal static class ServiceRegistrar
         {
             File.Delete(unitPath);
             Console.Out.WriteLine($"Removed {unitPath}");
+        }
+
+        // Remove the .desktop file too — uninstall should leave no orphan
+        // protocol-handler entries.
+        var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME")
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
+        var desktopPath = Path.Combine(dataHome, "applications", $"{ServiceName}.desktop");
+        if (File.Exists(desktopPath))
+        {
+            File.Delete(desktopPath);
+            Console.Out.WriteLine($"Removed {desktopPath}");
         }
 
         await RunAsync("systemctl", "--user daemon-reload").ConfigureAwait(false);
