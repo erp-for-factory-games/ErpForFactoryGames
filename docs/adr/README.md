@@ -45,4 +45,4 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0022](0022-captain-of-industry-support.md) | Captain of Industry as the second supported game | Accepted |
 | [0023](0023-hosting-deployment-approach.md) | Hosting + deployment via homelab Docker behind Cloudflare Tunnel | Accepted |
 | [0024](0024-agent-v1-shape.md) | Game agent v1 PoC — shape, wire protocol, distribution | Accepted |
-| [0025](0025-agent-auth-catalogue-handover.md) | Agent auth & catalogue handover model | Proposed |
+| [0025](0025-agent-auth-catalogue-handover.md) | Agent auth & catalogue handover model | Accepted |

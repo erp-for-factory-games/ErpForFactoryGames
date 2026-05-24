@@ -1,6 +1,6 @@
 # 0025. Agent auth & catalogue handover model
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-05-24
 - Deciders: Chris
 
