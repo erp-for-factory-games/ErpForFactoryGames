@@ -47,10 +47,17 @@ public class MyAgentsTests(AspireAppFixture fixture) : IClassFixture<AspireAppFi
         await Expect(mintButton).ToBeVisibleAsync();
         await mintButton.ClickAsync();
 
-        var plaintextField = page.Locator("[data-testid='minted-plaintext'] textarea");
-        await Expect(plaintextField).ToBeVisibleAsync(new() { Timeout = 10_000 });
-        var plaintext = await plaintextField.InputValueAsync();
-        Assert.StartsWith("eafg_", plaintext);
+        // The reveal phase's "Save this token now" warning is the cheapest
+        // proof that mint succeeded — MudBlazor v9 doesn't reliably forward
+        // data-testid onto MudTextField's inner <textarea>, so asserting
+        // on the wrapper-attached selector flakes. Plaintext format itself
+        // is covered end-to-end by PlayerTokenEndpointsTests on the API.
+        var revealWarning = page.GetByText("Save this token now", new() { Exact = false });
+        await Expect(revealWarning).ToBeVisibleAsync(new() { Timeout = 10_000 });
+
+        var tokenTextarea = page.Locator("textarea")
+            .Filter(new() { HasTextRegex = new System.Text.RegularExpressions.Regex("^eafg_") });
+        await Expect(tokenTextarea).ToBeVisibleAsync(new() { Timeout = 5_000 });
 
         // Close the dialog; the table should now include the new row.
         await page.Locator("[data-testid='close-button']").ClickAsync();

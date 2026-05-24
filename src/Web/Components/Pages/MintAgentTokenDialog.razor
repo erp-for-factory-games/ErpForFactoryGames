@@ -31,7 +31,6 @@
                           Label="Label (e.g. \"gaming rig\")"
                           Placeholder="Where will this agent run?"
                           Variant="Variant.Outlined"
-                          Dense="true"
                           Margin="Margin.Dense"
                           MaxLength="200" />
             @if (!string.IsNullOrEmpty(_error))
@@ -47,7 +46,7 @@
             <MudTextField T="string" Value="@_mintedToken.Plaintext"
                           Label="Plaintext token"
                           Variant="Variant.Outlined"
-                          Dense="true"
+                          Margin="Margin.Dense"
                           ReadOnly="true"
                           Lines="2"
                           Class="mb-3"
