@@ -1,6 +1,6 @@
 # 0011. Catalogue source path configuration
 
-- Status: Accepted
+- Status: Accepted (superseded in part by [0025](0025-agent-auth-catalogue-handover.md) for hosted deployments — server-local resolution is dev-only fallback)
 - Date: 2026-05-03
 - Deciders: Chris
 

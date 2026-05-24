@@ -8,29 +8,46 @@ Single-file self-contained binary — no .NET install required.
 
 ## Windows
 
+### Recommended: winget
+
+```powershell
+winget install ErpForFactoryGames.Agent
+```
+
+Then create `%LocalAppData%\ErpForFactoryGames\agent.json` (the agent
+creates this folder on first run; or make it yourself):
+
+```json
+{
+  "Agent": {
+    "ApiBaseUrl": "https://satisfactory.erp-for-factory.games",
+    "AgentToken": "<any-non-empty-string-for-v1>"
+  }
+}
+```
+
+Open an **elevated** PowerShell and register the service:
+
+```powershell
+erp-agent --install
+```
+
+The service auto-starts at boot (delayed-auto), restarts on crash, and
+uploads new saves as they appear. Logs at `%LocalAppData%\ErpForFactoryGames\agent-logs\`.
+
+Future agent releases pick up with `winget upgrade ErpForFactoryGames.Agent`.
+
+To remove: `erp-agent --uninstall` (elevated), then `winget uninstall ErpForFactoryGames.Agent`.
+
+### Fallback: download the zip
+
+If winget isn't an option (locked-down environment, older Windows):
+
 1. Download `erp-agent-win-x64.zip` from the latest [GitHub Release](https://github.com/ChrisonSimtian/ErpForFactoryGames/releases).
 2. Extract somewhere stable, e.g. `C:\Program Files\ErpForFactoryGames\`.
-3. Edit `%LocalAppData%\ErpForFactoryGames\agent.json` (created on first
-   run; use the bundled `agent.json.example` as a template):
-
-   ```json
-   {
-     "Agent": {
-       "ApiBaseUrl": "https://satisfactory.erp-for-factory.games",
-       "AgentToken": "<any-non-empty-string-for-v1>"
-     }
-   }
-   ```
-
-4. Right-click `erp-agent.exe` → **Run as administrator**, then in a
-   terminal (still elevated):
-
-   ```powershell
-   .\erp-agent.exe --install
-   ```
-
-5. Done. The service auto-starts at boot (delayed-auto), restarts on
-   crash. Logs at `%LocalAppData%\ErpForFactoryGames\agent-logs\`.
+3. Create `agent.json` as above.
+4. Right-click `erp-agent.exe` → **Run as administrator**, then from an
+   elevated terminal: `.\erp-agent.exe --install`.
 
 To remove: `.\erp-agent.exe --uninstall` (elevated).
 

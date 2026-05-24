@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
+
+PackageIdentifier: ErpForFactoryGames.Agent
+PackageVersion: 0.4.45
+PackageLocale: en-US
+
+Publisher: ErpForFactoryGames
+PublisherUrl: https://github.com/ChrisonSimtian/ErpForFactoryGames
+PublisherSupportUrl: https://github.com/ChrisonSimtian/ErpForFactoryGames/issues
+
+PackageName: ERP for Factory Games — Agent
+PackageUrl: https://github.com/ChrisonSimtian/ErpForFactoryGames
+Author: ErpForFactoryGames contributors
+
+License: MIT
+LicenseUrl: https://github.com/ChrisonSimtian/ErpForFactoryGames/blob/main/LICENSE
+Copyright: Copyright (c) ErpForFactoryGames contributors
+
+ShortDescription: Watches your Satisfactory save folder and uploads each new save to the ERP planner.
+Description: |-
+  The ERP for Factory Games agent is a small headless service that watches
+  the local Satisfactory save folder and uploads each new save file to the
+  hosted planner web app, so your factory's live state shows up alongside
+  your production plans.
+
+  After install, run `erp-agent --install` from an elevated shell to register
+  the Windows service. The agent then auto-starts at boot and uploads new
+  saves as you play.
+
+Moniker: erp-agent
+Tags:
+  - satisfactory
+  - factory
+  - games
+  - erp
+  - planner
+  - savegame
+  - dotnet
+
+ReleaseNotesUrl: https://github.com/ChrisonSimtian/ErpForFactoryGames/releases/tag/v0.4.45
+
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

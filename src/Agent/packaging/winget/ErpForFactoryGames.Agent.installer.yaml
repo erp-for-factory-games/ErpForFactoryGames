@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
+
+PackageIdentifier: ErpForFactoryGames.Agent
+PackageVersion: 0.4.45
+ReleaseDate: 2026-05-22
+
+InstallerType: zip
+NestedInstallerType: portable
+NestedInstallerFiles:
+  - RelativeFilePath: erp-agent.exe
+    PortableCommandAlias: erp-agent
+
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/ChrisonSimtian/ErpForFactoryGames/releases/download/v0.4.45/erp-agent-win-x64.zip
+    InstallerSha256: E28806764D851A1B0623DD31EECA30B750294D8B65F01E819CFFE7EBF6BE5715
+
+ManifestType: installer
+ManifestVersion: 1.10.0
