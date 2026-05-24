@@ -19,15 +19,17 @@ namespace Agent;
 internal sealed class LogTailBackgroundService : BackgroundService
 {
     private readonly ILogTailUploader _uploader;
+    private readonly ICatalogueUploader _catalogueUploader;
     private readonly LogTailOptions _options;
     private readonly string _logsDirectory;
     private readonly ILogger<LogTailBackgroundService> _logger;
 
     public LogTailBackgroundService(
         ILogTailUploader uploader,
+        ICatalogueUploader catalogueUploader,
         IOptions<AgentOptions> options,
         ILogger<LogTailBackgroundService> logger)
-        : this(uploader, options.Value.LogTail, ResolveLogsDirectory(), logger)
+        : this(uploader, catalogueUploader, options.Value.LogTail, ResolveLogsDirectory(), logger)
     {
     }
 
@@ -35,11 +37,13 @@ internal sealed class LogTailBackgroundService : BackgroundService
     // without touching the real per-OS path.
     internal LogTailBackgroundService(
         ILogTailUploader uploader,
+        ICatalogueUploader catalogueUploader,
         LogTailOptions options,
         string logsDirectory,
         ILogger<LogTailBackgroundService> logger)
     {
         _uploader = uploader;
+        _catalogueUploader = catalogueUploader;
         _options = options;
         _logsDirectory = logsDirectory;
         _logger = logger;
@@ -76,7 +80,25 @@ internal sealed class LogTailBackgroundService : BackgroundService
                 var lines = reader.ReadNewLines(_options.MaxLinesPerUpload);
                 if (lines.Count == 0) continue;
 
-                await _uploader.UploadAsync(lines, stoppingToken).ConfigureAwait(false);
+                var result = await _uploader.UploadAsync(lines, stoppingToken).ConfigureAwait(false);
+
+                // Server-driven re-ingest (ADR-0025 §7). Piggybacks on the
+                // log-tail response so we don't have to mint a second poll
+                // channel — the cost of catalogue re-ingest landing up to
+                // _options.Interval late is documented in the ADR.
+                if (result.ReIngestRequested)
+                {
+                    _logger.LogInformation("Re-ingest flag observed; uploading catalogue.");
+                    try
+                    {
+                        await _catalogueUploader.UploadAsync(stoppingToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { throw; }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Catalogue re-ingest upload threw");
+                    }
+                }
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

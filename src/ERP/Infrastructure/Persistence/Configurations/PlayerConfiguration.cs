@@ -26,5 +26,7 @@ internal sealed class PlayerConfiguration : IEntityTypeConfiguration<Player>
             .HasMaxLength(200);
 
         builder.Property(p => p.CreatedUtc).IsRequired();
+        builder.Property(p => p.ReIngestRequested).IsRequired();
+        builder.Property(p => p.ReIngestRequestedUtc);
     }
 }

@@ -19,6 +19,19 @@ public sealed class Player
     public string DisplayName { get; private set; } = string.Empty;
     public DateTime CreatedUtc { get; private set; }
 
+    /// <summary>
+    /// Sticky flag set by <c>POST /players/{id}/re-ingest-catalogue</c>
+    /// (ADR-0025 §7) and cleared by the next successful catalogue upload
+    /// from any of this player's agents. The agent reads this on each
+    /// log-tail poll; when true, it forces a re-upload regardless of its
+    /// cached hash, so the user can manually nudge an out-of-sync agent
+    /// without waiting for a Docs.json change.
+    /// </summary>
+    public bool ReIngestRequested { get; private set; }
+
+    /// <summary>When <see cref="ReIngestRequested"/> was last set. Audit only.</summary>
+    public DateTime? ReIngestRequestedUtc { get; private set; }
+
     /// <summary>Parameterless ctor for EF Core materialisation. Don't call from app code.</summary>
     private Player() { }
 
@@ -36,5 +49,19 @@ public sealed class Player
     {
         if (string.IsNullOrWhiteSpace(displayName)) throw new ArgumentException("DisplayName is required.", nameof(displayName));
         DisplayName = displayName;
+    }
+
+    /// <summary>Mark the player as wanting a fresh catalogue upload. Idempotent.</summary>
+    public void RequestReIngest(DateTime nowUtc)
+    {
+        ReIngestRequested = true;
+        ReIngestRequestedUtc = nowUtc;
+    }
+
+    /// <summary>Clear the flag — invoked when a catalogue upload for this
+    /// player lands, regardless of which agent sent it.</summary>
+    public void ClearReIngestRequest()
+    {
+        ReIngestRequested = false;
     }
 }

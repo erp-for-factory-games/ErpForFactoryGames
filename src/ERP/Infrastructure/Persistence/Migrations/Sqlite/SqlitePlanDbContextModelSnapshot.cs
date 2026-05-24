@@ -145,6 +145,12 @@ namespace ERP.Infrastructure.Persistence.Migrations.Sqlite
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("ReIngestRequested")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ReIngestRequestedUtc")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.ToTable("Players", (string)null);
