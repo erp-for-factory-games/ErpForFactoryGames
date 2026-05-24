@@ -1,7 +1,7 @@
 namespace Web.Shared;
 
 /// <summary>
-/// Wire shape for <c>GET /agent/logs</c>. Mirrors the JSON the
+/// Wire shape for <c>GET /api/agent/logs</c>. Mirrors the JSON the
 /// ApiService endpoint emits (camelCase).
 /// </summary>
 public sealed record AgentLogsDto(

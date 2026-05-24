@@ -97,7 +97,7 @@ detected", user sets the override and restarts.
 
 ### 4. Wire protocol — raw bytes, server-side parse
 
-Upload is `POST {ApiBaseUrl}/agent/savegames/satisfactory`:
+Upload is `POST {ApiBaseUrl}/api/agent/savegames/satisfactory`:
 
 - **Body**: raw `.sav` bytes, `Content-Type: application/octet-stream`.
 - **Headers**:
@@ -120,9 +120,16 @@ patch only needs a server-side update. If we ever need pre-flight
 validation client-side, we can add a thin magic-byte check; full
 parsing stays server-side.
 
-Status query is `GET {ApiBaseUrl}/agent/status` (no body, same
+Status query is `GET {ApiBaseUrl}/api/agent/status` (no body, same
 response shape as the upload's 200 plus an `agentSeen` timestamp and
 an `isStale` flag).
+
+> **Amendment (2026-05-24, issue #242).** The original path was
+> `/agent/...` (no `/api` prefix). Renamed under `/api/` so the Cloudflare
+> tunnel can route `/api/.*` to `erp-api` while keeping the Blazor pages
+> on `erp-web` — the page at `@page "/agent/logs"` and the API endpoint
+> previously both lived at the same URL on the public hostname, which
+> would have collided once `erp-api` became publicly reachable.
 
 ### 5. Auth seam — `X-Agent-Token` header, accepted but unvalidated
 
@@ -196,7 +203,7 @@ activity through the Web UI without having to SSH the user's machine.
 - **Trigger**: a separate `LogTailBackgroundService` ticks on a
   configurable interval (default 60 s). Independent of save uploads —
   log shipping happens even when no save activity is occurring.
-- **Wire shape**: `POST {ApiBaseUrl}/agent/logs` with
+- **Wire shape**: `POST {ApiBaseUrl}/api/agent/logs` with
   `Content-Type: application/json`, body `{ lines: ["..."], agentVersion?: "..." }`.
   Same `X-Agent-Token` seam as §5.
 - **Position tracking**: in-memory only; on agent restart the reader
@@ -205,7 +212,8 @@ activity through the Web UI without having to SSH the user's machine.
   (`AgentLogsOptions.MaxBufferLines`, default 2000). Lost on process
   restart by design — durable, multi-source observability is the
   follow-up issue (#212, SigNoz / OTel).
-- **Read endpoint**: `GET {ApiBaseUrl}/agent/logs?limit=N`.
+- **Read endpoint**: `GET {ApiBaseUrl}/api/agent/logs?limit=N`. See §4
+  amendment for why the path moved under `/api/`.
 
 Rejected for v1: persistence (would need a migration just for
 observability data), structured log lines on the wire (Serilog's default

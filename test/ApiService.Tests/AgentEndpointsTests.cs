@@ -28,7 +28,7 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
         var content = new ByteArrayContent(new byte[] { 0x01, 0x02 });
         content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 
-        var response = await client.PostAsync("/agent/savegames/satisfactory", content);
+        var response = await client.PostAsync("/api/agent/savegames/satisfactory", content);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -41,7 +41,7 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
         var client = _factory.CreateClient();
         var content = new ByteArrayContent(new byte[] { 0x01, 0x02 });
         content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-        var request = new HttpRequestMessage(HttpMethod.Post, "/agent/savegames/satisfactory")
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/agent/savegames/satisfactory")
         {
             Content = content,
         };
@@ -58,7 +58,7 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
         var client = _factory.CreateClient();
         var token = await _factory.MintTokenAsync();
         var content = new StringContent("not a save", System.Text.Encoding.UTF8, "text/plain");
-        var request = new HttpRequestMessage(HttpMethod.Post, "/agent/savegames/satisfactory")
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/agent/savegames/satisfactory")
         {
             Content = content,
         };
@@ -76,7 +76,7 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
         var token = await _factory.MintTokenAsync();
         var content = new ByteArrayContent(new byte[] { 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00 });
         content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-        var request = new HttpRequestMessage(HttpMethod.Post, "/agent/savegames/satisfactory")
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/agent/savegames/satisfactory")
         {
             Content = content,
         };
@@ -88,8 +88,8 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
 
-        // The failure should be visible on /agent/status too.
-        var status = await client.GetFromJsonAsync<StatusEnvelope>("/agent/status");
+        // The failure should be visible on /api/agent/status too.
+        var status = await client.GetFromJsonAsync<StatusEnvelope>("/api/agent/status");
         Assert.NotNull(status);
         Assert.NotNull(status!.LastUpload);
         Assert.False(status.LastUpload!.Succeeded);
@@ -101,12 +101,12 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
     [Fact]
     public async Task Status_returns_isStale_true_with_no_upload()
     {
-        // Fresh factory — never received an upload. /agent/status should
+        // Fresh factory — never received an upload. /api/agent/status should
         // surface that as isStale=true with null lastUpload.
         await using var fresh = new AgentApiFactory();
         var client = fresh.CreateClient();
 
-        var status = await client.GetFromJsonAsync<StatusEnvelope>("/agent/status");
+        var status = await client.GetFromJsonAsync<StatusEnvelope>("/api/agent/status");
 
         Assert.NotNull(status);
         Assert.True(status!.IsStale);

@@ -2,7 +2,7 @@ namespace ApiService;
 
 /// <summary>
 /// Server-side snapshot of what the agent last uploaded, for the
-/// <c>GET /agent/status</c> endpoint and the Web UI status card (#200).
+/// <c>GET /api/agent/status</c> endpoint and the Web UI status card (#200).
 /// Singleton; replaced atomically on each upload.
 /// </summary>
 public interface IAgentUploadStatus

@@ -3,7 +3,7 @@ namespace Agent;
 /// <summary>
 /// In-process snapshot of what the agent is doing. The future Web UI
 /// component <c>AgentStatusCard</c> (#200) reads a server-side projection of
-/// this via <c>GET /agent/status</c>; the agent itself uses it to publish
+/// this via <c>GET /api/agent/status</c>; the agent itself uses it to publish
 /// its own state to the API on each upload.
 /// </summary>
 public interface IAgentStatus

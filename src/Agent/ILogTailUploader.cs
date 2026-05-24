@@ -21,7 +21,7 @@ public interface ILogTailUploader
 /// </summary>
 internal sealed class HttpLogTailUploader : ILogTailUploader
 {
-    private const string UploadPath = "/agent/logs";
+    private const string UploadPath = "/api/agent/logs";
 
     private readonly HttpClient _http;
     private readonly AgentOptions _options;

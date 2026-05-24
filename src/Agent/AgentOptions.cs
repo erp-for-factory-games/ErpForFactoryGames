@@ -8,8 +8,8 @@ namespace Agent;
 public sealed class AgentOptions
 {
     /// <summary>
-    /// Base URL of the ApiService that hosts <c>/agent/savegames/satisfactory</c>
-    /// and <c>/agent/status</c>. No default — must be configured.
+    /// Base URL of the ApiService that hosts <c>/api/agent/savegames/satisfactory</c>
+    /// and <c>/api/agent/status</c>. No default — must be configured.
     /// </summary>
     public string ApiBaseUrl { get; set; } = "";
 
@@ -53,7 +53,7 @@ public sealed class LogTailOptions
     public bool Enabled { get; set; } = true;
 
     /// <summary>How often the agent reads new lines from its log file
-    /// and POSTs them to <c>/agent/logs</c>. Default 60 seconds.</summary>
+    /// and POSTs them to <c>/api/agent/logs</c>. Default 60 seconds.</summary>
     public TimeSpan Interval { get; set; } = TimeSpan.FromSeconds(60);
 
     /// <summary>Cap on lines shipped per interval. New lines beyond this

@@ -6,7 +6,7 @@ namespace Agent;
 
 /// <summary>
 /// Periodically reads newly-appended lines from the local Serilog file
-/// sink and ships them to <c>/agent/logs</c> on the hosted API. See
+/// sink and ships them to <c>/api/agent/logs</c> on the hosted API. See
 /// ADR-0024 §9 + issue #210.
 ///
 /// Reads from <see cref="LogTailReader"/>; pushes via

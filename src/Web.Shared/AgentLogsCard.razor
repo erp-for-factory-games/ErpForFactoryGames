@@ -57,7 +57,7 @@
 </div>
 
 @code {
-    /// <summary>HttpClient pointed at the ApiService that hosts <c>/agent/logs</c>.</summary>
+    /// <summary>HttpClient pointed at the ApiService that hosts <c>/api/agent/logs</c>.</summary>
     [Parameter, EditorRequired] public HttpClient Http { get; set; } = default!;
 
     /// <summary>CSS class applied to the outer card container so the host app can theme it.</summary>
@@ -66,7 +66,7 @@
     /// <summary>CSS class applied to the header row. Same idea.</summary>
     [Parameter] public string? HeaderClass { get; set; }
 
-    /// <summary>Poll cadence for <c>GET /agent/logs</c>. Default 5s, same as AgentStatusCard.</summary>
+    /// <summary>Poll cadence for <c>GET /api/agent/logs</c>. Default 5s, same as AgentStatusCard.</summary>
     [Parameter] public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>Max lines to request from the server. Default 500.</summary>
@@ -109,7 +109,7 @@
     {
         try
         {
-            _logs = await Http.GetFromJsonAsync<AgentLogsDto>($"/agent/logs?limit={Limit}", ct);
+            _logs = await Http.GetFromJsonAsync<AgentLogsDto>($"/api/agent/logs?limit={Limit}", ct);
             _error = null;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
