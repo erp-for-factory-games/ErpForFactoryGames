@@ -583,16 +583,21 @@ app.MapGet("/plans/shared/{token}", async (
 // ---------------------------------------------------------------------------
 // Agent endpoints (#199). Wire shape per ADR-0024 §4 + §5.
 //
-//   POST /agent/savegames/satisfactory  — raw .sav body, three X-Agent-*
-//     headers. Token accepted as opaque (auth seam; future ADR-0025 wires
-//     real validation). Parser failures land 422 with the exception type +
-//     first-line of the message in the body.
+//   POST /api/agent/savegames/satisfactory  — raw .sav body, three X-Agent-*
+//     headers. Token validated via IAgentTokenAuthenticator (ADR-0025).
+//     Parser failures land 422 with the exception type + first-line of the
+//     message in the body.
 //
-//   GET  /agent/status                  — last upload snapshot for the
+//   GET  /api/agent/status                  — last upload snapshot for the
 //     Web UI status card (#200).
+//
+// All public agent-facing endpoints live under /api/ so the Cloudflare
+// tunnel can route /api/.* to erp-api separately from the Blazor pages on
+// erp-web — see #242. The Blazor page at @page "/agent/logs" stays on
+// erp-web; the API endpoint moved to /api/agent/logs to avoid the collision.
 // ---------------------------------------------------------------------------
 
-app.MapPost("/agent/savegames/satisfactory", async (
+app.MapPost("/api/agent/savegames/satisfactory", async (
     HttpRequest http,
     IFactoryStateProvider provider,
     IAgentUploadStatus uploadStatus,
@@ -693,7 +698,7 @@ app.MapPost("/agent/savegames/satisfactory", async (
     }
 });
 
-app.MapGet("/agent/status", (IAgentUploadStatus status, TimeProvider clock) =>
+app.MapGet("/api/agent/status", (IAgentUploadStatus status, TimeProvider clock) =>
 {
     var latest = status.Latest;
     // isStale = no upload in the last 10 minutes. The watcher only fires
@@ -713,12 +718,12 @@ app.MapGet("/agent/status", (IAgentUploadStatus status, TimeProvider clock) =>
 
 // ---- Agent log-tail (#210) ------------------------------------------------
 //
-//   POST /agent/logs — JSON body `{ lines: ["..."], agentVersion?: "..." }`.
+//   POST /api/agent/logs — JSON body `{ lines: ["..."], agentVersion?: "..." }`.
 //     Same X-Agent-Token seam as the save upload (ADR-0024 §5).
 //
-//   GET  /agent/logs?limit=N — most-recent lines from the ring buffer.
+//   GET  /api/agent/logs?limit=N — most-recent lines from the ring buffer.
 
-app.MapPost("/agent/logs", async (
+app.MapPost("/api/agent/logs", async (
     HttpRequest http,
     IAgentLogsStore store,
     IAgentTokenAuthenticator authenticator,
@@ -769,7 +774,7 @@ app.MapPost("/agent/logs", async (
     return Results.Ok(new { received = payload.Lines.Count, retained = store.TotalReceived });
 });
 
-app.MapGet("/agent/logs", (IAgentLogsStore store, int? limit) =>
+app.MapGet("/api/agent/logs", (IAgentLogsStore store, int? limit) =>
 {
     var take = limit is > 0 ? Math.Min(limit.Value, 5000) : 500;
     var lines = store.ReadLatest(take);
@@ -788,8 +793,11 @@ app.MapGet("/agent/logs", (IAgentLogsStore store, int? limit) =>
 
 // ---- Player + agent-token management (ADR-0025 §2, §9) -------------------
 //
-//   POST   /players/{id}/agent-tokens          — mint, plaintext shown once
-//   GET    /players/{id}/agent-tokens          — list (no plaintext)
+//   GET    /players/current                     — resolves the dev player
+//                                                 (Auth:DevPlayerId) for the
+//                                                 Web UI's "scope" context
+//   POST   /players/{id}/agent-tokens           — mint, plaintext shown once
+//   GET    /players/{id}/agent-tokens           — list (no plaintext)
 //   DELETE /players/{id}/agent-tokens/{tokenId} — revoke
 //   GET    /me                                  — who-am-I for the agent's
 //                                                 pairing validation call
@@ -799,6 +807,31 @@ app.MapGet("/agent/logs", (IAgentLogsStore store, int? limit) =>
 // "single-user-shaped on purpose" dev-player flow until login lands.
 // Production deployment must hide them behind the homelab's Web UI gate.
 // ---------------------------------------------------------------------------
+
+app.MapGet("/players/current", async (
+    Microsoft.Extensions.Options.IOptions<AuthOptions> authOptions,
+    IPlayerRepository players,
+    CancellationToken ct) =>
+{
+    var playerId = new PlayerId(authOptions.Value.DevPlayerId);
+    var player = await players.GetAsync(playerId, ct).ConfigureAwait(false);
+    if (player is null)
+    {
+        // DevPlayerBootstrap should have seeded by now; missing means the
+        // deployment has a misconfigured DevPlayerId or the bootstrap
+        // failed. 503 is more honest than 404 — caller should retry.
+        return Results.Json(
+            new { error = "Current player not yet provisioned. Check Auth:DevPlayerId and startup logs." },
+            statusCode: 503);
+    }
+
+    return Results.Ok(new
+    {
+        playerId = player.Id.Value,
+        displayName = player.DisplayName,
+        createdUtc = player.CreatedUtc,
+    });
+});
 
 app.MapPost("/players/{id:guid}/agent-tokens", async (
     Guid id,
@@ -923,7 +956,7 @@ internal static class ShareTokenGenerator
 
 public sealed record ShareTokenView(string Token, string Url, DateTime CreatedUtc, DateTime? ExpiresUtc);
 
-/// <summary>POST /agent/logs body (#210). Lines are raw text — server doesn't
+/// <summary>POST /api/agent/logs body (#210). Lines are raw text — server doesn't
 /// parse Serilog's output template, the Web component highlights levels on
 /// best-effort.</summary>
 public sealed record AgentLogsRequest(IReadOnlyList<string>? Lines, string? AgentVersion = null);

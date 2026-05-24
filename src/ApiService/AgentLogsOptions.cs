@@ -2,7 +2,7 @@ namespace ApiService;
 
 /// <summary>
 /// Bound from <c>AgentLogs</c> in configuration. Controls the in-memory
-/// ring buffer that backs <c>POST /agent/logs</c> + <c>GET /agent/logs</c>.
+/// ring buffer that backs <c>POST /api/agent/logs</c> + <c>GET /api/agent/logs</c>.
 ///
 /// Persisted observability (across process restarts) is deliberately out
 /// of scope for v1 — see ADR-0024 §9. The follow-up SigNoz / OTel issue
@@ -18,7 +18,7 @@ public sealed class AgentLogsOptions
     public int MaxBufferLines { get; set; } = 2000;
 
     /// <summary>
-    /// Maximum lines accepted in a single <c>POST /agent/logs</c> request.
+    /// Maximum lines accepted in a single <c>POST /api/agent/logs</c> request.
     /// Anything beyond this is silently truncated server-side. Cap is for
     /// DoS hardening, not user-facing.
     /// </summary>

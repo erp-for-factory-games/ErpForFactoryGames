@@ -19,7 +19,7 @@ public sealed class AgentLogsEndpointsTests : IClassFixture<AgentLogsEndpointsTe
     public async Task Post_without_token_returns_401()
     {
         var client = _factory.CreateClient();
-        var response = await client.PostAsJsonAsync("/agent/logs", new { lines = new[] { "x" } });
+        var response = await client.PostAsJsonAsync("/api/agent/logs", new { lines = new[] { "x" } });
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -27,11 +27,12 @@ public sealed class AgentLogsEndpointsTests : IClassFixture<AgentLogsEndpointsTe
     public async Task Post_with_wrong_content_type_returns_415()
     {
         var client = _factory.CreateClient();
-        var request = new HttpRequestMessage(HttpMethod.Post, "/agent/logs")
+        var token = await _factory.MintTokenAsync();
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/agent/logs")
         {
             Content = new StringContent("not json", System.Text.Encoding.UTF8, "text/plain"),
         };
-        request.Headers.TryAddWithoutValidation("X-Agent-Token", "any");
+        request.Headers.TryAddWithoutValidation("X-Agent-Token", token);
 
         var response = await client.SendAsync(request);
 
@@ -43,14 +44,15 @@ public sealed class AgentLogsEndpointsTests : IClassFixture<AgentLogsEndpointsTe
     {
         await using var fresh = new LogsApiFactory();
         var client = fresh.CreateClient();
+        var token = await fresh.MintTokenAsync();
 
         async Task Post(params string[] lines)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, "/agent/logs")
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/agent/logs")
             {
                 Content = JsonContent.Create(new { lines, agentVersion = "0.0.0-test" }),
             };
-            request.Headers.TryAddWithoutValidation("X-Agent-Token", "any-non-empty");
+            request.Headers.TryAddWithoutValidation("X-Agent-Token", token);
             request.Headers.TryAddWithoutValidation("X-Agent-Version", "0.0.0-test");
             var resp = await client.SendAsync(request);
             Assert.True(resp.IsSuccessStatusCode, $"POST failed: {(int)resp.StatusCode}");
@@ -59,7 +61,7 @@ public sealed class AgentLogsEndpointsTests : IClassFixture<AgentLogsEndpointsTe
         await Post("first batch line 1", "first batch line 2");
         await Post("second batch line 1");
 
-        var logs = await client.GetFromJsonAsync<LogsEnvelope>("/agent/logs?limit=10");
+        var logs = await client.GetFromJsonAsync<LogsEnvelope>("/api/agent/logs?limit=10");
 
         Assert.NotNull(logs);
         Assert.Equal(3, logs!.TotalReceived);
@@ -75,15 +77,16 @@ public sealed class AgentLogsEndpointsTests : IClassFixture<AgentLogsEndpointsTe
     {
         await using var fresh = new LogsApiFactory();
         var client = fresh.CreateClient();
+        var token = await fresh.MintTokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Post, "/agent/logs")
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/agent/logs")
         {
             Content = JsonContent.Create(new { lines = new[] { "1", "2", "3", "4", "5" } }),
         };
-        request.Headers.TryAddWithoutValidation("X-Agent-Token", "any");
+        request.Headers.TryAddWithoutValidation("X-Agent-Token", token);
         await client.SendAsync(request);
 
-        var logs = await client.GetFromJsonAsync<LogsEnvelope>("/agent/logs?limit=2");
+        var logs = await client.GetFromJsonAsync<LogsEnvelope>("/api/agent/logs?limit=2");
         Assert.NotNull(logs);
         Assert.Equal(5, logs!.TotalReceived);
         Assert.Equal(new[] { "4", "5" }, logs.Lines.Select(l => l.Text));
@@ -95,7 +98,7 @@ public sealed class AgentLogsEndpointsTests : IClassFixture<AgentLogsEndpointsTe
         await using var fresh = new LogsApiFactory();
         var client = fresh.CreateClient();
 
-        var logs = await client.GetFromJsonAsync<LogsEnvelope>("/agent/logs");
+        var logs = await client.GetFromJsonAsync<LogsEnvelope>("/api/agent/logs");
         Assert.NotNull(logs);
         Assert.Empty(logs!.Lines);
         Assert.Equal(0, logs.TotalReceived);
@@ -107,15 +110,16 @@ public sealed class AgentLogsEndpointsTests : IClassFixture<AgentLogsEndpointsTe
     {
         await using var fresh = new LogsApiFactory(maxBufferLines: 3);
         var client = fresh.CreateClient();
+        var token = await fresh.MintTokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Post, "/agent/logs")
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/agent/logs")
         {
             Content = JsonContent.Create(new { lines = new[] { "a", "b", "c", "d", "e" } }),
         };
-        request.Headers.TryAddWithoutValidation("X-Agent-Token", "any");
+        request.Headers.TryAddWithoutValidation("X-Agent-Token", token);
         await client.SendAsync(request);
 
-        var logs = await client.GetFromJsonAsync<LogsEnvelope>("/agent/logs?limit=100");
+        var logs = await client.GetFromJsonAsync<LogsEnvelope>("/api/agent/logs?limit=100");
         Assert.NotNull(logs);
         Assert.Equal(5, logs!.TotalReceived);
         // Only the last 3 should remain.
@@ -135,6 +139,8 @@ public sealed class AgentLogsEndpointsTests : IClassFixture<AgentLogsEndpointsTe
         private readonly string _uploadDir = Path.Combine(Path.GetTempPath(), $"erp-agent-logs-uploads-{Guid.NewGuid():N}");
         private readonly int _maxBufferLines;
 
+        public Guid DevPlayerId { get; } = Guid.NewGuid();
+
         // Parameterless ctor is the one xUnit uses for the IClassFixture
         // wiring; the int-overload is internal so we can spin up
         // factories with custom buffer sizes from individual tests.
@@ -153,9 +159,28 @@ public sealed class AgentLogsEndpointsTests : IClassFixture<AgentLogsEndpointsTe
                     ["ConnectionStrings:Plans"] = $"Data Source={_dbPath}",
                     ["AgentUploads:UploadDirectory"] = _uploadDir,
                     ["AgentLogs:MaxBufferLines"] = _maxBufferLines.ToString(),
+                    ["Auth:DevPlayerId"] = DevPlayerId.ToString(),
                 });
             });
         }
+
+        /// <summary>
+        /// Mint a fresh agent token for the dev player and return the
+        /// plaintext header value. Mirrors <c>AgentApiFactory.MintTokenAsync</c>
+        /// — ADR-0025 §3 validates by hash so tests need a real row in the DB.
+        /// </summary>
+        public async Task<string> MintTokenAsync(string? label = null)
+        {
+            using var client = CreateClient();
+            var response = await client.PostAsJsonAsync(
+                $"/players/{DevPlayerId}/agent-tokens",
+                new { label });
+            response.EnsureSuccessStatusCode();
+            var payload = await response.Content.ReadFromJsonAsync<MintResponse>();
+            return payload!.Plaintext;
+        }
+
+        private sealed record MintResponse(Guid Id, string Plaintext, string Label, DateTime CreatedUtc);
 
         protected override void Dispose(bool disposing)
         {

@@ -4,7 +4,7 @@ namespace ApiService;
 
 /// <summary>
 /// Server-side ring buffer of agent log lines, populated by
-/// <c>POST /agent/logs</c> and read by <c>GET /agent/logs</c>. Singleton,
+/// <c>POST /api/agent/logs</c> and read by <c>GET /api/agent/logs</c>. Singleton,
 /// in-memory only — see ADR-0024 §9. Lost on process restart by design.
 /// </summary>
 public interface IAgentLogsStore

@@ -1,7 +1,7 @@
 namespace Web.Shared;
 
 /// <summary>
-/// Wire shape for <c>GET /agent/status</c>. Mirrors the anonymous JSON
+/// Wire shape for <c>GET /api/agent/status</c>. Mirrors the anonymous JSON
 /// the ApiService endpoint emits (camelCase, nullable-friendly).
 /// </summary>
 public sealed record AgentStatusDto(

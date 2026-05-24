@@ -80,7 +80,7 @@
 </div>
 
 @code {
-    /// <summary>HttpClient pointed at the ApiService that hosts <c>/agent/status</c>.</summary>
+    /// <summary>HttpClient pointed at the ApiService that hosts <c>/api/agent/status</c>.</summary>
     [Parameter, EditorRequired] public HttpClient Http { get; set; } = default!;
 
     /// <summary>CSS class applied to the outer card container so the host app can theme it.</summary>
@@ -90,7 +90,7 @@
     [Parameter] public string? HeaderClass { get; set; }
 
     /// <summary>
-    /// How often to re-poll <c>GET /agent/status</c>. Default 5s. The
+    /// How often to re-poll <c>GET /api/agent/status</c>. Default 5s. The
     /// endpoint is cheap (in-memory snapshot read) so polling is fine for v1;
     /// SignalR push lands later if it becomes annoying.
     /// </summary>
@@ -130,7 +130,7 @@
     {
         try
         {
-            _status = await Http.GetFromJsonAsync<AgentStatusDto>("/agent/status", ct);
+            _status = await Http.GetFromJsonAsync<AgentStatusDto>("/api/agent/status", ct);
             _error = null;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

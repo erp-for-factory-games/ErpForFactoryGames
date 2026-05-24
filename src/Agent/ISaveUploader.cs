@@ -20,7 +20,7 @@ public interface ISaveUploader
 /// </summary>
 internal sealed class HttpSaveUploader : ISaveUploader
 {
-    private const string UploadPath = "/agent/savegames/satisfactory";
+    private const string UploadPath = "/api/agent/savegames/satisfactory";
 
     private readonly HttpClient _http;
     private readonly AgentOptions _options;
