@@ -7,6 +7,7 @@ using ERP.Infrastructure;
 using ERP.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Satisfactory.Save;
 using TickerQ.DependencyInjection;
 using Wolverine;
@@ -50,6 +51,11 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IAgentTokenAuthenticator, AgentTokenAuthenticator>();
 builder.Services.AddHostedService<DevPlayerBootstrap>();
 
+// Current-player accessor (ADR-0025 §2). v2 returns Auth:DevPlayerId; the
+// future authenticated adapter swaps this registration for an HttpContext-
+// backed implementation and the rest of the graph picks it up unchanged.
+builder.Services.AddScoped<ICurrentPlayer, CurrentPlayerFromAuthOptions>();
+
 // Catalogue storage (ADR-0025 §4-§5). Bytes land on the filesystem; the
 // PlayerCatalogue EF row carries the metadata + dedup hash.
 builder.Services.Configure<CatalogueStorageOptions>(
@@ -87,13 +93,14 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "API service is running. See /catalog/items, /plan, /factory/state.");
 
-app.MapGet("/catalog/items", (ICatalogProvider catalog) =>
-    catalog.Items
+app.MapGet("/catalog/items", (ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
+    NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Ok(catalog.Items
         .OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase)
-        .Select(i => new ItemDto(i.Id.Value, i.Name)));
+        .Select(i => new ItemDto(i.Id.Value, i.Name))));
 
-app.MapGet("/catalog/recipes", (ICatalogProvider catalog) =>
+app.MapGet("/catalog/recipes", (ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
 {
+    if (NoCatalogueProblem.IfMissing(catalog, catOpts) is { } missing) return missing;
     // Per-minute amounts mirror what /plan returns and what the planner UI displays —
     // raw per-cycle counts on the wire would force every consumer to multiply by
     // 60/duration. Recipes with zero duration would be a parser bug, but guard anyway.
@@ -104,7 +111,7 @@ app.MapGet("/catalog/recipes", (ICatalogProvider catalog) =>
                 ? Math.Round(a.Quantity * 60m / (decimal)duration.TotalSeconds, 4)
                 : a.Quantity);
 
-    return catalog.Recipes
+    return Results.Ok(catalog.Recipes
         .OrderBy(r => r.IsAlternate)
         .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
         .Select(r =>
@@ -120,7 +127,7 @@ app.MapGet("/catalog/recipes", (ICatalogProvider catalog) =>
                 r.Duration.TotalSeconds,
                 r.Inputs.Select(i => ToPerMinute(i, r.Duration)).ToList(),
                 r.Outputs.Select(o => ToPerMinute(o, r.Duration)).ToList());
-        });
+        }));
 });
 
 app.MapGet("/catalogue/status", (ICatalogProvider catalog) => catalog.GetStatus());
@@ -145,11 +152,11 @@ app.MapPost("/catalogue/configure", (ConfigureCatalogueRequest request, ICatalog
     }
 });
 
-app.MapGet("/factory/state", (IFactoryStateProvider provider, ICatalogProvider catalog) =>
-    FactoryStateView.From(provider, catalog));
+app.MapGet("/factory/state", (IFactoryStateProvider provider, ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
+    NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Ok(FactoryStateView.From(provider, catalog)));
 
-app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider, ICatalogProvider catalog, Satisfactory.Save.KnownFlora flora) =>
-    Results.Json(FactoryStateGeoJson.From(provider, catalog, flora), contentType: "application/geo+json"));
+app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider, ICatalogProvider catalog, Satisfactory.Save.KnownFlora flora, IOptions<CatalogueOptions> catOpts) =>
+    NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Json(FactoryStateGeoJson.From(provider, catalog, flora), contentType: "application/geo+json"));
 
 app.MapGet("/factory/saves", () =>
     SaveFileResolver.EnumerateDetectedSaves()
@@ -349,10 +356,13 @@ app.MapGet("/fs/browse", (string? path, string? filter, string? purpose) =>
 app.MapPost("/factory/ingest", async (
     IngestSaveRequest request, IMessageBus bus, IFactoryStateProvider provider,
     ICatalogProvider catalog, FactoryAlertAnalysisService alertAnalysis,
+    IOptions<CatalogueOptions> catOpts,
     ILoggerFactory loggerFactory, CancellationToken ct) =>
 {
     if (string.IsNullOrWhiteSpace(request.SavePath))
         return Results.BadRequest(new { error = "SavePath is required." });
+
+    if (NoCatalogueProblem.IfMissing(catalog, catOpts) is { } missing) return missing;
 
     try
     {
@@ -436,15 +446,9 @@ app.MapDelete("/factory/node-override", (
     return Results.NoContent();
 });
 
-app.MapPost("/plan", async (PlanRequest request, IMessageBus bus, ICatalogProvider catalog, ILoggerFactory loggerFactory) =>
+app.MapPost("/plan", async (PlanRequest request, IMessageBus bus, ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts, ILoggerFactory loggerFactory) =>
 {
-    if (!catalog.IsLoaded || catalog.Recipes.Count == 0)
-    {
-        return Results.Problem(
-            title: "Catalogue not loaded",
-            detail: "Configure the Docs.json path via POST /catalogue/configure before planning.",
-            statusCode: 409);
-    }
+    if (NoCatalogueProblem.IfMissing(catalog, catOpts) is { } missing) return missing;
 
     var query = new PlanProductionQuery(
         Targets: request.Targets.Select(t => new ProductionTarget(new ItemId(t.ItemId), t.ItemsPerMinute)).ToList(),
