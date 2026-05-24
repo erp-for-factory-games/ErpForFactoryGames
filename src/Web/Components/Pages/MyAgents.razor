@@ -9,6 +9,7 @@
 
 @page "/settings/agents"
 @rendermode InteractiveServer
+@implements IDisposable
 @inject PlannerApiClient Api
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -35,6 +36,62 @@ else
         machine running the agent. See
         <a href="https://github.com/ChrisonSimtian/ErpForFactoryGames/blob/main/docs/adr/0025-agent-auth-catalogue-handover.md" target="_blank">ADR-0025</a>.
     </MudText>
+
+    <MudPaper Class="fx-panel pa-4 mb-3" Elevation="0" data-testid="catalogue-card">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudText Typo="Typo.h6">Catalogue</MudText>
+            @{
+                // Re-ingest queued wins over "no catalogue" — the user just
+                // asked for one, the pill should reflect that even if nothing
+                // has been uploaded yet.
+                var pillColor = _catalogueStatus switch
+                {
+                    null => Color.Default,
+                    { ReIngestRequested: true } => Color.Warning,
+                    { Catalogue: null } => Color.Default,
+                    _ => Color.Success,
+                };
+                var pillText = _catalogueStatus switch
+                {
+                    null => "Loading…",
+                    { ReIngestRequested: true } => "Re-ingest queued",
+                    { Catalogue: null } => "No catalogue yet",
+                    _ => "In sync",
+                };
+            }
+            <MudChip T="string" Color="@pillColor" Size="Size.Small" data-testid="catalogue-status-pill">@pillText</MudChip>
+            <MudSpacer />
+            <MudButton StartIcon="@Icons.Material.Filled.Refresh"
+                       Color="Color.Primary" Variant="Variant.Outlined"
+                       OnClick="TriggerReIngestAsync"
+                       Disabled="_reIngestBusy || _currentPlayer is null"
+                       data-testid="reingest-button">
+                Re-ingest catalogue
+            </MudButton>
+        </MudStack>
+
+        @if (_catalogueStatus?.Catalogue is { } cat)
+        {
+            <MudStack Row="true" Spacing="6" Class="mb-1">
+                <div>
+                    <MudText Typo="Typo.caption" Color="Color.Default">Hash</MudText>
+                    <MudText Typo="Typo.body2" data-testid="catalogue-hash"><code>@cat.DocsHash[..Math.Min(12, cat.DocsHash.Length)]</code></MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption" Color="Color.Default">Game version</MudText>
+                    <MudText Typo="Typo.body2">@(cat.GameVersion ?? "—")</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption" Color="Color.Default">Uploaded</MudText>
+                    <MudText Typo="Typo.body2" data-testid="catalogue-uploaded">@FormatRelative(cat.UploadedUtc) (@cat.UploadedUtc.ToString("u"))</MudText>
+                </div>
+            </MudStack>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No catalogue uploaded yet. Pair an agent below and it will upload <code>Docs.json</code> on first run.</MudText>
+        }
+    </MudPaper>
 
     <MudPaper Class="fx-panel pa-4 mb-3" Elevation="0">
         <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
@@ -97,15 +154,22 @@ else
 }
 
 @code {
+    /// <summary>Cadence of the catalogue-status poll while the page is open.</summary>
+    private static readonly TimeSpan CataloguePollInterval = TimeSpan.FromSeconds(5);
+
     private CurrentPlayerView? _currentPlayer;
     private AgentTokenView[] _tokens = [];
+    private PlayerCatalogueStatusView? _catalogueStatus;
     private bool _loading = true;
+    private bool _reIngestBusy;
     private string? _loadError;
+    private CancellationTokenSource? _pollCts;
 
     protected override async Task OnInitializedAsync()
     {
         if (!Options.Value.Enabled) { _loading = false; return; }
         await LoadAsync();
+        StartCataloguePolling();
     }
 
     private async Task LoadAsync()
@@ -121,6 +185,7 @@ else
                 return;
             }
             _tokens = await Api.ListAgentTokensAsync(_currentPlayer.PlayerId);
+            _catalogueStatus = await Api.GetPlayerCatalogueAsync(_currentPlayer.PlayerId);
         }
         catch (Exception ex)
         {
@@ -130,6 +195,93 @@ else
         {
             _loading = false;
         }
+    }
+
+    private void StartCataloguePolling()
+    {
+        _pollCts?.Cancel();
+        _pollCts = new CancellationTokenSource();
+        _ = PollCatalogueAsync(_pollCts.Token);
+    }
+
+    private async Task PollCatalogueAsync(CancellationToken ct)
+    {
+        // Best-effort polling. Errors don't surface — the page's primary
+        // state (tokens table) is unaffected, and the next poll will retry.
+        // Visible feedback comes from the status pill flipping from "queued"
+        // → "in sync" when the agent's upload arrives.
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                await Task.Delay(CataloguePollInterval, ct);
+                if (_currentPlayer is null) continue;
+                try
+                {
+                    var next = await Api.GetPlayerCatalogueAsync(_currentPlayer.PlayerId, ct);
+                    if (next is null) continue;
+                    if (HasChanged(_catalogueStatus, next))
+                    {
+                        _catalogueStatus = next;
+                        await InvokeAsync(StateHasChanged);
+                    }
+                }
+                catch (OperationCanceledException) { throw; }
+                catch
+                {
+                    // Swallow — next tick will retry.
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private static bool HasChanged(PlayerCatalogueStatusView? prev, PlayerCatalogueStatusView next)
+    {
+        if (prev is null) return true;
+        if (prev.ReIngestRequested != next.ReIngestRequested) return true;
+        return prev.Catalogue?.DocsHash != next.Catalogue?.DocsHash
+            || prev.Catalogue?.UploadedUtc != next.Catalogue?.UploadedUtc;
+    }
+
+    private async Task TriggerReIngestAsync()
+    {
+        if (_currentPlayer is null || _reIngestBusy) return;
+        _reIngestBusy = true;
+        try
+        {
+            var ok = await Api.TriggerReIngestAsync(_currentPlayer.PlayerId);
+            if (ok)
+            {
+                Snackbar.Add("Re-ingest queued — agent will pick this up on its next poll (~1 min).", Severity.Info);
+                _catalogueStatus = _catalogueStatus is null
+                    ? new PlayerCatalogueStatusView(_currentPlayer.PlayerId, true, DateTime.UtcNow, null)
+                    : _catalogueStatus with { ReIngestRequested = true, ReIngestRequestedUtc = DateTime.UtcNow };
+            }
+            else
+            {
+                Snackbar.Add("Re-ingest request failed. Check API logs.", Severity.Error);
+            }
+        }
+        finally
+        {
+            _reIngestBusy = false;
+        }
+    }
+
+    private static string FormatRelative(DateTime utc)
+    {
+        var delta = DateTime.UtcNow - utc;
+        if (delta.TotalSeconds < 60) return "just now";
+        if (delta.TotalMinutes < 60) return $"{(int)delta.TotalMinutes} min ago";
+        if (delta.TotalHours < 24) return $"{(int)delta.TotalHours} h ago";
+        return $"{(int)delta.TotalDays} d ago";
+    }
+
+    public void Dispose()
+    {
+        _pollCts?.Cancel();
+        _pollCts?.Dispose();
     }
 
     private async Task ShowMintDialogAsync()
