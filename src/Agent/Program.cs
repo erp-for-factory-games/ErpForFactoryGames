@@ -40,10 +40,10 @@ builder.Services.AddSystemd();
 
 // ---------------------------------------------------------------------
 // Configuration — picks up appsettings.json next to the binary plus the
-// per-user agent.json (writeable; the install flow drops the token there)
+// shared agent.json (writeable; the install flow drops the seed there)
 // plus env vars (ERP_AGENT_*). User-secrets only outside Production.
 // ---------------------------------------------------------------------
-builder.Configuration.AddJsonFile(UserConfigPath(), optional: true, reloadOnChange: true);
+builder.Configuration.AddJsonFile(ConfigPath(), optional: true, reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables(prefix: "ERP_AGENT_");
 
 builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("Agent"));
@@ -112,7 +112,7 @@ if (string.IsNullOrWhiteSpace(options.ApiBaseUrl))
     log.LogWarning(
         "Agent:ApiBaseUrl is not configured. Set it via {ConfigPath} or ERP_AGENT_ApiBaseUrl. "
         + "Uploads will fail until this is set.",
-        UserConfigPath());
+        ConfigPath());
 }
 if (string.IsNullOrWhiteSpace(options.AgentToken))
 {
@@ -141,19 +141,28 @@ static void PrintUsage()
 
         Configuration:
           appsettings.json next to the binary holds defaults.
-          agent.json under %LocalAppData%/ErpForFactoryGames/ (Windows) or
+          agent.json under %ProgramData%/ErpForFactoryGames/ (Windows) or
           $XDG_CONFIG_HOME/ErpForFactoryGames/ (Linux) is the writeable
-          per-user override — that's where you put your API URL + token.
+          override — that's where you put your API URL + token. On Windows
+          the path is machine-wide rather than per-user so the LocalSystem
+          service and the installing user agree on which file to read.
 
         See INSTALL.md next to the binary for the full first-run guide.
         """);
 }
 
 // Local helpers — file paths are OS-specific. See ADR-0024 §2.
+//
+// Windows uses %ProgramData% rather than %LocalAppData% so that the
+// LocalSystem-mode service and the installing user resolve the same
+// path. %LocalAppData% would expand to C:\Windows\System32\config\
+// systemprofile\AppData\Local\ for the service, which the user can't
+// find or edit. Linux keeps per-user XDG paths because the systemd
+// --user unit installed by --install runs as the user already.
 static string LogsDirectory()
 {
     var baseDir = OperatingSystem.IsWindows()
-        ? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
+        ? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)
         : Environment.GetEnvironmentVariable("XDG_STATE_HOME")
           ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "state");
     var dir = Path.Combine(baseDir, "ErpForFactoryGames", "agent-logs");
@@ -161,10 +170,10 @@ static string LogsDirectory()
     return dir;
 }
 
-static string UserConfigPath()
+static string ConfigPath()
 {
     var baseDir = OperatingSystem.IsWindows()
-        ? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
+        ? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)
         : Environment.GetEnvironmentVariable("XDG_CONFIG_HOME")
           ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config");
     var dir = Path.Combine(baseDir, "ErpForFactoryGames");
