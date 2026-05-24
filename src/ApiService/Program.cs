@@ -733,6 +733,7 @@ app.MapPost("/api/agent/logs", async (
     HttpRequest http,
     IAgentLogsStore store,
     IAgentTokenAuthenticator authenticator,
+    IPlayerRepository players,
     Microsoft.Extensions.Options.IOptions<AgentLogsOptions> logsOptions,
     TimeProvider clock,
     CancellationToken ct) =>
@@ -761,9 +762,16 @@ app.MapPost("/api/agent/logs", async (
         return Results.Json(new { error = "Invalid JSON body.", detail = ex.Message }, statusCode: 400);
     }
 
+    // ReIngestRequested piggybacks on this poll (ADR-0025 §7) — the agent
+    // reads it on every log-tail tick and triggers CatalogueUploader on
+    // true. Looked up once per request; cheap with the PlayerId already
+    // resolved by the auth pipeline.
+    var player = await players.GetAsync(auth.PlayerId, ct).ConfigureAwait(false);
+    var reIngestRequested = player?.ReIngestRequested ?? false;
+
     if (payload is null || payload.Lines is null || payload.Lines.Count == 0)
     {
-        return Results.Ok(new { received = 0 });
+        return Results.Ok(new { received = 0, reIngestRequested });
     }
 
     var cap = Math.Max(1, logsOptions.Value.MaxLinesPerRequest);
@@ -777,7 +785,7 @@ app.MapPost("/api/agent/logs", async (
 
     store.Append(lines, agentVersion, clock.GetUtcNow());
 
-    return Results.Ok(new { received = payload.Lines.Count, retained = store.TotalReceived });
+    return Results.Ok(new { received = payload.Lines.Count, retained = store.TotalReceived, reIngestRequested });
 });
 
 app.MapGet("/api/agent/logs", (IAgentLogsStore store, int? limit) =>
@@ -819,6 +827,7 @@ app.MapPost("/api/agent/catalogue/satisfactory", async (
     HttpRequest http,
     IAgentTokenAuthenticator authenticator,
     IPlayerCatalogueRepository catalogues,
+    IPlayerRepository players,
     ICatalogueStorage storage,
     Microsoft.Extensions.Options.IOptions<CatalogueStorageOptions> storageOptions,
     TimeProvider clock,
@@ -917,6 +926,18 @@ app.MapPost("/api/agent/catalogue/satisfactory", async (
         existing.ReplaceWith(docsHash, storageKey, bytes.Length, now, gameVersion: null);
     }
     await catalogues.SaveChangesAsync(ct).ConfigureAwait(false);
+
+    // Clear the re-ingest flag now that we've absorbed a fresh upload.
+    // Per ADR-0025 §7: any catalogue upload from any of the player's
+    // agents counts as "satisfied" — even a 304 would (but 304 paths
+    // return above before reaching here, so we don't bother in that
+    // branch since nothing changed on disk anyway).
+    var player = await players.GetAsync(auth.PlayerId, ct).ConfigureAwait(false);
+    if (player is not null && player.ReIngestRequested)
+    {
+        player.ClearReIngestRequest();
+        await players.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
 
     log.LogInformation(
         "Catalogue upload from {PlayerId}: {Bytes} bytes, hash {Hash}, stored at {Key}.",
@@ -1076,6 +1097,66 @@ app.MapGet("/api/me", async (
         playerId = player.Id.Value,
         displayName = player.DisplayName,
         tokenId = auth.TokenId.Value,
+    });
+});
+
+// ---- Catalogue re-ingest control (ADR-0025 §7) ----------------------------
+//
+//   POST /players/{id}/re-ingest-catalogue  — set the sticky flag. Picked up
+//                                              by the agent on its next
+//                                              log-tail poll (~60 s) which
+//                                              forces a re-upload regardless
+//                                              of the agent's cached hash.
+//   GET  /players/{id}/catalogue/satisfactory — current catalogue metadata
+//                                                + the re-ingest flag, for
+//                                                the Web UI to render.
+//
+// No caller-side auth on these in v2 (same stance as the token-management
+// endpoints — gated by the Web UI being on the homelab-internal LAN).
+// ---------------------------------------------------------------------------
+
+app.MapPost("/players/{id:guid}/re-ingest-catalogue", async (
+    Guid id,
+    IPlayerRepository players,
+    TimeProvider clock,
+    CancellationToken ct) =>
+{
+    var playerId = new PlayerId(id);
+    var player = await players.GetAsync(playerId, ct).ConfigureAwait(false);
+    if (player is null) return Results.NotFound(new { error = $"Player {id} not found." });
+
+    player.RequestReIngest(clock.GetUtcNow().UtcDateTime);
+    await players.SaveChangesAsync(ct).ConfigureAwait(false);
+    return Results.Accepted(value: new
+    {
+        reIngestRequested = true,
+        reIngestRequestedUtc = player.ReIngestRequestedUtc,
+    });
+});
+
+app.MapGet("/players/{id:guid}/catalogue/satisfactory", async (
+    Guid id,
+    IPlayerRepository players,
+    IPlayerCatalogueRepository catalogues,
+    CancellationToken ct) =>
+{
+    var playerId = new PlayerId(id);
+    var player = await players.GetAsync(playerId, ct).ConfigureAwait(false);
+    if (player is null) return Results.NotFound(new { error = $"Player {id} not found." });
+
+    var row = await catalogues.GetAsync(playerId, PlayerCatalogue.SatisfactoryGame, ct).ConfigureAwait(false);
+    return Results.Ok(new
+    {
+        playerId = player.Id.Value,
+        reIngestRequested = player.ReIngestRequested,
+        reIngestRequestedUtc = player.ReIngestRequestedUtc,
+        catalogue = row is null ? null : new
+        {
+            docsHash = row.DocsHash,
+            gameVersion = row.GameVersion,
+            sizeBytes = row.SizeBytes,
+            uploadedUtc = row.UploadedUtc,
+        },
     });
 });
 

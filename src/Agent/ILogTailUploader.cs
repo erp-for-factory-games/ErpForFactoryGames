@@ -6,13 +6,23 @@ using Microsoft.Extensions.Options;
 namespace Agent;
 
 /// <summary>
-/// Ships a batch of log lines to the hosted API. Returns whether the
-/// batch landed so the watcher can decide whether to advance its
-/// position pointer.
+/// Ships a batch of log lines to the hosted API. Returns the upload
+/// outcome including any server-side flags piggybacked on the response
+/// (ADR-0025 §7 — the re-ingest trigger rides this same poll).
 /// </summary>
 public interface ILogTailUploader
 {
-    Task<bool> UploadAsync(IReadOnlyList<string> lines, CancellationToken ct);
+    Task<LogTailUploadResult> UploadAsync(IReadOnlyList<string> lines, CancellationToken ct);
+}
+
+/// <summary>
+/// Outcome of one log-tail upload tick. <see cref="ReIngestRequested"/>
+/// is the server's "please re-upload the catalogue" signal, set by the
+/// Web UI's re-ingest button (ADR-0025 §7).
+/// </summary>
+public readonly record struct LogTailUploadResult(bool Succeeded, bool ReIngestRequested)
+{
+    public static LogTailUploadResult Failure { get; } = new(false, false);
 }
 
 /// <summary>
@@ -37,9 +47,9 @@ internal sealed class HttpLogTailUploader : ILogTailUploader
         _logger = logger;
     }
 
-    public async Task<bool> UploadAsync(IReadOnlyList<string> lines, CancellationToken ct)
+    public async Task<LogTailUploadResult> UploadAsync(IReadOnlyList<string> lines, CancellationToken ct)
     {
-        if (lines.Count == 0) return true;
+        if (lines.Count == 0) return new LogTailUploadResult(true, false);
 
         var agentVersion = typeof(HttpLogTailUploader).Assembly.GetName().Version?.ToString() ?? "0.0.0";
 
@@ -56,10 +66,11 @@ internal sealed class HttpLogTailUploader : ILogTailUploader
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogDebug("Shipped {Count} log line(s) -> {Status}", lines.Count, (int)response.StatusCode);
-                return true;
+                var body = await response.Content.ReadFromJsonAsync<LogTailResponse>(ct).ConfigureAwait(false);
+                return new LogTailUploadResult(true, body?.ReIngestRequested ?? false);
             }
             _logger.LogWarning("Log-tail upload failed: {Status}", (int)response.StatusCode);
-            return false;
+            return LogTailUploadResult.Failure;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -72,7 +83,9 @@ internal sealed class HttpLogTailUploader : ILogTailUploader
             // would then ship themselves once the server returns. Debug is
             // enough; the operator sees the missing lines in the UI.
             _logger.LogDebug(ex, "Log-tail upload threw");
-            return false;
+            return LogTailUploadResult.Failure;
         }
     }
+
+    private sealed record LogTailResponse(int Received, long? Retained, bool ReIngestRequested);
 }
