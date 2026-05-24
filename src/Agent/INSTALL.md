@@ -14,26 +14,38 @@ Single-file self-contained binary — no .NET install required.
 winget install ErpForFactoryGames.Agent
 ```
 
-Then create `%LocalAppData%\ErpForFactoryGames\agent.json` (the agent
-creates this folder on first run; or make it yourself):
-
-```json
-{
-  "Agent": {
-    "ApiBaseUrl": "https://satisfactory.erp-for-factory.games",
-    "AgentToken": "<any-non-empty-string-for-v1>"
-  }
-}
-```
-
 Open an **elevated** PowerShell and register the service:
 
 ```powershell
 erp-agent --install
 ```
 
+`--install` seeds `%ProgramData%\ErpForFactoryGames\agent.json` with
+your save folder pre-filled and grants your user write access to that
+file. Open it in any editor and set the API URL + token:
+
+```json
+{
+  "Agent": {
+    "ApiBaseUrl": "https://satisfactory.erp-for-factory.games",
+    "AgentToken": "<any-non-empty-string-for-v1>",
+    "SaveFolderPath": "C:\\Users\\<you>\\AppData\\Local\\FactoryGame\\Saved\\SaveGames"
+  }
+}
+```
+
+Then restart the service so the new values take effect:
+
+```powershell
+Restart-Service erp-agent
+```
+
+The service runs as LocalSystem; that's why `agent.json` lives under
+`%ProgramData%` (machine-wide) rather than `%LocalAppData%` (per-user) —
+LocalSystem and you both resolve to the same file this way.
+
 The service auto-starts at boot (delayed-auto), restarts on crash, and
-uploads new saves as they appear. Logs at `%LocalAppData%\ErpForFactoryGames\agent-logs\`.
+uploads new saves as they appear. Logs at `%ProgramData%\ErpForFactoryGames\agent-logs\`.
 
 Future agent releases pick up with `winget upgrade ErpForFactoryGames.Agent`.
 
@@ -45,9 +57,12 @@ If winget isn't an option (locked-down environment, older Windows):
 
 1. Download `erp-agent-win-x64.zip` from the latest [GitHub Release](https://github.com/ChrisonSimtian/ErpForFactoryGames/releases).
 2. Extract somewhere stable, e.g. `C:\Program Files\ErpForFactoryGames\`.
-3. Create `agent.json` as above.
-4. Right-click `erp-agent.exe` → **Run as administrator**, then from an
-   elevated terminal: `.\erp-agent.exe --install`.
+3. Right-click `erp-agent.exe` → **Run as administrator**, then from an
+   elevated terminal: `.\erp-agent.exe --install`. This seeds
+   `agent.json` under `%ProgramData%\ErpForFactoryGames\` just like the
+   winget path.
+4. Edit `%ProgramData%\ErpForFactoryGames\agent.json` to set the API URL
+   + token, then `Restart-Service erp-agent`.
 
 To remove: `.\erp-agent.exe --uninstall` (elevated).
 
@@ -143,11 +158,11 @@ honours. Set `Enabled: false` to opt out entirely.
 ## Troubleshooting
 
 - **Service installed but won't start**: check
-  `%LocalAppData%\ErpForFactoryGames\agent-logs\` for the file log, and
+  `%ProgramData%\ErpForFactoryGames\agent-logs\` for the file log, and
   the Windows Event Viewer (Application log) for service-host errors.
 - **Saves not uploading**: confirm `ApiBaseUrl` is correct and the
   server is reachable (`curl -i $ApiBaseUrl/health`). The agent logs
   every upload attempt with the response status code.
-- **First-time `agent.json` doesn't exist**: the agent creates the
-  containing folder on first run. Just create `agent.json` there
-  yourself with the snippet above; it's reloaded automatically.
+- **`agent.json` missing on Windows**: `--install` seeds it. If you
+  deleted it, re-run `erp-agent --install` (elevated) — it's idempotent
+  and won't replace an existing file.

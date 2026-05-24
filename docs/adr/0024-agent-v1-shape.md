@@ -67,8 +67,18 @@ boundary, so swapping it later costs one Program.cs edit.
 
 Log paths (XDG / Microsoft conventions):
 
-- Windows: `%LocalAppData%/ErpForFactoryGames/agent-logs/agent-{Date}.log`
+- Windows: `%ProgramData%/ErpForFactoryGames/agent-logs/agent-{Date}.log`
 - Linux: `${XDG_STATE_HOME:-$HOME/.local/state}/ErpForFactoryGames/agent-logs/agent-{Date}.log`
+
+> **Amendment (2026-05-24, issue #241).** The Windows path was originally
+> `%LocalAppData%`. That expands differently for the LocalSystem service
+> (`C:\Windows\System32\config\systemprofile\AppData\Local\`) than for the
+> installing user, so config + logs landed somewhere the user couldn't
+> find. `%ProgramData%` (`Environment.SpecialFolder.CommonApplicationData`)
+> is shared across users, predictable for both the service and the user,
+> and the conventional Windows location for service-wide state (Docker,
+> Chocolatey, etc.). Linux paths unchanged — the systemd `--user` unit
+> runs as the user already.
 
 ### 3. Save-folder discovery — auto-detect with config override
 

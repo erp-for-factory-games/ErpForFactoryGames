@@ -94,17 +94,74 @@ internal static class ServiceRegistrar
         // Restart twice on failure, then give up. Standard service hygiene.
         await RunAsync("sc.exe", $"failure {ServiceName} reset= 86400 actions= restart/60000/restart/60000//").ConfigureAwait(false);
 
+        // Seed %ProgramData%\ErpForFactoryGames\agent.json with the installing
+        // user's save folder so the LocalSystem service has a working pointer
+        // from the first start. Idempotent — preserves an existing file.
+        var configPath = await SeedAgentJsonWindowsAsync().ConfigureAwait(false);
+
         var start = await RunAsync("sc.exe", $"start {ServiceName}").ConfigureAwait(false);
         if (start.ExitCode != 0)
         {
             Console.Error.WriteLine($"Service installed but failed to start (exit {start.ExitCode}): {start.Stderr}");
-            Console.Error.WriteLine($"Check the Windows Event Viewer or the file log at %LocalAppData%\\ErpForFactoryGames\\agent-logs\\.");
+            Console.Error.WriteLine($"Check the Windows Event Viewer or the file log at %ProgramData%\\ErpForFactoryGames\\agent-logs\\.");
             return start.ExitCode;
         }
 
         Console.Out.WriteLine($"Service '{ServiceName}' installed and started.");
-        Console.Out.WriteLine($"Configure the API URL + token at %LocalAppData%\\ErpForFactoryGames\\agent.json then restart the service.");
+        Console.Out.WriteLine($"Set the API URL + token in {configPath} then restart the service.");
         return 0;
+    }
+
+    /// <summary>
+    /// Ensures %ProgramData%\ErpForFactoryGames\agent.json exists with the
+    /// installing user's save folder pre-filled, and grants that user Modify
+    /// on the file so they can edit it without re-elevating. Returns the
+    /// resolved config path.
+    /// </summary>
+    private static async Task<string> SeedAgentJsonWindowsAsync()
+    {
+        var configDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            "ErpForFactoryGames");
+        Directory.CreateDirectory(configDir);
+        var configPath = Path.Combine(configDir, "agent.json");
+
+        if (!File.Exists(configPath))
+        {
+            // Resolves to the installing user's profile because --install runs
+            // as that user (UAC keeps identity, only elevates the token).
+            var saveFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "FactoryGame", "Saved", "SaveGames");
+            var saveFolderJson = saveFolder.Replace("\\", "\\\\");
+            var seed = $$"""
+                {
+                  "Agent": {
+                    "ApiBaseUrl": "",
+                    "AgentToken": "",
+                    "SaveFolderPath": "{{saveFolderJson}}"
+                  }
+                }
+                """;
+            await File.WriteAllTextAsync(configPath, seed).ConfigureAwait(false);
+            Console.Out.WriteLine($"Wrote seed config: {configPath}");
+        }
+        else
+        {
+            Console.Out.WriteLine($"Preserving existing config: {configPath}");
+        }
+
+#pragma warning disable CA1416 // Caller already gated on IsWindowsElevated().
+        var user = WindowsIdentity.GetCurrent().Name;
+#pragma warning restore CA1416
+        var grant = await RunAsync("icacls", $"\"{configPath}\" /grant \"{user}\":M").ConfigureAwait(false);
+        if (grant.ExitCode != 0)
+        {
+            Console.Error.WriteLine($"icacls grant failed (exit {grant.ExitCode}): {grant.Stderr.Trim()}");
+            Console.Error.WriteLine("Service will still work; you may need to edit agent.json from an elevated editor.");
+        }
+
+        return configPath;
     }
 
     private static async Task<int> UninstallWindowsAsync()
