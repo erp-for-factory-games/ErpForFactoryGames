@@ -150,6 +150,40 @@ namespace ERP.Infrastructure.Persistence.Migrations.Sqlite
                     b.ToTable("Players", (string)null);
                 });
 
+            modelBuilder.Entity("ERP.Domain.PlayerCatalogue", b =>
+                {
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Game")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocsHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GameVersion")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UploadedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("PlayerId", "Game");
+
+                    b.ToTable("PlayerCatalogues", (string)null);
+                });
+
             modelBuilder.Entity("ERP.Domain.SavedPlan", b =>
                 {
                     b.Property<Guid>("Id")
@@ -371,6 +405,15 @@ namespace ERP.Infrastructure.Persistence.Migrations.Sqlite
                     b.HasOne("ERP.Domain.SavedPlan", null)
                         .WithMany()
                         .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ERP.Domain.PlayerCatalogue", b =>
+                {
+                    b.HasOne("ERP.Domain.Player", null)
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

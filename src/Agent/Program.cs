@@ -68,6 +68,8 @@ builder.Configuration.AddJsonFile(ConfigPath(), optional: true, reloadOnChange: 
 builder.Configuration.AddEnvironmentVariables(prefix: "ERP_AGENT_");
 
 builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("Agent"));
+builder.Services.Configure<CatalogueUploadOptions>(
+    builder.Configuration.GetSection(CatalogueUploadOptions.SectionName));
 
 // ---------------------------------------------------------------------
 // Logging — Serilog file sink + console, see ADR-0024 §2. App code stays
@@ -118,8 +120,21 @@ builder.Services.AddHttpClient<ILogTailUploader, HttpLogTailUploader>((sp, http)
     http.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// Catalogue uploader — separate HttpClient with a longer timeout since
+// Docs.json can run 30+ MB and the LXC's upload bandwidth isn't huge.
+builder.Services.AddHttpClient<ICatalogueUploader, HttpCatalogueUploader>((sp, http) =>
+{
+    var opts = sp.GetRequiredService<IOptions<AgentOptions>>().Value;
+    if (!string.IsNullOrWhiteSpace(opts.ApiBaseUrl))
+    {
+        http.BaseAddress = new Uri(opts.ApiBaseUrl, UriKind.Absolute);
+    }
+    http.Timeout = TimeSpan.FromMinutes(5);
+});
+
 builder.Services.AddHostedService<SaveFolderWatcher>();
 builder.Services.AddHostedService<LogTailBackgroundService>();
+builder.Services.AddHostedService<CatalogueUploadStartup>();
 
 var host = builder.Build();
 

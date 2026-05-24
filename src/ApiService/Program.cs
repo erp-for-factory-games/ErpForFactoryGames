@@ -50,6 +50,12 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IAgentTokenAuthenticator, AgentTokenAuthenticator>();
 builder.Services.AddHostedService<DevPlayerBootstrap>();
 
+// Catalogue storage (ADR-0025 §4-§5). Bytes land on the filesystem; the
+// PlayerCatalogue EF row carries the metadata + dedup hash.
+builder.Services.Configure<CatalogueStorageOptions>(
+    builder.Configuration.GetSection(CatalogueStorageOptions.SectionName));
+builder.Services.AddSingleton<ICatalogueStorage, FileSystemCatalogueStorage>();
+
 var app = builder.Build();
 
 // Apply pending plan-storage migrations on startup so the SQLite default Just
@@ -788,6 +794,140 @@ app.MapGet("/api/agent/logs", (IAgentLogsStore store, int? limit) =>
         }),
         totalReceived = store.TotalReceived,
         agentLastSeen = store.AgentLastSeen,
+    });
+});
+
+// ---- Catalogue upload (ADR-0025 §4-§5) ------------------------------------
+//
+//   POST /api/agent/catalogue/satisfactory — raw Docs.json body.
+//     Headers:
+//       X-Agent-Token       — validated by IAgentTokenAuthenticator.
+//       If-None-Match       — last-uploaded hash echoed by the agent so
+//                             identical re-uploads short-circuit to 304.
+//     200 { docsHash, sizeBytes, uploadedUtc, changed: true }
+//     304 (changed=false; If-None-Match matched the stored hash)
+//     401 missing/invalid token
+//     413 body exceeds MaxUploadBytes
+//     415 unexpected Content-Type (must be application/json or octet-stream)
+//
+// Bytes are kept opaque in v2 — no Docs.json parsing at upload time.
+// GameVersion parsing lands with the planner resolver swap (Phase B
+// follow-up to #238).
+// ---------------------------------------------------------------------------
+
+app.MapPost("/api/agent/catalogue/satisfactory", async (
+    HttpRequest http,
+    IAgentTokenAuthenticator authenticator,
+    IPlayerCatalogueRepository catalogues,
+    ICatalogueStorage storage,
+    Microsoft.Extensions.Options.IOptions<CatalogueStorageOptions> storageOptions,
+    TimeProvider clock,
+    ILoggerFactory loggerFactory,
+    CancellationToken ct) =>
+{
+    var log = loggerFactory.CreateLogger("CatalogueUpload");
+
+    var auth = await authenticator.AuthenticateAsync(http.Headers["X-Agent-Token"].ToString(), ct).ConfigureAwait(false);
+    if (!auth.IsAuthenticated)
+    {
+        return Results.Json(new { error = "X-Agent-Token is missing or invalid." }, statusCode: 401);
+    }
+
+    var contentType = http.ContentType?.Split(';')[0].Trim() ?? string.Empty;
+    if (!string.Equals(contentType, "application/json", StringComparison.OrdinalIgnoreCase)
+        && !string.Equals(contentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(
+            new { error = $"Content-Type must be application/json or application/octet-stream; got '{http.ContentType}'." },
+            statusCode: 415);
+    }
+
+    var maxBytes = storageOptions.Value.MaxUploadBytes;
+    if (http.ContentLength is { } len && len > maxBytes)
+    {
+        return Results.Json(
+            new { error = $"Upload exceeds MaxUploadBytes ({maxBytes})." },
+            statusCode: 413);
+    }
+
+    // Read into memory — capped by MaxUploadBytes above. We need the
+    // bytes twice (hash + storage write) and Docs.json sizes are bounded.
+    byte[] bytes;
+    using (var ms = new MemoryStream())
+    {
+        var buffer = new byte[64 * 1024];
+        int read;
+        while ((read = await http.Body.ReadAsync(buffer, ct).ConfigureAwait(false)) > 0)
+        {
+            if (ms.Length + read > maxBytes)
+            {
+                return Results.Json(
+                    new { error = $"Upload exceeds MaxUploadBytes ({maxBytes})." },
+                    statusCode: 413);
+            }
+            await ms.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+        }
+        bytes = ms.ToArray();
+    }
+
+    if (bytes.Length == 0)
+    {
+        return Results.Json(new { error = "Request body is empty." }, statusCode: 400);
+    }
+
+    var hashBytes = System.Security.Cryptography.SHA256.HashData(bytes);
+    var docsHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
+
+    // If-None-Match short-circuit. We compare against the stored row's
+    // current hash; a match means "nothing to do, the agent's already
+    // sent this version". Returns 304 with no body.
+    var ifNoneMatch = http.Headers.IfNoneMatch.ToString().Trim('"', ' ');
+    var existing = await catalogues.GetAsync(auth.PlayerId, PlayerCatalogue.SatisfactoryGame, ct).ConfigureAwait(false);
+    if (existing is not null && string.Equals(existing.DocsHash, docsHash, StringComparison.OrdinalIgnoreCase))
+    {
+        log.LogInformation("Catalogue upload from {PlayerId} matched existing hash {Hash}; 304.", auth.PlayerId, docsHash);
+        return Results.StatusCode(304);
+    }
+    if (existing is not null && !string.IsNullOrEmpty(ifNoneMatch)
+        && string.Equals(existing.DocsHash, ifNoneMatch, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(existing.DocsHash, docsHash, StringComparison.OrdinalIgnoreCase))
+    {
+        // Defensive — covered by the check above, but keeps the
+        // If-None-Match semantics explicit if the agent and DB diverge.
+        return Results.StatusCode(304);
+    }
+
+    var storageKey = await storage.StoreAsync(auth.PlayerId.Value, PlayerCatalogue.SatisfactoryGame, docsHash, bytes, ct)
+        .ConfigureAwait(false);
+    var now = clock.GetUtcNow().UtcDateTime;
+
+    if (existing is null)
+    {
+        var row = new PlayerCatalogue(
+            auth.PlayerId,
+            PlayerCatalogue.SatisfactoryGame,
+            docsHash,
+            storageKey,
+            bytes.Length,
+            now);
+        await catalogues.AddAsync(row, ct).ConfigureAwait(false);
+    }
+    else
+    {
+        existing.ReplaceWith(docsHash, storageKey, bytes.Length, now, gameVersion: null);
+    }
+    await catalogues.SaveChangesAsync(ct).ConfigureAwait(false);
+
+    log.LogInformation(
+        "Catalogue upload from {PlayerId}: {Bytes} bytes, hash {Hash}, stored at {Key}.",
+        auth.PlayerId, bytes.Length, docsHash, storageKey);
+
+    return Results.Ok(new
+    {
+        docsHash,
+        sizeBytes = bytes.Length,
+        uploadedUtc = now,
+        changed = true,
     });
 });
 
