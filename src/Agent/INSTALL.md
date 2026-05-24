@@ -21,24 +21,40 @@ erp-agent --install
 ```
 
 `--install` seeds `%ProgramData%\ErpForFactoryGames\agent.json` with
-your save folder pre-filled and grants your user write access to that
-file. Open it in any editor and set the API URL + token:
+your save folder pre-filled, grants your user write access to that
+file, and registers the `erp-agent://` URL protocol handler under
+`HKCU\Software\Classes\erp-agent` so the web UI's deep-link button can
+launch this binary.
 
-```json
-{
-  "Agent": {
-    "ApiBaseUrl": "https://satisfactory.erp-for-factory.games",
-    "AgentToken": "<any-non-empty-string-for-v1>",
-    "SaveFolderPath": "C:\\Users\\<you>\\AppData\\Local\\FactoryGame\\Saved\\SaveGames"
-  }
-}
-```
+### Pair the install
 
-Then restart the service so the new values take effect:
+Two ways to pair this agent to your planner account (ADR-0025 §8):
+
+**Deep link (easiest).** In the web UI, open **My Agents** → **Add an
+agent**, mint a token, then click **Open in agent**. Windows resolves
+the `erp-agent://pair?token=...&api=...` URL to this binary, which
+validates the token against `/api/me`, writes `agent.json`, and exits
+0. Then restart the service:
 
 ```powershell
 Restart-Service erp-agent
 ```
+
+**CLI wizard.** Useful for headless / server installs:
+
+```powershell
+erp-agent --setup
+```
+
+Prompts for API URL, token (copy from the web UI), and an optional
+save-folder override. Non-interactive variant for installers:
+
+```powershell
+erp-agent --setup --token eafg_... --api https://satisfactory.erp-for-factory.games
+```
+
+Either path writes the same `agent.json` — they just differ in how the
+token gets in.
 
 The service runs as LocalSystem; that's why `agent.json` lives under
 `%ProgramData%` (machine-wide) rather than `%LocalAppData%` (per-user) —
@@ -70,22 +86,40 @@ To remove: `.\erp-agent.exe --uninstall` (elevated).
 
 1. Download `erp-agent-linux-x64.tar.gz` from the [GitHub Release](https://github.com/ChrisonSimtian/ErpForFactoryGames/releases).
 2. Extract to `~/.local/bin/` (or anywhere on `$PATH`).
-3. Edit `$XDG_CONFIG_HOME/ErpForFactoryGames/agent.json` (defaults to
-   `~/.config/ErpForFactoryGames/agent.json`):
-
-   ```json
-   {
-     "Agent": {
-       "ApiBaseUrl": "https://satisfactory.erp-for-factory.games",
-       "AgentToken": "<any-non-empty-string-for-v1>"
-     }
-   }
-   ```
-
-4. Register the user-mode systemd unit (no `sudo`):
+3. Register the user-mode systemd unit (no `sudo`):
 
    ```bash
    ~/.local/bin/erp-agent --install
+   ```
+
+   This also writes a `.desktop` entry under
+   `$XDG_DATA_HOME/applications/erp-agent.desktop` and registers the
+   `erp-agent://` URL protocol handler via `xdg-mime`, so the web UI's
+   deep-link button can launch this binary on your desktop.
+
+4. Pair the install. Two options (ADR-0025 §8):
+
+   **Deep link.** In the web UI, open **My Agents** → **Add an
+   agent**, mint a token, then click **Open in agent**. Your desktop
+   resolves the `erp-agent://pair?token=...&api=...` URL to this
+   binary, which validates the token, writes `agent.json`, and exits.
+
+   **CLI wizard.** Useful for headless installs:
+
+   ```bash
+   ~/.local/bin/erp-agent --setup
+   ```
+
+   Or non-interactively:
+
+   ```bash
+   ~/.local/bin/erp-agent --setup --token eafg_... --api https://satisfactory.erp-for-factory.games
+   ```
+
+   Then restart so the new values take effect:
+
+   ```bash
+   systemctl --user restart erp-agent
    ```
 
 5. To keep the agent running after you log out:

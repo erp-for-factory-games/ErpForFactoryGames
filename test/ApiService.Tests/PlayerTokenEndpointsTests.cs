@@ -73,7 +73,7 @@ public sealed class PlayerTokenEndpointsTests : IClassFixture<AgentEndpointsTest
         Assert.NotNull(payload);
 
         // The token works.
-        var meOk = new HttpRequestMessage(HttpMethod.Get, "/me");
+        var meOk = new HttpRequestMessage(HttpMethod.Get, "/api/me");
         meOk.Headers.TryAddWithoutValidation("X-Agent-Token", payload!.Plaintext);
         var meOkResponse = await client.SendAsync(meOk);
         Assert.Equal(HttpStatusCode.OK, meOkResponse.StatusCode);
@@ -84,7 +84,7 @@ public sealed class PlayerTokenEndpointsTests : IClassFixture<AgentEndpointsTest
 
         // Now the token is dead — auth pipeline must reject (the cache was
         // invalidated by the revoke endpoint).
-        var meDead = new HttpRequestMessage(HttpMethod.Get, "/me");
+        var meDead = new HttpRequestMessage(HttpMethod.Get, "/api/me");
         meDead.Headers.TryAddWithoutValidation("X-Agent-Token", payload.Plaintext);
         var meDeadResponse = await client.SendAsync(meDead);
         Assert.Equal(HttpStatusCode.Unauthorized, meDeadResponse.StatusCode);
@@ -96,7 +96,7 @@ public sealed class PlayerTokenEndpointsTests : IClassFixture<AgentEndpointsTest
         var client = _factory.CreateClient();
         var token = await _factory.MintTokenAsync(label: "/me probe");
 
-        var request = new HttpRequestMessage(HttpMethod.Get, "/me");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/me");
         request.Headers.TryAddWithoutValidation("X-Agent-Token", token);
         var response = await client.SendAsync(request);
 
