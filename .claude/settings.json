@@ -11,22 +11,14 @@
       "Bash(dotnet --info)",
       "Bash(dotnet --version)",
       "Bash(npm install*)",
-      "Bash(git status*)",
-      "Bash(git diff*)",
-      "Bash(git log*)",
-      "Bash(git show*)",
-      "Bash(git branch*)",
-      "Bash(git ls-files*)",
-      "Bash(git push*)",
-      "Bash(git reset*)",
-      "Bash(git checkout*)",
-      "Bash(git commit*)",
-      "Bash(gh issue*)",
+      "Bash(git *)",
       "Bash(gh*)",
       "Bash(curl*)",
+      "WebSearch",
+      "WebFetch(domain:playwright.dev)",
       "WebFetch(domain:satisfactory.wiki.gg)",
       "WebFetch(domain:satisfactorygame.com)",
-      "Skill(update-config)"
+      "Skill(update-config)" 
     ]
   },
   "autoMode": {
@@ -41,5 +33,10 @@
   },
   "enabledPlugins": {
     "playwright@claude-plugins-official": false
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright",
+    "aspire"
+  ],
+  "enableAllProjectMcpServers": true
 }

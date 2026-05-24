@@ -1,23 +1,8 @@
 {
 	"folders": [
 		{
-			"name": "ErpForFactoryGames",
 			"path": "."
-		},
-		{
-			"name": "Satisfactory",
-			"path": ".satisfactory"
-		},
-		{
-			"name": "SatisfactorySaveNet",
-			"path": "vendor/SatisfactorySaveNet"
-		},
-		{
-			"name": "CUE Parser",
-			"path": "vendor/CUE4Parser"
 		}
 	],
-	"settings": {
-		"powershell.cwd": "ErpForFactoryGames"
-	}
+	"settings": {}
 }

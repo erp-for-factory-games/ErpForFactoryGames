@@ -8,6 +8,10 @@ artifacts/
 *.user
 *.suo
 
+# Claude Code — local-only files (shared settings.json IS committed)
+.claude/settings.local.json
+.claude/.credentials*
+.claude/scheduled_tasks.lock
 # Claude Code agent worktrees (transient, never commit)
 .claude/worktrees/
 .claude/scheduled_tasks.lock
@@ -52,7 +56,7 @@ node_modules/
 test/ui-tests/
 
 # Local reference assets (user-only, not for redistribution)
-.assets/
+#.assets/ # TODO: Handle this differently. Also need to tidy up a bit, this folder turned a bit messy
 
 # SQLite plan storage (ADR-0018) — runtime data, never committed
 *.db
