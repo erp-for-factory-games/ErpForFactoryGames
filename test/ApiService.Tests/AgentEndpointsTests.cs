@@ -34,15 +34,35 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
     }
 
     [Fact]
+    public async Task Upload_with_unknown_token_returns_401()
+    {
+        // After ADR-0025 the middleware validates the token by hash. An
+        // arbitrary string no longer authenticates — that's the contract.
+        var client = _factory.CreateClient();
+        var content = new ByteArrayContent(new byte[] { 0x01, 0x02 });
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        var request = new HttpRequestMessage(HttpMethod.Post, "/agent/savegames/satisfactory")
+        {
+            Content = content,
+        };
+        request.Headers.TryAddWithoutValidation("X-Agent-Token", "eafg_unknown-token-not-in-database");
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Upload_with_wrong_content_type_returns_415()
     {
         var client = _factory.CreateClient();
+        var token = await _factory.MintTokenAsync();
         var content = new StringContent("not a save", System.Text.Encoding.UTF8, "text/plain");
         var request = new HttpRequestMessage(HttpMethod.Post, "/agent/savegames/satisfactory")
         {
             Content = content,
         };
-        request.Headers.TryAddWithoutValidation("X-Agent-Token", "any-non-empty");
+        request.Headers.TryAddWithoutValidation("X-Agent-Token", token);
 
         var response = await client.SendAsync(request);
 
@@ -53,13 +73,14 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
     public async Task Upload_with_garbage_body_returns_422_and_records_failure()
     {
         var client = _factory.CreateClient();
+        var token = await _factory.MintTokenAsync();
         var content = new ByteArrayContent(new byte[] { 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00 });
         content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
         var request = new HttpRequestMessage(HttpMethod.Post, "/agent/savegames/satisfactory")
         {
             Content = content,
         };
-        request.Headers.TryAddWithoutValidation("X-Agent-Token", "any-non-empty");
+        request.Headers.TryAddWithoutValidation("X-Agent-Token", token);
         request.Headers.TryAddWithoutValidation("X-Agent-FileName", "garbage.sav");
         request.Headers.TryAddWithoutValidation("X-Agent-Version", "0.0.0-test");
 
@@ -111,6 +132,8 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
         private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"erp-agent-tests-{Guid.NewGuid():N}.db");
         private readonly string _uploadDir = Path.Combine(Path.GetTempPath(), $"erp-agent-uploads-{Guid.NewGuid():N}");
 
+        public Guid DevPlayerId { get; } = Guid.NewGuid();
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Development");
@@ -121,9 +144,28 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
                     ["Persistence:Provider"] = "sqlite",
                     ["ConnectionStrings:Plans"] = $"Data Source={_dbPath}",
                     ["AgentUploads:UploadDirectory"] = _uploadDir,
+                    ["Auth:DevPlayerId"] = DevPlayerId.ToString(),
                 });
             });
         }
+
+        /// <summary>
+        /// Mint a fresh agent token for the dev player and return the
+        /// plaintext header value. Replaces the old "any-non-empty"
+        /// token stand-in now that ADR-0025 §3 validates by hash.
+        /// </summary>
+        public async Task<string> MintTokenAsync(string? label = null)
+        {
+            using var client = CreateClient();
+            var response = await client.PostAsJsonAsync(
+                $"/players/{DevPlayerId}/agent-tokens",
+                new { label });
+            response.EnsureSuccessStatusCode();
+            var payload = await response.Content.ReadFromJsonAsync<MintResponse>();
+            return payload!.Plaintext;
+        }
+
+        private sealed record MintResponse(Guid Id, string Plaintext, string Label, DateTime CreatedUtc);
 
         protected override void Dispose(bool disposing)
         {

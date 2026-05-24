@@ -34,6 +34,10 @@ public class PlanDbContext : DbContext
 
     public DbSet<FactoryAlert> FactoryAlerts => Set<FactoryAlert>();
 
+    public DbSet<Player> Players => Set<Player>();
+
+    public DbSet<AgentToken> AgentTokens => Set<AgentToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PlanDbContext).Assembly);

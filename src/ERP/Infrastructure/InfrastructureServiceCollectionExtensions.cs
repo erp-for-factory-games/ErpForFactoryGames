@@ -51,6 +51,10 @@ public static class InfrastructureServiceCollectionExtensions
         // the function host directly; the job's per-tick scope is opened by
         // the framework around InvokeAsync calls inside RunAsync.
         services.AddSingleton<AutoIngestJob>();
+        // Agent token hashing (ADR-0025 §2). SHA-256, no salt — tokens
+        // are 32 random bytes so rainbow tables / offline cracking are
+        // infeasible regardless of memory-hardness. Stateless singleton.
+        services.AddSingleton<IAgentTokenHasher, Sha256TokenHasher>();
         return services;
     }
 }

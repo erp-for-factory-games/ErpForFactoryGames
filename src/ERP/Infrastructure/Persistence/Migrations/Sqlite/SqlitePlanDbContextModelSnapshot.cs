@@ -17,6 +17,43 @@ namespace ERP.Infrastructure.Persistence.Migrations.Sqlite
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
+            modelBuilder.Entity("ERP.Domain.AgentToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastSeenUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RevokedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("BLOB");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("AgentTokens", (string)null);
+                });
+
             modelBuilder.Entity("ERP.Domain.FactoryAlert", b =>
                 {
                     b.Property<Guid>("Id")
@@ -93,6 +130,24 @@ namespace ERP.Infrastructure.Persistence.Migrations.Sqlite
                     b.HasIndex("PlanId");
 
                     b.ToTable("PlanShareTokens", (string)null);
+                });
+
+            modelBuilder.Entity("ERP.Domain.Player", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Players", (string)null);
                 });
 
             modelBuilder.Entity("ERP.Domain.SavedPlan", b =>
@@ -300,6 +355,15 @@ namespace ERP.Infrastructure.Persistence.Migrations.Sqlite
                         .HasDatabaseName("IX_TimeTicker_Status_ExecutionTime");
 
                     b.ToTable("TimeTickers", "ticker");
+                });
+
+            modelBuilder.Entity("ERP.Domain.AgentToken", b =>
+                {
+                    b.HasOne("ERP.Domain.Player", null)
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ERP.Domain.PlanShareToken", b =>

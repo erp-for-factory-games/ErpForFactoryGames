@@ -71,9 +71,9 @@ AgentToken {
   Id: Guid
   PlayerId: Guid          // FK → Player
   Label: string           // "Chris's gaming rig", user-editable
-  TokenHash: byte[]       // argon2id, salted
+  TokenHash: byte[]       // SHA-256 of plaintext, no salt (see rationale)
   CreatedAt: DateTimeOffset
-  LastSeenAt: DateTimeOffset?
+  LastSeenUtc: DateTimeOffset?
   RevokedAt: DateTimeOffset?
 }
 ```
@@ -83,8 +83,21 @@ AgentToken {
   bumps land cleanly (`eafg2_…`).
 - **Plaintext is surfaced once.** The mint response returns it; the
   list endpoint never does. Server stores only the hash.
-- **Hashing:** argon2id with parameters tuned for ~50 ms on the LXC.
+- **Hashing:** SHA-256 of the plaintext bytes, no salt, indexed column.
   Tests assert plaintext is not recoverable from the persisted row.
+
+  *Amended 2026-05-24 during #235 implementation.* The initial draft of
+  this ADR specified argon2id + per-token salt — the password-hashing
+  recipe. That's the wrong threat model for *high-entropy random
+  tokens*. The 32-byte CSPRNG plaintext has 256 bits of entropy, so
+  rainbow tables and offline brute-force are infeasible regardless of
+  memory-hardness — argon2id buys nothing extra. Per-token salts then
+  actively *break* the indexed-lookup hot path (every auth would need
+  to scan candidates and try each salt). SHA-256 with no salt is the
+  pattern GitHub Personal Access Tokens, Stripe API keys, and AWS use
+  for the same reason. Memory-hardness re-enters the picture only if
+  we ever issue *low-entropy* tokens (e.g. user-chosen secrets), which
+  this ADR explicitly does not.
 - **Revocation:** `RevokedAt` is set; row is kept for audit. Auth
   middleware treats `RevokedAt != null` as 401.
 
@@ -100,13 +113,13 @@ replaced. New middleware:
 1. Reads `X-Agent-Token` from the request.
 2. Hashes it, looks up the matching `AgentToken` row.
 3. On hit (and not revoked): attaches `(PlayerId, AgentTokenId)` to
-   the request context, bumps `LastSeenAt`. Status codes from
+   the request context, bumps `LastSeenUtc`. Status codes from
    ADR-0024 §4 are preserved.
 4. On miss / revoked / missing: 401.
 
-Per-request `LastSeenAt` bumps go through a debounced writer (60 s
+Per-request `LastSeenUtc` bumps go through a debounced writer (60 s
 coalesce window) so log-tail traffic doesn't hammer the DB. The
-existing `AgentStatusDto.AgentSeen` field reads from `LastSeenAt` now
+existing `AgentStatusDto.AgentSeen` field reads from `LastSeenUtc` now
 instead of an in-memory bag.
 
 The existing `X-Agent-Token` header position is preserved — agents
@@ -270,13 +283,16 @@ seam tightens per §3.
 
 - **Symmetric encryption at rest.** Reversible by design — wrong shape
   for credentials. Hashing is the standard answer.
-- **Bcrypt / PBKDF2.** Both work; argon2id is the current
-  recommendation and the libsodium binding is already a transitive
-  dep via .NET 10. No reason to pick the older primitives.
+- **Argon2id / bcrypt / PBKDF2.** Memory-hard or iteration-hard
+  password KDFs. The right choice for *low-entropy* inputs (passwords)
+  where the dominant attack is offline brute-force after a DB leak.
+  Wrong choice for our high-entropy random tokens (see the SHA-256
+  rationale in §2). Re-enters the picture only if we ever issue
+  user-chosen secrets.
 - **JWT.** Stateless validation is nice, but revocation needs a denylist
   anyway, at which point the JWT is just a more complicated row lookup.
   Opaque tokens with a hashed row are simpler and we already need the
-  row for `LastSeenAt`.
+  row for `LastSeenUtc`.
 
 **Catalogue handover**
 
@@ -349,10 +365,12 @@ agent has no rotation logic. This keeps the auth ADR small.
 - The single-tenant assumption baked into existing planner endpoints
   has to go. Every query now has a `PlayerId` filter; tests need to
   cover the "wrong player's data" 404 path.
-- Argon2id hashes are slow on purpose. ~50 ms per pair validation is
-  fine; we don't want it on the hot path of every save upload. The
-  `LastSeenAt` debounce + the token-cache (5-minute in-memory cache
-  keyed by hash → row, evicted on revoke) keeps the hot path cheap.
+- SHA-256 is cheap (microseconds per call) so the cache is a
+  defence-in-depth optimisation rather than a load-bearing one. The
+  `LastSeenUtc` debounce + the 5-minute in-memory cache (keyed by
+  hex-encoded hash → row, evicted on revoke) still earns its keep on
+  the DB side — without it, log-tail traffic would write
+  `LastSeenUtc` once per minute per agent indefinitely.
 
 **Follow-up** (tracked under
 [milestone #19](https://github.com/ChrisonSimtian/ErpForFactoryGames/milestone/19))
