@@ -17,7 +17,16 @@ public static class InfrastructureServiceCollectionExtensions
         services.Configure<AutoIngestOptions>(configuration.GetSection("FactoryState:Satisfactory:AutoIngest"));
         services.Configure<PlannerOptions>(configuration.GetSection("Planner"));
         services.AddSingleton<UserCatalogueConfig>();
-        services.AddSingleton<ICatalogProvider, DocsCatalogProvider>();
+        // Catalogue resolver layering (ADR-0025 §4):
+        //   - DocsCatalogProvider stays a singleton, registered as itself, so
+        //     the scoped resolver can inject it as the dev/fallback path. The
+        //     Settings-page Docs.json picker also still talks to it directly.
+        //   - PlayerScopedCatalogProvider is the request-time ICatalogProvider:
+        //     resolves the current player's uploaded catalogue from the store
+        //     (cached by hash), falling back to DocsCatalogProvider when no
+        //     row exists and AllowServerLocalFallback is true (dev only).
+        services.AddSingleton<DocsCatalogProvider>();
+        services.AddScoped<ICatalogProvider, PlayerScopedCatalogProvider>();
         // Manual node overrides — user-local JSON loaded once at startup and
         // mutated through the /factory/node-override API. Same singleton is
         // shared with the SaveFileReader so re-parses pick up new entries.
@@ -32,7 +41,11 @@ public static class InfrastructureServiceCollectionExtensions
         // config — defaults to Recursive. The LP engine uses OR-Tools GLOP
         // (Google.OrTools native deps verified for macOS dev + self-hosted
         // Linux CI). Both impls share the IRecipePlanner contract.
-        services.AddSingleton<IRecipePlanner>(sp =>
+        //
+        // Scoped because it captures ICatalogProvider, which is itself scoped
+        // (ADR-0025 §4 — catalogue resolves per request from the player's
+        // uploaded data).
+        services.AddScoped<IRecipePlanner>(sp =>
         {
             var engine = sp.GetRequiredService<IOptions<PlannerOptions>>().Value.Engine;
             var catalog = sp.GetRequiredService<ICatalogProvider>();

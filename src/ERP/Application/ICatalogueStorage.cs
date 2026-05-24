@@ -1,4 +1,4 @@
-namespace ApiService;
+namespace ERP.Application;
 
 /// <summary>
 /// Filesystem-or-other blob store for uploaded catalogue bytes
