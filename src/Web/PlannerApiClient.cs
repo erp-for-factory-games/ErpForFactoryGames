@@ -187,6 +187,27 @@ public class PlannerApiClient(HttpClient httpClient)
         var response = await httpClient.DeleteAsync($"/plans/{planId}/share/{Uri.EscapeDataString(token)}", ct);
         return response.IsSuccessStatusCode;
     }
+
+    // ---- Agent tokens (ADR-0025 §2) ---------------------------------------
+
+    public Task<CurrentPlayerView?> GetCurrentPlayerAsync(CancellationToken ct = default) =>
+        httpClient.GetFromJsonAsync<CurrentPlayerView>("/players/current", ct);
+
+    public async Task<MintAgentTokenResponse?> MintAgentTokenAsync(Guid playerId, string? label, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"/players/{playerId}/agent-tokens", new { label }, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<MintAgentTokenResponse>(ct);
+    }
+
+    public async Task<AgentTokenView[]> ListAgentTokensAsync(Guid playerId, CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<AgentTokenView[]>($"/players/{playerId}/agent-tokens", ct) ?? [];
+
+    public async Task<bool> RevokeAgentTokenAsync(Guid playerId, Guid tokenId, CancellationToken ct = default)
+    {
+        var response = await httpClient.DeleteAsync($"/players/{playerId}/agent-tokens/{tokenId}", ct);
+        return response.IsSuccessStatusCode;
+    }
 }
 
 public sealed record CatalogItem(string Id, string Name);
@@ -424,3 +445,16 @@ public sealed record SavedPlanResponse(
     DateTime UpdatedUtc);
 
 public sealed record ShareTokenResponse(string Token, string Url, DateTime CreatedUtc, DateTime? ExpiresUtc);
+
+// ---- Agent tokens (ADR-0025 §2) -------------------------------------------
+
+public sealed record CurrentPlayerView(Guid PlayerId, string DisplayName, DateTime CreatedUtc);
+
+public sealed record MintAgentTokenResponse(Guid Id, string Plaintext, string Label, DateTime CreatedUtc);
+
+public sealed record AgentTokenView(
+    Guid Id,
+    string Label,
+    DateTime CreatedUtc,
+    DateTime? LastSeenUtc,
+    DateTime? RevokedUtc);

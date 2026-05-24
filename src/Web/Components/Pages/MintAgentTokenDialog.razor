@@ -1,0 +1,162 @@
+@*
+    Mint-agent-token dialog (#236, ADR-0025 §2, §8).
+
+    Two-phase flow:
+      1. Form  — caller enters a label, hits "Mint". Token is created
+                 server-side; plaintext is returned exactly once.
+      2. Reveal — plaintext is displayed with two CTAs:
+                   • "Open in agent" — erp-agent:// deep-link (hidden when
+                     no PairingApiBaseUrl is configured).
+                   • "Copy token" — clipboard via JS interop, for the
+                     CLI wizard / manual paste path.
+                  A loud reminder that the plaintext won't be shown again.
+
+    The dialog returns DialogResult.Ok(true) on close so the caller can
+    refresh the token list; cancel without minting returns Cancel.
+*@
+
+@inject PlannerApiClient Api
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        @if (_mintedToken is null)
+        {
+            <MudText Class="mb-3">
+                Mint a new agent token for this player. The plaintext is shown <strong>once</strong>;
+                after this dialog closes the token is unrecoverable.
+            </MudText>
+            <MudTextField T="string" @bind-Value="_label"
+                          Label="Label (e.g. \"gaming rig\")"
+                          Placeholder="Where will this agent run?"
+                          Variant="Variant.Outlined"
+                          Dense="true"
+                          Margin="Margin.Dense"
+                          MaxLength="200" />
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-3" Dense="true">@_error</MudAlert>
+            }
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-3" Dense="true">
+                Save this token now. It will not be shown again — revoke and re-mint if lost.
+            </MudAlert>
+            <MudTextField T="string" Value="@_mintedToken.Plaintext"
+                          Label="Plaintext token"
+                          Variant="Variant.Outlined"
+                          Dense="true"
+                          ReadOnly="true"
+                          Lines="2"
+                          Class="mb-3"
+                          data-testid="minted-plaintext" />
+            <MudStack Row="true" Spacing="2">
+                <MudButton OnClick="CopyAsync" StartIcon="@Icons.Material.Filled.ContentCopy"
+                           Color="Color.Secondary" Variant="Variant.Outlined">
+                    Copy token
+                </MudButton>
+                @if (!string.IsNullOrWhiteSpace(_deepLink))
+                {
+                    <MudLink Href="@_deepLink" Underline="Underline.None">
+                        <MudButton StartIcon="@Icons.Material.Filled.Launch"
+                                   Color="Color.Primary" Variant="Variant.Filled">
+                            Open in agent
+                        </MudButton>
+                    </MudLink>
+                }
+            </MudStack>
+            @if (string.IsNullOrWhiteSpace(_deepLink))
+            {
+                <MudText Typo="Typo.caption" Class="mt-3 d-block">
+                    <strong>CLI wizard:</strong> on the machine running the agent, run
+                    <code>erp-agent --setup --token &lt;the-token-above&gt;</code>.
+                </MudText>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (_mintedToken is null)
+        {
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudSpacer />
+            <MudButton OnClick="MintAsync" Color="Color.Primary" Variant="Variant.Filled"
+                       Disabled="_busy" data-testid="mint-button">
+                @(_busy ? "Minting…" : "Mint")
+            </MudButton>
+        }
+        else
+        {
+            <MudSpacer />
+            <MudButton OnClick="Close" Color="Color.Primary" Variant="Variant.Filled"
+                       data-testid="close-button">
+                Done
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter, EditorRequired] public Guid PlayerId { get; set; }
+    [Parameter] public string PairingApiBaseUrl { get; set; } = string.Empty;
+
+    private string _label = string.Empty;
+    private string? _error;
+    private bool _busy;
+    private MintAgentTokenResponse? _mintedToken;
+    private string? _deepLink;
+
+    private async Task MintAsync()
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            _mintedToken = await Api.MintAgentTokenAsync(PlayerId, string.IsNullOrWhiteSpace(_label) ? null : _label);
+            if (_mintedToken is null)
+            {
+                _error = "Server returned no token. Check API logs.";
+                return;
+            }
+            _deepLink = BuildDeepLink(_mintedToken.Plaintext);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private string? BuildDeepLink(string plaintext)
+    {
+        if (string.IsNullOrWhiteSpace(PairingApiBaseUrl)) return null;
+        var encodedToken = Uri.EscapeDataString(plaintext);
+        var encodedApi = Uri.EscapeDataString(PairingApiBaseUrl.TrimEnd('/'));
+        return $"erp-agent://pair?token={encodedToken}&api={encodedApi}";
+    }
+
+    private async Task CopyAsync()
+    {
+        if (_mintedToken is null) return;
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _mintedToken.Plaintext);
+            Snackbar.Add("Token copied to clipboard.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            // Clipboard write can fail under restrictive browser policies.
+            Snackbar.Add($"Couldn't copy automatically — select and copy manually. ({ex.Message})", Severity.Warning);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Close() => MudDialog.Close(DialogResult.Ok(true));
+}
