@@ -7,12 +7,19 @@ using Microsoft.Extensions.Options;
 using Serilog;
 
 // ---------------------------------------------------------------------
-// CLI entry — handle --install / --uninstall / --help before any host
-// machinery boots. These flags do one thing and exit; the long-running
-// service path is the default when no flag is given.
+// CLI entry — handle --install / --uninstall / --setup / --pair / --help
+// before any host machinery boots. These flags do one thing and exit;
+// the long-running service path is the default when no flag is given.
+//
+// Pairing dispatch (ADR-0025 §8):
+//   • erp-agent --pair erp-agent://pair?token=...&api=...
+//   • erp-agent erp-agent://pair?token=...&api=...    (raw URL via protocol handler)
+//   • erp-agent --setup [--token X] [--api Y] [--save-folder Z]
+// Both paths converge on PairingService.
 // ---------------------------------------------------------------------
-foreach (var arg in args)
+for (var i = 0; i < args.Length; i++)
 {
+    var arg = args[i];
     switch (arg)
     {
         case "--install":
@@ -25,6 +32,20 @@ foreach (var arg in args)
         case "--help" or "-h":
             PrintUsage();
             return 0;
+        case "--pair":
+            {
+                var url = (i + 1 < args.Length) ? args[i + 1] : null;
+                return await RunPairAsync(url).ConfigureAwait(false);
+            }
+        case "--setup":
+            return await RunSetupAsync(args).ConfigureAwait(false);
+    }
+
+    // Protocol handler invocation: Windows / Linux pass the deep-link as
+    // the first positional argv when launching us via erp-agent://.
+    if (arg.StartsWith($"{PairingUrlParser.Scheme}://", StringComparison.OrdinalIgnoreCase))
+    {
+        return await RunPairAsync(arg).ConfigureAwait(false);
     }
 }
 
@@ -131,24 +152,114 @@ static void PrintUsage()
         erp-agent — ERP for Factory Games local-data agent.
 
         Usage:
-          erp-agent                  Run in the foreground (or as a registered
-                                     service when launched by the SCM / systemd).
-          erp-agent --install        Register as a Windows service (run elevated)
-                                     or a systemd --user unit.
-          erp-agent --uninstall      Reverse of --install.
-          erp-agent --version, -v    Print the agent version.
-          erp-agent --help, -h       This help.
+          erp-agent                       Run in the foreground (or as a registered
+                                          service when launched by the SCM / systemd).
+          erp-agent --install             Register as a Windows service (run elevated)
+                                          or a systemd --user unit. Also registers the
+                                          erp-agent:// URL protocol handler for the
+                                          deep-link pairing flow.
+          erp-agent --uninstall           Reverse of --install.
+          erp-agent --setup               Interactive first-run wizard: prompts for
+            [--token X]                     API URL, agent token, optional save-folder
+            [--api Y]                       override. Validates the token against
+            [--save-folder Z]               /api/me and writes agent.json.
+          erp-agent --pair erp-agent://pair?token=...&api=...
+                                          Non-interactive pairing: parse the deep-link,
+                                          validate the token, write agent.json. Same
+                                          path used by the URL protocol handler.
+          erp-agent erp-agent://...       Equivalent to --pair (positional invocation).
+          erp-agent --version, -v         Print the agent version.
+          erp-agent --help, -h            This help.
 
         Configuration:
           appsettings.json next to the binary holds defaults.
           agent.json under %ProgramData%/ErpForFactoryGames/ (Windows) or
           $XDG_CONFIG_HOME/ErpForFactoryGames/ (Linux) is the writeable
-          override — that's where you put your API URL + token. On Windows
+          override — that's where the API URL + token live. On Windows
           the path is machine-wide rather than per-user so the LocalSystem
           service and the installing user agree on which file to read.
 
         See INSTALL.md next to the binary for the full first-run guide.
         """);
+}
+
+static async Task<int> RunPairAsync(string? url)
+{
+    if (string.IsNullOrWhiteSpace(url))
+    {
+        Console.Error.WriteLine("--pair requires a erp-agent:// URL argument.");
+        return 2;
+    }
+
+    var parsed = PairingUrlParser.TryParse(url);
+    if (!parsed.IsSuccess)
+    {
+        Console.Error.WriteLine($"Could not parse pairing URL: {parsed.ErrorMessage}");
+        return 2;
+    }
+
+    var pairing = BuildPairingService(parsed.Payload.ApiBaseUrl);
+    Console.Out.WriteLine($"Pairing against {parsed.Payload.ApiBaseUrl}…");
+    var result = await pairing.PairAsync(parsed.Payload.ApiBaseUrl, parsed.Payload.Token).ConfigureAwait(false);
+    if (!result.IsSuccess)
+    {
+        Console.Error.WriteLine($"Pairing failed: {result.ErrorMessage}");
+        return 4;
+    }
+
+    var paired = result.Paired!;
+    Console.Out.WriteLine($"Paired as '{paired.DisplayName}' ({paired.PlayerId}).");
+    Console.Out.WriteLine($"Wrote config: {paired.ConfigPath}");
+    Console.Out.WriteLine("Restart the agent service to pick up the new values:");
+    Console.Out.WriteLine(OperatingSystem.IsWindows()
+        ? "  sc.exe stop erp-agent && sc.exe start erp-agent"
+        : "  systemctl --user restart erp-agent");
+    return 0;
+}
+
+static async Task<int> RunSetupAsync(string[] argv)
+{
+    string? token = null;
+    string? api = null;
+    string? saveFolder = null;
+    var interactive = true;
+
+    for (var i = 0; i < argv.Length; i++)
+    {
+        switch (argv[i])
+        {
+            case "--token" when i + 1 < argv.Length:
+                token = argv[++i];
+                interactive = false;
+                break;
+            case "--api" when i + 1 < argv.Length:
+                api = argv[++i];
+                break;
+            case "--save-folder" when i + 1 < argv.Length:
+                saveFolder = argv[++i];
+                break;
+        }
+    }
+
+    // Tentative API for building the HttpClient; the SetupService will
+    // re-prompt if it's null, so we use a placeholder that will be
+    // overwritten before any network call. The client just needs a
+    // BaseAddress at construction; PairingService passes the real URL.
+    var setup = new SetupService(BuildPairingService(api ?? "https://localhost"));
+    return await setup
+        .RunAsync(new SetupArgs(api, token, saveFolder, interactive))
+        .ConfigureAwait(false);
+}
+
+static PairingService BuildPairingService(string apiBaseUrlHint)
+{
+    var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+    if (Uri.TryCreate(apiBaseUrlHint, UriKind.Absolute, out var uri))
+    {
+        http.BaseAddress = uri;
+    }
+    var writer = new AgentConfigWriter(ConfigPath());
+    return new PairingService(writer, http);
 }
 
 // Local helpers — file paths are OS-specific. See ADR-0024 §2.

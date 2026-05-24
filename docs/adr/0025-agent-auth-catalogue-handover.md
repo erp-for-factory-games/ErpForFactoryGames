@@ -259,7 +259,7 @@ DELETE /players/{id}/agent-tokens/{tokenId}        // revoke
 POST   /players/{id}/re-ingest-catalogue           // set flag
 POST   /agent/catalogue/satisfactory               // upload Docs.json
 GET    /agent/poll                                 // tick + flags
-GET    /me                                         // who-am-I for pair validation
+GET    /api/me                                     // who-am-I for pair validation (under /api/* for Cloudflare routing per #245)
 ```
 
 Existing endpoints from ADR-0024 §4 keep their shape; their auth
