@@ -36,21 +36,60 @@ contribution goes back into keeping it running.
 
 See [where the money goes](costs.md) for the running list of project costs.
 
-## What's new in v0.4 — *Pipe polylines milestone*
+## What's new in v1.0 — *First stable release*
 
-- **Pipe polylines** — `mSplineData` is now deep-parsed end-to-end; pipes render
-  as LineStrings on the map alongside conveyor belts (#138).
+v1.0 is the shipped product: a hosted planner at
+[`satisfactory.erp-for-factory.games`](https://satisfactory.erp-for-factory.games),
+a `winget`-installable Windows agent that uploads your catalogue and save files
+in the background, and an LP planner that picks recipes, miners, generators, and
+pipe tiers from what you have to what you need.
+
+**Planner**
+- **LP-driven recipe selection** — OR-Tools picks recipes, allocates miners to
+  resource nodes, sizes fluid pipes, and emits shadow prices + reduced costs
+  so you can see *why* a plan is shaped the way it is (#129).
 - **Generator-aware planning** — pass a `PowerTargetMw` and the LP picks
   generator kinds + fuels freely; missing fuel surfaces as a `MissingInput`
-  rather than infeasibility (#137).
-- **LP sensitivity** — shadow prices on supply constraints + reduced costs on
-  inactive recipes, surfaced in the planner UI (#129).
+  rather than infeasibility (#91 / #137).
+- **Variance warnings** for plans that touch miners or fluid extractors —
+  base-power × count under-reports peak draw by ~50%, so the plan flags it (#91).
 - **Fluid throughput constraints** — per-item pipe requirements with
   recommended tier on the resulting plan (#90).
-- **Variance warnings** for plans bottlenecked by miner/extractor allocation (#91).
-- **`/dashboard` page** — glance-able snapshot, auto-refresh, in-game-browser friendly (#131).
+
+**Live factory state**
+- **Save-file ingestion end-to-end** — items, buildings, recipes, conveyor
+  polylines, and pipe polylines (`mSplineData` deep-parse) all land on the map
+  as GeoJSON (#12 / #138).
 - **Auto-ingest** — TickerQ background scheduler picks up newer `.sav` files
   without manual reload (#115).
+- **`/dashboard` page** — glance-able snapshot, auto-refresh, in-game-browser friendly (#131).
+
+**Agent + catalogue handover (ADR-0025)**
+- **Windows agent** — `winget install ErpForFactoryGames.Agent` installs a
+  background service that watches `Saved/SaveGames/` and uploads new `.sav`
+  files plus your `Docs.json` to your planner account (#201, #205, #210, #228).
+- **Per-player catalogue store** — planner endpoints resolve the catalogue from
+  the agent's upload instead of a server-local file, with parsed-state cached
+  in memory by `DocsHash` (#238, #251).
+- **`erp-agent://` deep-link pairing** — mint a token on the My Agents page,
+  click "Open in agent", and the installed agent picks it up via the URL
+  protocol handler (#237, #246). `erp-agent --setup` is the CLI fallback for
+  headless installs.
+- **Re-ingest on demand** — "Re-ingest catalogue" button on My Agents flips a
+  sticky flag the agent honours on its next log-tail poll (~60 s), forcing a
+  re-upload regardless of the agent's cached hash (#239, #252).
+
+**Hosted deploy**
+- **`satisfactory.erp-for-factory.games`** runs the planner as Docker containers
+  on the homelab behind a Cloudflare Tunnel ([ADR-0023](docs/adr/0023-hosting-deployment-approach.md)).
+- **Tag-to-deploy** — pushing a `vX.Y.Z` tag builds and publishes Docker images;
+  the homelab pulls them on the next compose-up.
+
+**Foundations** — Onion + CQRS + Wolverine on .NET 10 / Blazor Server / Aspire;
+MudBlazor 9 UI; PostgreSQL via Npgsql + EF Core with migration-drift CI guard.
+
+Map *editing* (drag-to-plan, belt reroute, plan-vs-actual diff) is the v2 epic
+tracked under [milestone 14](https://github.com/ChrisonSimtian/ErpForFactoryGames/milestones).
 
 See the full backlog at [milestones](https://github.com/ChrisonSimtian/ErpForFactoryGames/milestones)
 or the wiki [Roadmap](https://github.com/ChrisonSimtian/ErpForFactoryGames/wiki/Roadmap).
