@@ -4,6 +4,11 @@ Bootstrap manifest for `ErpForFactoryGames.Agent`. Lets Windows users install
 the agent with `winget install ErpForFactoryGames.Agent` and pick up new
 releases via `winget upgrade`.
 
+> This file lives outside `winget/` on purpose. `winget validate --manifest <dir>`
+> parses every file in the target directory as YAML, regardless of extension,
+> so a markdown file alongside the manifests trips the scanner on the first
+> stray `:` it sees.
+
 Today this is a **portable** manifest that wraps the release `erp-agent-win-x64.zip`.
 Winget puts `erp-agent.exe` on the user's PATH; the user runs
 `erp-agent --install` from an elevated shell to register the Windows service.
