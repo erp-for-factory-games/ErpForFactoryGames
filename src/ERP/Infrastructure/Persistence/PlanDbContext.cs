@@ -38,6 +38,8 @@ public class PlanDbContext : DbContext
 
     public DbSet<AgentToken> AgentTokens => Set<AgentToken>();
 
+    public DbSet<PlayerCatalogue> PlayerCatalogues => Set<PlayerCatalogue>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PlanDbContext).Assembly);

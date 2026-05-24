@@ -100,6 +100,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IFactoryAlertRepository, FactoryAlertRepository>();
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<IAgentTokenRepository, AgentTokenRepository>();
+        services.AddScoped<IPlayerCatalogueRepository, PlayerCatalogueRepository>();
 
         // TickerQ — background job scheduler (#115, ADR-0019). Entity
         // configurations are applied explicitly in PlanDbContext.OnModelCreating
