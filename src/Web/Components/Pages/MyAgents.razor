@@ -1,0 +1,171 @@
+@*
+    "My Agents" page (#236, ADR-0025 §8).
+
+    Lists the tokens paired to the current player (dev player in v2, real
+    user once login lands per ADR-0025 §1) and lets the user mint new
+    tokens or revoke existing ones. Gated by AgentManagement:Enabled —
+    when off, the page returns 404 and the NavMenu link is hidden.
+*@
+
+@page "/settings/agents"
+@rendermode InteractiveServer
+@inject PlannerApiClient Api
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@inject Microsoft.Extensions.Options.IOptions<AgentManagementOptions> Options
+
+<PageTitle>My Agents · ERP for Factory Games</PageTitle>
+
+@if (!Options.Value.Enabled)
+{
+    // Feature flag off — render as a not-found surface. The route still
+    // exists (we can't unregister a @page at runtime), but the UI gives
+    // the same signal as any other 404.
+    <MudText Typo="Typo.h4">Not found</MudText>
+    <MudText>Agent management is disabled in this deployment.</MudText>
+}
+else
+{
+    <MudText Typo="Typo.h4" Class="mb-2">My Agents</MudText>
+    <MudText Class="mb-3">
+        Each token pairs one installed agent to your planner account. Mint a token here, then either
+        click <strong>Open in agent</strong> on the next screen (deep-link, requires the agent to be
+        installed) or copy the token and paste it into <code>erp-agent --setup --token</code> on the
+        machine running the agent. See
+        <a href="https://github.com/ChrisonSimtian/ErpForFactoryGames/blob/main/docs/adr/0025-agent-auth-catalogue-handover.md" target="_blank">ADR-0025</a>.
+    </MudText>
+
+    <MudPaper Class="fx-panel pa-4 mb-3" Elevation="0">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+            <MudText Typo="Typo.h6">@(_currentPlayer?.DisplayName ?? "Loading…")</MudText>
+            <MudSpacer />
+            <MudButton StartIcon="@Icons.Material.Filled.Add"
+                       Color="Color.Primary" Variant="Variant.Filled"
+                       OnClick="ShowMintDialogAsync"
+                       Disabled="_currentPlayer is null"
+                       data-testid="add-agent-button">
+                Add an agent
+            </MudButton>
+        </MudStack>
+
+        @if (_loadError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-3" Dense="true">@_loadError</MudAlert>
+        }
+
+        <MudTable Items="@_tokens" Hover="true" Dense="true"
+                  Loading="@_loading" LoadingProgressColor="Color.Primary"
+                  data-testid="agent-tokens-table">
+            <HeaderContent>
+                <MudTh>Label</MudTh>
+                <MudTh>Created</MudTh>
+                <MudTh>Last seen</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="width: 1%;"></MudTh>
+            </HeaderContent>
+            <RowTemplate Context="token">
+                <MudTd DataLabel="Label">@token.Label</MudTd>
+                <MudTd DataLabel="Created">@token.CreatedUtc.ToString("u")</MudTd>
+                <MudTd DataLabel="Last seen">@(token.LastSeenUtc?.ToString("u") ?? "—")</MudTd>
+                <MudTd DataLabel="Status">
+                    @if (token.RevokedUtc is null)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small">Revoked</MudChip>
+                    }
+                </MudTd>
+                <MudTd>
+                    @if (token.RevokedUtc is null)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error" Size="Size.Small"
+                                       OnClick="() => RevokeAsync(token)"
+                                       data-testid="revoke-button"
+                                       title="Revoke token" />
+                    }
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-3">No agents paired yet. Click <strong>Add an agent</strong> to mint your first token.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+}
+
+@code {
+    private CurrentPlayerView? _currentPlayer;
+    private AgentTokenView[] _tokens = [];
+    private bool _loading = true;
+    private string? _loadError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Options.Value.Enabled) { _loading = false; return; }
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _loadError = null;
+        try
+        {
+            _currentPlayer = await Api.GetCurrentPlayerAsync();
+            if (_currentPlayer is null)
+            {
+                _loadError = "No player provisioned. Check Auth:DevPlayerId on the server.";
+                return;
+            }
+            _tokens = await Api.ListAgentTokensAsync(_currentPlayer.PlayerId);
+        }
+        catch (Exception ex)
+        {
+            _loadError = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ShowMintDialogAsync()
+    {
+        if (_currentPlayer is null) return;
+        var parameters = new DialogParameters
+        {
+            { nameof(MintAgentTokenDialog.PlayerId), _currentPlayer.PlayerId },
+            { nameof(MintAgentTokenDialog.PairingApiBaseUrl), Options.Value.PairingApiBaseUrl },
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<MintAgentTokenDialog>("Add an agent", parameters, options);
+        var result = await dialog.Result;
+        if (result is not null && !result.Canceled)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task RevokeAsync(AgentTokenView token)
+    {
+        // Native browser confirm — adequate for v2; a styled MudDialog
+        // can land later if the surface grows.
+        var confirmed = await JS.InvokeAsync<bool>("confirm",
+            $"Revoke \"{token.Label}\"? The agent will stop talking to this server immediately. This can't be undone.");
+        if (!confirmed || _currentPlayer is null) return;
+
+        var ok = await Api.RevokeAgentTokenAsync(_currentPlayer.PlayerId, token.Id);
+        if (ok)
+        {
+            Snackbar.Add("Token revoked.", Severity.Success);
+            await LoadAsync();
+        }
+        else
+        {
+            Snackbar.Add("Revoke failed. Check API logs.", Severity.Error);
+        }
+    }
+}

@@ -24,6 +24,11 @@ builder.Services.AddHttpClient<Web.PlannerApiClient>(client =>
         client.BaseAddress = new("https+http://apiservice");
     });
 
+// Agent management page surface (#236, ADR-0025 §8). Feature-flagged off
+// in production until the deployment hides the page behind its own auth.
+builder.Services.Configure<Web.AgentManagementOptions>(
+    builder.Configuration.GetSection(Web.AgentManagementOptions.SectionName));
+
 // Per-circuit draft store backing #78's planner auto-save. Scoped because
 // IJSRuntime is scoped to the Blazor Server circuit (i.e. the user's tab).
 builder.Services.AddScoped<Web.PlannerDraftStore>();
