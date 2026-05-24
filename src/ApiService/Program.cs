@@ -6,6 +6,7 @@ using ERP.Domain;
 using ERP.Infrastructure;
 using ERP.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Satisfactory.Save;
 using TickerQ.DependencyInjection;
 using Wolverine;
@@ -38,6 +39,16 @@ builder.Services.AddSingleton<IAgentUploadStatus, AgentUploadStatus>();
 // Durable cross-process observability is the follow-up issue #212 (SigNoz / OTel).
 builder.Services.Configure<AgentLogsOptions>(builder.Configuration.GetSection("AgentLogs"));
 builder.Services.AddSingleton<IAgentLogsStore, AgentLogsStore>();
+
+// Agent auth pipeline (ADR-0025 §3). Hash-based lookup with an
+// IMemoryCache hot-path and LastSeenUtc write-debounce. The hashing
+// algorithm itself is wired by AddErpInfrastructure (Sha256TokenHasher).
+builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
+builder.Services.Configure<AgentTokenAuthenticatorOptions>(
+    builder.Configuration.GetSection(AgentTokenAuthenticatorOptions.SectionName));
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IAgentTokenAuthenticator, AgentTokenAuthenticator>();
+builder.Services.AddHostedService<DevPlayerBootstrap>();
 
 var app = builder.Build();
 
@@ -585,18 +596,17 @@ app.MapPost("/agent/savegames/satisfactory", async (
     HttpRequest http,
     IFactoryStateProvider provider,
     IAgentUploadStatus uploadStatus,
+    IAgentTokenAuthenticator authenticator,
     Microsoft.Extensions.Options.IOptions<AgentUploadOptions> uploadOptions,
     ILoggerFactory loggerFactory,
     CancellationToken ct) =>
 {
     var log = loggerFactory.CreateLogger("AgentUpload");
 
-    var token = http.Headers["X-Agent-Token"].ToString();
-    if (string.IsNullOrWhiteSpace(token))
+    var auth = await authenticator.AuthenticateAsync(http.Headers["X-Agent-Token"].ToString(), ct).ConfigureAwait(false);
+    if (!auth.IsAuthenticated)
     {
-        // 401 (not 400/403) so the eventual real-auth ADR-0025 keeps the
-        // same status-code semantics — see ADR-0024 §5.
-        return Results.Json(new { error = "X-Agent-Token header is required." }, statusCode: 401);
+        return Results.Json(new { error = "X-Agent-Token is missing or invalid." }, statusCode: 401);
     }
 
     if (!string.Equals(http.ContentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase))
@@ -711,14 +721,15 @@ app.MapGet("/agent/status", (IAgentUploadStatus status, TimeProvider clock) =>
 app.MapPost("/agent/logs", async (
     HttpRequest http,
     IAgentLogsStore store,
+    IAgentTokenAuthenticator authenticator,
     Microsoft.Extensions.Options.IOptions<AgentLogsOptions> logsOptions,
     TimeProvider clock,
     CancellationToken ct) =>
 {
-    var token = http.Headers["X-Agent-Token"].ToString();
-    if (string.IsNullOrWhiteSpace(token))
+    var auth = await authenticator.AuthenticateAsync(http.Headers["X-Agent-Token"].ToString(), ct).ConfigureAwait(false);
+    if (!auth.IsAuthenticated)
     {
-        return Results.Json(new { error = "X-Agent-Token header is required." }, statusCode: 401);
+        return Results.Json(new { error = "X-Agent-Token is missing or invalid." }, statusCode: 401);
     }
 
     if (!string.Equals(http.ContentType, "application/json", StringComparison.OrdinalIgnoreCase)
@@ -775,6 +786,124 @@ app.MapGet("/agent/logs", (IAgentLogsStore store, int? limit) =>
     });
 });
 
+// ---- Player + agent-token management (ADR-0025 §2, §9) -------------------
+//
+//   POST   /players/{id}/agent-tokens          — mint, plaintext shown once
+//   GET    /players/{id}/agent-tokens          — list (no plaintext)
+//   DELETE /players/{id}/agent-tokens/{tokenId} — revoke
+//   GET    /me                                  — who-am-I for the agent's
+//                                                 pairing validation call
+//
+// Note: the mint/list/revoke endpoints have no caller-auth in v2 — they're
+// intended to be reached only by the Web UI, which itself runs the
+// "single-user-shaped on purpose" dev-player flow until login lands.
+// Production deployment must hide them behind the homelab's Web UI gate.
+// ---------------------------------------------------------------------------
+
+app.MapPost("/players/{id:guid}/agent-tokens", async (
+    Guid id,
+    MintAgentTokenRequest request,
+    IPlayerRepository players,
+    IAgentTokenRepository tokens,
+    IAgentTokenHasher hasher,
+    TimeProvider clock,
+    CancellationToken ct) =>
+{
+    var playerId = new PlayerId(id);
+    var player = await players.GetAsync(playerId, ct).ConfigureAwait(false);
+    if (player is null) return Results.NotFound(new { error = $"Player {id} not found." });
+
+    var label = string.IsNullOrWhiteSpace(request?.Label)
+        ? $"Agent {DateTime.UtcNow:yyyy-MM-dd}"
+        : request!.Label!.Trim();
+
+    var plaintext = hasher.MintPlaintext();
+    var hash = hasher.Hash(plaintext);
+    var token = new AgentToken(
+        AgentTokenId.New(),
+        playerId,
+        label,
+        hash,
+        clock.GetUtcNow().UtcDateTime);
+    await tokens.AddAsync(token, ct).ConfigureAwait(false);
+    await tokens.SaveChangesAsync(ct).ConfigureAwait(false);
+
+    return Results.Json(new
+    {
+        id = token.Id.Value,
+        plaintext,
+        label = token.Label,
+        createdUtc = token.CreatedUtc,
+    }, statusCode: 201);
+});
+
+app.MapGet("/players/{id:guid}/agent-tokens", async (
+    Guid id,
+    IPlayerRepository players,
+    IAgentTokenRepository tokens,
+    CancellationToken ct) =>
+{
+    var playerId = new PlayerId(id);
+    var player = await players.GetAsync(playerId, ct).ConfigureAwait(false);
+    if (player is null) return Results.NotFound(new { error = $"Player {id} not found." });
+
+    var list = await tokens.ListForPlayerAsync(playerId, ct).ConfigureAwait(false);
+    return Results.Ok(list.Select(t => new AgentTokenView(
+        Id: t.Id.Value,
+        Label: t.Label,
+        CreatedUtc: t.CreatedUtc,
+        LastSeenUtc: t.LastSeenUtc,
+        RevokedUtc: t.RevokedUtc)));
+});
+
+app.MapDelete("/players/{id:guid}/agent-tokens/{tokenId:guid}", async (
+    Guid id,
+    Guid tokenId,
+    IAgentTokenRepository tokens,
+    IAgentTokenAuthenticator authenticator,
+    TimeProvider clock,
+    CancellationToken ct) =>
+{
+    var token = await tokens.GetAsync(new AgentTokenId(tokenId), ct).ConfigureAwait(false);
+    if (token is null || token.PlayerId != new PlayerId(id))
+    {
+        return Results.NotFound(new { error = $"Token {tokenId} not found for player {id}." });
+    }
+
+    token.Revoke(clock.GetUtcNow().UtcDateTime);
+    await tokens.SaveChangesAsync(ct).ConfigureAwait(false);
+    authenticator.Invalidate(token.Id);
+    return Results.NoContent();
+});
+
+app.MapGet("/me", async (
+    HttpRequest http,
+    IAgentTokenAuthenticator authenticator,
+    IPlayerRepository players,
+    CancellationToken ct) =>
+{
+    var auth = await authenticator.AuthenticateAsync(http.Headers["X-Agent-Token"].ToString(), ct).ConfigureAwait(false);
+    if (!auth.IsAuthenticated)
+    {
+        return Results.Json(new { error = "X-Agent-Token is missing or invalid." }, statusCode: 401);
+    }
+
+    var player = await players.GetAsync(auth.PlayerId, ct).ConfigureAwait(false);
+    if (player is null)
+    {
+        // Token row exists but player was deleted — treat as 401 so the
+        // agent re-pairs rather than displaying a confusing partial state.
+        return Results.Json(new { error = "Player no longer exists." }, statusCode: 401);
+    }
+
+    return Results.Ok(new
+    {
+        playerId = player.Id.Value,
+        displayName = player.DisplayName,
+        tokenId = auth.TokenId.Value,
+    });
+});
+
 app.MapDefaultEndpoints();
 
 app.Run();
@@ -798,6 +927,17 @@ public sealed record ShareTokenView(string Token, string Url, DateTime CreatedUt
 /// parse Serilog's output template, the Web component highlights levels on
 /// best-effort.</summary>
 public sealed record AgentLogsRequest(IReadOnlyList<string>? Lines, string? AgentVersion = null);
+
+/// <summary>POST /players/{id}/agent-tokens body (ADR-0025 §2).</summary>
+public sealed record MintAgentTokenRequest(string? Label);
+
+/// <summary>GET /players/{id}/agent-tokens row shape (no plaintext).</summary>
+public sealed record AgentTokenView(
+    Guid Id,
+    string Label,
+    DateTime CreatedUtc,
+    DateTime? LastSeenUtc,
+    DateTime? RevokedUtc);
 
 public partial class Program { }
 
