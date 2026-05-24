@@ -186,3 +186,62 @@ jobs:
           gh release view "$tag" >/dev/null 2>&1 \
             || gh release create "$tag" --title "$tag" --notes "See CHANGELOG / commit history. Container images on ghcr.io/${GITHUB_REPOSITORY_OWNER,,}."
           gh release upload "$tag" "${ARCHIVE_NAME}" --clobber
+
+  # ---------------------------------------------------------------------------
+  # winget — bump the ErpForFactoryGames.Agent manifest in winget-pkgs.
+  #
+  # Bootstrap (first submission) is manual via `wingetcreate submit` against
+  # the templates in src/Agent/packaging/winget/. From the second release
+  # onwards this job picks it up: downloads the new zip, recomputes SHA256,
+  # opens a PR against microsoft/winget-pkgs with the bumped version.
+  #
+  # Only runs on tag push — workflow_dispatch doesn't bump the manifest
+  # because winget needs a 1:1 mapping between PackageVersion and the
+  # InstallerUrl on the release page.
+  #
+  # Needs secret WINGET_SUBMIT_TOKEN (PAT with public_repo scope) — the
+  # default GITHUB_TOKEN can't push to a fork of microsoft/winget-pkgs.
+  # ---------------------------------------------------------------------------
+  publish-winget:
+    name: Publish winget manifest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: publish-agent
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Install wingetcreate
+        run: dotnet tool install --global Microsoft.WindowsPackageManager.WingetCreateCli
+
+      - name: Resolve package version
+        id: pkg
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          echo "version=${version}" >>"$GITHUB_OUTPUT"
+          echo "url=https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/erp-agent-win-x64.zip" >>"$GITHUB_OUTPUT"
+
+      - name: Submit manifest update to winget-pkgs
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_SUBMIT_TOKEN }}
+        shell: bash
+        run: |
+          if [[ -z "${WINGET_TOKEN}" ]]; then
+            echo "::warning::WINGET_SUBMIT_TOKEN not set — skipping winget manifest update."
+            echo "Add a PAT with public_repo scope as repo secret WINGET_SUBMIT_TOKEN to enable."
+            exit 0
+          fi
+          wingetcreate update ErpForFactoryGames.Agent \
+            --urls "${{ steps.pkg.outputs.url }}" \
+            --version "${{ steps.pkg.outputs.version }}" \
+            --submit \
+            --token "${WINGET_TOKEN}"
