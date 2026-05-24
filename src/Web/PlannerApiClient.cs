@@ -208,6 +208,17 @@ public class PlannerApiClient(HttpClient httpClient)
         var response = await httpClient.DeleteAsync($"/players/{playerId}/agent-tokens/{tokenId}", ct);
         return response.IsSuccessStatusCode;
     }
+
+    // ---- Player catalogue (ADR-0025 §7) -----------------------------------
+
+    public Task<PlayerCatalogueStatusView?> GetPlayerCatalogueAsync(Guid playerId, CancellationToken ct = default) =>
+        httpClient.GetFromJsonAsync<PlayerCatalogueStatusView>($"/players/{playerId}/catalogue/satisfactory", ct);
+
+    public async Task<bool> TriggerReIngestAsync(Guid playerId, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsync($"/players/{playerId}/re-ingest-catalogue", content: null, ct);
+        return response.IsSuccessStatusCode;
+    }
 }
 
 public sealed record CatalogItem(string Id, string Name);
@@ -458,3 +469,21 @@ public sealed record AgentTokenView(
     DateTime CreatedUtc,
     DateTime? LastSeenUtc,
     DateTime? RevokedUtc);
+
+/// <summary>
+/// Catalogue + re-ingest state for one player, returned by
+/// <c>GET /players/{id}/catalogue/satisfactory</c> (ADR-0025 §7). The
+/// <see cref="Catalogue"/> sub-record is null until the agent has
+/// successfully uploaded once.
+/// </summary>
+public sealed record PlayerCatalogueStatusView(
+    Guid PlayerId,
+    bool ReIngestRequested,
+    DateTime? ReIngestRequestedUtc,
+    PlayerCatalogueSummary? Catalogue);
+
+public sealed record PlayerCatalogueSummary(
+    string DocsHash,
+    string? GameVersion,
+    long SizeBytes,
+    DateTime UploadedUtc);

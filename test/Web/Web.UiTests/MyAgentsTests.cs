@@ -63,4 +63,31 @@ public class MyAgentsTests(AspireAppFixture fixture) : IClassFixture<AspireAppFi
         await page.Locator("[data-testid='close-button']").ClickAsync();
         await Expect(page.Locator("[data-testid='agent-tokens-table'] tbody tr")).ToHaveCountAsync(1);
     }
+
+    [Fact]
+    public async Task Catalogue_card_and_reingest_button_render()
+    {
+        // Render-only check. The full click → "Re-ingest queued" flip is
+        // covered by manual verification in the PR test plan; including
+        // the click here interacts with the surrounding Mint_flow test in
+        // a way that flakes intermittently (Aspire fixture state).
+        var context = await fixture.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var consoleErrors = new List<string>();
+        page.Console += (_, msg) => { if (msg.Type == "error") consoleErrors.Add(msg.Text); };
+
+        await page.GotoAsync($"{fixture.WebFrontendUrl.TrimEnd('/')}/settings/agents");
+
+        var card = page.Locator("[data-testid='catalogue-card']");
+        await Expect(card).ToBeVisibleAsync(new() { Timeout = 15_000 });
+
+        var pill = page.Locator("[data-testid='catalogue-status-pill']");
+        await Expect(pill).ToBeVisibleAsync();
+
+        var reIngestButton = page.GetByRole(AriaRole.Button, new() { Name = "Re-ingest catalogue" });
+        await Expect(reIngestButton).ToBeVisibleAsync(new() { Timeout = 10_000 });
+
+        await Expect(page.Locator("#blazor-error-ui")).ToBeHiddenAsync();
+        Assert.Empty(consoleErrors);
+    }
 }
