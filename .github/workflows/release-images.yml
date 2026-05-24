@@ -206,20 +206,15 @@ jobs:
     name: Publish winget manifest
     if: startsWith(github.ref, 'refs/tags/v')
     needs: publish-agent
-    runs-on: ubuntu-latest
+    # wingetcreate is Windows-only since Microsoft retired the dotnet-tool
+    # distribution. windows-latest runners have winget itself pre-installed,
+    # so we install wingetcreate the canonical way: through winget.
+    runs-on: windows-latest
     permissions:
       contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-
-      - name: Install wingetcreate
-        run: dotnet tool install --global Microsoft.WindowsPackageManager.WingetCreateCli
 
       - name: Resolve package version
         id: pkg
@@ -232,16 +227,20 @@ jobs:
 
       - name: Submit manifest update to winget-pkgs
         env:
-          WINGET_TOKEN: ${{ secrets.WINGET_SUBMIT_TOKEN }}
-        shell: bash
+          WINGET_CREATE_GITHUB_TOKEN: ${{ secrets.WINGET_SUBMIT_TOKEN }}
+        shell: pwsh
         run: |
-          if [[ -z "${WINGET_TOKEN}" ]]; then
-            echo "::warning::WINGET_SUBMIT_TOKEN not set — skipping winget manifest update."
-            echo "Add a PAT with public_repo scope as repo secret WINGET_SUBMIT_TOKEN to enable."
-            exit 0
-          fi
-          wingetcreate update ErpForFactoryGames.Agent \
-            --urls "${{ steps.pkg.outputs.url }}" \
-            --version "${{ steps.pkg.outputs.version }}" \
-            --submit \
-            --token "${WINGET_TOKEN}"
+          if (-not $env:WINGET_CREATE_GITHUB_TOKEN) {
+              Write-Host "::warning::WINGET_SUBMIT_TOKEN not set — skipping winget manifest update."
+              Write-Host "Add a PAT with public_repo scope as repo secret WINGET_SUBMIT_TOKEN to enable."
+              exit 0
+          }
+          winget install wingetcreate `
+              --accept-package-agreements `
+              --accept-source-agreements `
+              --silent `
+              --disable-interactivity
+          wingetcreate update ErpForFactoryGames.Agent `
+              --urls "${{ steps.pkg.outputs.url }}" `
+              --version "${{ steps.pkg.outputs.version }}" `
+              --submit
