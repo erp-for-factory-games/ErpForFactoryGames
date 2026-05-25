@@ -40,12 +40,25 @@ COPY src/ src/
 # works without ballooning the image.
 COPY .git .git/
 
+# Diagnostic for issue #255 — publish has been silently dropping
+# wwwroot/_framework/ in this SDK image. -v normal emits the static-web-asset
+# resolution lines we need to see what's actually happening.
 RUN --mount=type=secret,id=github_token \
     GITHUB_TOKEN=$(cat /run/secrets/github_token) \
     dotnet publish src/Web/Web.csproj \
         --configuration Release \
         --no-restore \
+        --verbosity normal \
         --output /app/publish
+
+# Show the NuGet cache state for Microsoft.AspNetCore.App.Internal.Assets —
+# if this isn't here, that's the root cause.
+RUN echo "--- NuGet cache (Microsoft.AspNetCore.App.Internal.Assets) ---"; \
+    ls -la /root/.nuget/packages/microsoft.aspnetcore.app.internal.assets/ 2>&1 || echo "(absent)"; \
+    echo "--- obj/Release/.../compressed/ from publish ---"; \
+    find /src/src/Web/obj -path '*compressed*' -name '*blazor*' 2>&1 | head -20 || true; \
+    echo "--- /app/publish/wwwroot/ ---"; \
+    ls -laR /app/publish/wwwroot/ 2>&1 | head -40
 
 # Sanity check — every prior shipped image was missing wwwroot/_framework/, which
 # left the deployed site fully non-interactive (Blazor never hydrated). If the
