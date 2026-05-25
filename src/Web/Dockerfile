@@ -47,6 +47,15 @@ RUN --mount=type=secret,id=github_token \
         --no-restore \
         --output /app/publish
 
+# Sanity check — every prior shipped image was missing wwwroot/_framework/, which
+# left the deployed site fully non-interactive (Blazor never hydrated). If the
+# publish output is incomplete again, fail loudly here instead of pushing a
+# broken image. Issue #255.
+RUN test -f /app/publish/wwwroot/_framework/blazor.web.js \
+    || { echo "FATAL: /app/publish/wwwroot/_framework/blazor.web.js missing — Blazor framework files were not produced by publish."; \
+         echo "Listing /app/publish/wwwroot/:"; ls -la /app/publish/wwwroot/ || true; \
+         exit 1; }
+
 # -----------------------------------------------------------------------------
 # Runtime
 # -----------------------------------------------------------------------------

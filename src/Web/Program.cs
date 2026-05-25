@@ -51,6 +51,12 @@ app.UseOutputCache();
 
 app.MapStaticAssets();
 
+// Defence-in-depth: serve physical files from wwwroot/ directly as well.
+// MapStaticAssets relies on the publish-time endpoints manifest; if anything
+// in the build pipeline drops files from wwwroot/_framework/ or any other
+// non-manifested path, UseStaticFiles still finds them on disk. Issue #255.
+app.UseStaticFiles();
+
 // .assets/ is the dev's local drop folder for external assets (item icons, maps, etc.).
 // Gitignored — populated by Tools/Download-Icons.ps1 or copied manually from a game install.
 // Map it to /assets/* at runtime so pages can <img src="/assets/icons/items/{id}.png" />
