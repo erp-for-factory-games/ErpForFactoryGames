@@ -4,6 +4,18 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!--
+      Microsoft.NET.Sdk.Web auto-detects whether the project needs the
+      Blazor framework asset pack (`Microsoft.AspNetCore.App.Internal.Assets`)
+      by looking for `.razor` files in @(Content) at *restore* time. Our
+      Dockerfile copies csprojs first for layer caching and only copies the
+      rest of `src/` *after* restore, so at restore time no `.razor` files
+      exist, the SDK sets `RequiresAspNetWebAssets=false`, and the framework
+      pack (which ships `_framework/blazor.web.js`) is never downloaded.
+      Local builds work because the whole tree is on disk; CI containers
+      silently shipped images with no `_framework/`. Issue #255.
+    -->
+    <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
   </PropertyGroup>
 
   <ItemGroup>
