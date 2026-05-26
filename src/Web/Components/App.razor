@@ -9,7 +9,10 @@
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["Web.styles.css"]" />
     <ImportMap />
-    <link rel="icon" type="image/png" href="favicon.png" />
+    @* Modern browsers prefer SVG (scales sharp at any size); the PNG is the
+       fallback for the few that don't yet handle SVG favicons. *@
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
     <HeadOutlet />
     <script>
         // Apply persisted theme before first paint to avoid a flash. MainLayout
