@@ -38,7 +38,17 @@ public sealed class AspireAppFixture : IAsyncLifetime
         WebFrontendUrl = App.GetEndpoint("webfrontend").ToString();
 
         Playwright = await Microsoft.Playwright.Playwright.CreateAsync();
-        Browser = await Playwright.Chromium.LaunchAsync();
+        // Default: headless. Override with ERP_UITESTS_HEADED=1 when you actually
+        // want to watch a test drive the browser — otherwise nobody wants a Chromium
+        // window popping up over their editor every time the suite runs.
+        var headed = string.Equals(
+            Environment.GetEnvironmentVariable("ERP_UITESTS_HEADED"),
+            "1",
+            StringComparison.Ordinal);
+        Browser = await Playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Headless = !headed,
+        });
     }
 
     /// <summary>
