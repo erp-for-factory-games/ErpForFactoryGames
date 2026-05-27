@@ -31,11 +31,13 @@
         "Format",
         "InstallPlaywrightBrowsers",
         "MigrationsPostgresSmoke",
+        "Provision",
         "Release",
         "Restore",
         "Test",
         "TestNoUi",
-        "TestUi"
+        "TestUi",
+        "Up"
       ]
     },
     "Verbosity": {
@@ -109,6 +111,11 @@
   "allOf": [
     {
       "properties": {
+        "CloudflareApiToken": {
+          "type": "string",
+          "description": "Cloudflare API token. Scopes: Account · Cloudflare Tunnel · Edit; Zone · DNS · Edit; Account · Account Settings · Read",
+          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
+        },
         "Configuration": {
           "type": "string",
           "description": "Configuration to build — Debug locally, Release on CI",
@@ -116,6 +123,18 @@
             "Debug",
             "Release"
           ]
+        },
+        "DeployOutput": {
+          "type": "string",
+          "description": "Output format for Provision: text (human, default) or json"
+        },
+        "DryRun": {
+          "type": "boolean",
+          "description": "Plan changes without writing them back to Cloudflare (Provision) or the LXC (Up)"
+        },
+        "ImageTag": {
+          "type": "string",
+          "description": "Image tag for erp-web + erp-api. Default: latest"
         },
         "Solution": {
           "type": "string",
