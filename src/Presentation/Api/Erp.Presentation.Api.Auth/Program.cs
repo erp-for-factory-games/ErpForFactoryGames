@@ -27,6 +27,13 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IAgentTokenAuthenticator, AgentTokenAuthenticator>();
 builder.Services.AddHostedService<DevPlayerBootstrap>();
 
+// ICurrentPlayer is needed by transitive registrations in
+// AddErpInfrastructure (PlayerScopedCatalogProvider). Auth API never
+// actually serves catalog requests so this registration is satisfying the
+// DI validator more than anything; the actual /api/me endpoint
+// authenticates via the token directly.
+builder.Services.AddScoped<ICurrentPlayer, CurrentPlayerFromAuthOptions>();
+
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
