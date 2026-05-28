@@ -13,9 +13,13 @@ var apiService = builder.AddProject<Projects.Satisfactory_Presentation_Api>("api
     .WithHttpHealthCheck("/health")
     .WaitFor(authApi);
 
-// Captain of Industry API (scaffold) — same shape as the Satisfactory binary,
-// no real surface yet. Phase 5c5 wires its planner endpoints + health check.
-var coiApi = builder.AddProject<Projects.CaptainOfIndustry_Presentation_Api>("coi-api");
+// Captain of Industry API (scaffold) — same shape as the Satisfactory binary.
+// Health-checkable now (launchSettings + WithHttpHealthCheck), but still has no
+// real planner surface: CoI.Web reads its catalogue in-process. The planner
+// endpoints + operational rollout (CNAME, compose, CI image) are deferred to
+// the full phase-5c5 work (#281); this just makes the binary symmetric.
+var coiApi = builder.AddProject<Projects.CaptainOfIndustry_Presentation_Api>("coi-api")
+    .WithHttpHealthCheck("/health");
 
 // ---- Optional Postgres for plan storage (ADR-0018) -------------------------
 // SQLite is the default and needs no orchestration. Uncomment the block below
