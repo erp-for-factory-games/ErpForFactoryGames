@@ -74,6 +74,13 @@ public sealed class SshDeployer : IDisposable
         foreach (var f in files)
         {
             _log.LogInformation("SFTP write {Path} ({Bytes} bytes, mode {Mode:o})", f.RemotePath, f.Size, f.Mode);
+
+            // UploadFile(canOverride:true) still EACCES's if the existing file
+            // lacks owner-write. Pre-chmod 0644 so a stuck remote mode can't
+            // wedge subsequent deploys.
+            try { _sftp.ChangePermissions(f.RemotePath, 644); }
+            catch (Renci.SshNet.Common.SftpPathNotFoundException) { /* new file */ }
+
             using var stream = new MemoryStream(f.Body);
             _sftp.UploadFile(stream, f.RemotePath, canOverride: true);
             _sftp.ChangePermissions(f.RemotePath, f.Mode);
