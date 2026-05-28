@@ -7,8 +7,17 @@
   <Folder Name="/src/">
     <Project Path="src/Agent/Agent.csproj" />
     <Project Path="src/ApiService/ApiService.csproj" />
-    <Project Path="src/Web/Web.csproj" />
-    <Project Path="src/Web.Shared/Web.Shared.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/" />
+  <Folder Name="/src/Presentation/Web/" />
+  <Folder Name="/src/Presentation/Web/Erp.Presentation.Web.Common/">
+    <Project Path="src/Presentation/Web/Erp.Presentation.Web.Common/Erp.Presentation.Web.Common.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/Web/Satisfactory.Presentation.Web/">
+    <Project Path="src/Presentation/Web/Satisfactory.Presentation.Web/Satisfactory.Presentation.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/Web/CaptainOfIndustry.Presentation.Web/">
+    <Project Path="src/Presentation/Web/CaptainOfIndustry.Presentation.Web/CaptainOfIndustry.Presentation.Web.csproj" />
   </Folder>
   <Folder Name="/src/Hosting/" />
   <Folder Name="/src/Hosting/Erp.Hosting.AppHost/">
@@ -38,10 +47,6 @@
   <Folder Name="/src/Infrastructure/Persistence/" />
   <Folder Name="/src/Infrastructure/Persistence/Erp.Infrastructure.Persistence/">
     <Project Path="src/Infrastructure/Persistence/Erp.Infrastructure.Persistence/Erp.Infrastructure.Persistence.csproj" />
-  </Folder>
-  <Folder Name="/src/CaptainOfIndustry/" />
-  <Folder Name="/src/CaptainOfIndustry/Web/">
-    <Project Path="src/CaptainOfIndustry/Web/CaptainOfIndustry.Web.csproj" />
   </Folder>
   <Folder Name="/tools/" />
   <Folder Name="/tools/Erp.Deploy/">

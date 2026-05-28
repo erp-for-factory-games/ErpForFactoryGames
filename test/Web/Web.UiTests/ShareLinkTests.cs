@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-namespace Web.UiTests;
+namespace Satisfactory.Presentation.Web.UiTests;
 
 /// <summary>
 /// UI test for the share-link flow (#80). Boots the full Aspire app, visits

@@ -1,7 +1,7 @@
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 
-namespace Web.UiTests;
+namespace Satisfactory.Presentation.Web.UiTests;
 
 /// <summary>
 /// Playwright smoke tests for the "My Agents" page (#236, ADR-0025 §8).

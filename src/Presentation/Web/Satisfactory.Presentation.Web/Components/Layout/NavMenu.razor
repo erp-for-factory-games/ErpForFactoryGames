@@ -1,0 +1,54 @@
+<div class="brand-block">
+    <div class="brand-row">
+        <span class="brand-gear" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM11 1l-.5 2.6a8.8 8.8 0 0 0-2.3 1L6 3.2 3.2 6l1.4 2.2c-.5.7-.8 1.5-1 2.3L1 11v2l2.6.5c.2.8.5 1.6 1 2.3L3.2 18 6 20.8l2.2-1.4c.7.5 1.5.8 2.3 1L11 23h2l.5-2.6c.8-.2 1.6-.5 2.3-1l2.2 1.4L20.8 18l-1.4-2.2c.5-.7.8-1.5 1-2.3L23 13v-2l-2.6-.5a8.8 8.8 0 0 0-1-2.3L20.8 6 18 3.2l-2.2 1.4c-.7-.5-1.5-.8-2.3-1L13 1h-2z"/>
+            </svg>
+        </span>
+        <div class="brand-text">
+            <span class="brand-eyebrow">FICSIT INC.</span>
+            <a class="brand-name" href="/">ERP<span class="brand-name-dot">.</span>SATISFACTORY</a>
+        </div>
+    </div>
+    <div class="brand-sub">PRODUCTION SUITE</div>
+</div>
+
+<MudNavMenu Class="fx-nav">
+    <MudNavLink Href="" Match="NavLinkMatch.All">
+        <span class="fx-icon fx-icon-inline fx-icon-home" aria-hidden="true"></span> Home
+    </MudNavLink>
+    <MudNavLink Href="dashboard" Icon="@Icons.Material.Filled.Dashboard" IconColor="Color.Inherit">
+        Dashboard
+    </MudNavLink>
+    <MudNavLink Href="planner">
+        <span class="fx-icon fx-icon-inline fx-icon-wrench" aria-hidden="true"></span> Planner
+    </MudNavLink>
+    <MudNavLink Href="planner/graph" Icon="@Icons.Material.Filled.AccountTree" IconColor="Color.Inherit">
+        Flow graph
+    </MudNavLink>
+    <MudNavLink Href="recipes" Icon="@Icons.Material.Filled.MenuBook" IconColor="Color.Inherit">
+        Recipes
+    </MudNavLink>
+    <MudNavLink Href="factory/ingest">
+        <span class="fx-icon fx-icon-inline fx-icon-gear" aria-hidden="true"></span> Factory state
+    </MudNavLink>
+    <MudNavLink Href="factory/map">
+        <span class="fx-icon fx-icon-inline fx-icon-map" aria-hidden="true"></span> Factory map
+    </MudNavLink>
+    <MudNavLink Href="agent/logs" Icon="@Icons.Material.Filled.Terminal" IconColor="Color.Inherit">
+        Agent logs
+    </MudNavLink>
+    @if (AgentManagement.Value.Enabled)
+    {
+        <MudNavLink Href="settings/agents" Icon="@Icons.Material.Filled.Key" IconColor="Color.Inherit">
+            My Agents
+        </MudNavLink>
+    }
+    <MudNavLink Href="settings">
+        <span class="fx-icon fx-icon-inline fx-icon-screwdriver" aria-hidden="true"></span> Settings
+    </MudNavLink>
+</MudNavMenu>
+
+@code {
+    [Inject] private Microsoft.Extensions.Options.IOptions<Satisfactory.Presentation.Web.AgentManagementOptions> AgentManagement { get; set; } = default!;
+}

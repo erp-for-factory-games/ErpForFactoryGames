@@ -12,8 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\ApiService\ApiService.csproj" />
-    <ProjectReference Include="..\..\Web\Web.csproj" />
-    <ProjectReference Include="..\..\CaptainOfIndustry\Web\CaptainOfIndustry.Web.csproj" />
+    <ProjectReference Include="..\..\Presentation\Web\Satisfactory.Presentation.Web\Satisfactory.Presentation.Web.csproj" />
+    <ProjectReference Include="..\..\Presentation\Web\CaptainOfIndustry.Presentation.Web\CaptainOfIndustry.Presentation.Web.csproj" />
   </ItemGroup>
 
 </Project>

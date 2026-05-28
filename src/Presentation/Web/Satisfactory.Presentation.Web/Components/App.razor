@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["Satisfactory.Presentation.Web.styles.css"]" />
+    <ImportMap />
+    @* Modern browsers prefer SVG (scales sharp at any size); the PNG is the
+       fallback for the few that don't yet handle SVG favicons. *@
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+    <HeadOutlet />
+    <script>
+        // Apply persisted theme before first paint to avoid a flash. MainLayout
+        // takes over as soon as the circuit boots — this is just the pre-hydration nudge.
+        (function () {
+            try {
+                var saved = localStorage.getItem('erp-theme');
+                if (saved === 'light' || saved === 'dark') {
+                    document.documentElement.classList.remove('theme-dark', 'theme-light');
+                    document.documentElement.classList.add('theme-' + saved);
+                }
+            } catch (_) { /* localStorage may be unavailable */ }
+        })();
+        // Bridge between MudBlazor's IsDarkMode (C# source of truth) and the
+        // .theme-dark / .theme-light class on <html>. MainLayout calls
+        // erpSetTheme on toggle and erpReadInitialTheme once on init.
+        window.erpSetTheme = function (theme) {
+            document.documentElement.classList.remove('theme-dark', 'theme-light');
+            document.documentElement.classList.add('theme-' + theme);
+            try { localStorage.setItem('erp-theme', theme); } catch (_) { }
+        };
+        window.erpReadInitialTheme = function () {
+            return document.documentElement.classList.contains('theme-light') ? 'light' : 'dark';
+        };
+    </script>
+</head>
+
+<body>
+    @* InteractiveServer at the Routes level so the whole app — layout + pages — shares
+       one interactive render tree. MudBlazor's providers live in MainLayout and must be
+       in the same tree as the components that consume them (MudAutocomplete, etc.).
+       Setting @rendermode on <RouteView> would try to JSON-serialize RouteData.PageType
+       (a System.Type) across the SSR boundary, which is unsupported. *@
+    <Routes @rendermode="InteractiveServer" />
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="js/plan-export.js"></script>
+    <script src="js/auto-save.js"></script>
+</body>
+
+</html>
+

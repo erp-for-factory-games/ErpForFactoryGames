@@ -33,7 +33,7 @@
       booting Aspire. Playwright-driven tests still use the AppHost
       reference above to drive a real browser session.
     -->
-    <ProjectReference Include="..\..\..\src\Web\Web.csproj" />
+    <ProjectReference Include="..\..\..\src\Presentation\Web\Satisfactory.Presentation.Web\Satisfactory.Presentation.Web.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,489 @@
+using System.Net.Http.Json;
+
+namespace Satisfactory.Presentation.Web;
+
+public class PlannerApiClient(HttpClient httpClient)
+{
+    public async Task<CatalogItem[]> GetItemsAsync(CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<CatalogItem[]>("/catalog/items", ct) ?? [];
+
+    public async Task<RecipeView[]> GetRecipesAsync(CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<RecipeView[]>("/catalog/recipes", ct) ?? [];
+
+    public async Task<PlanResponse?> ComputePlanAsync(PlanRequest request, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("/plan", request, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<PlanResponse>(ct);
+    }
+
+    public async Task<CatalogueStatusView?> GetCatalogueStatusAsync(CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<CatalogueStatusView>("/catalogue/status", ct);
+
+    public async Task<CatalogueConfigureResult> ConfigureCatalogueAsync(string docsPath, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("/catalogue/configure", new { docsPath }, ct);
+        if (response.IsSuccessStatusCode)
+        {
+            var status = await response.Content.ReadFromJsonAsync<CatalogueStatusView>(ct);
+            return new CatalogueConfigureResult(true, status, null);
+        }
+        var error = await response.Content.ReadAsStringAsync(ct);
+        return new CatalogueConfigureResult(false, null, error);
+    }
+
+    public Task<FactoryStateViewModel?> GetFactoryStateAsync(CancellationToken ct = default) =>
+        httpClient.GetFromJsonAsync<FactoryStateViewModel>("/factory/state", ct);
+
+    public async Task<DetectedSaveViewModel[]> GetDetectedSavesAsync(CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<DetectedSaveViewModel[]>("/factory/saves", ct) ?? [];
+
+    /// <summary>
+    /// Raw GeoJSON FeatureCollection for the map page. JS consumes it
+    /// directly; no .NET DTO mirror needed (the shape is owned by the GeoJSON
+    /// spec, not our domain).
+    /// </summary>
+    public async Task<System.Text.Json.JsonElement?> GetFactoryStateGeoJsonAsync(CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync("/factory/state.geojson", ct);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(ct);
+    }
+
+    public async Task<FactoryIngestResult> IngestSaveAsync(string savePath, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("/factory/ingest", new { savePath }, ct);
+        if (response.IsSuccessStatusCode)
+        {
+            var view = await response.Content.ReadFromJsonAsync<FactoryStateViewModel>(ct);
+            return new FactoryIngestResult(true, view, null);
+        }
+        var error = await response.Content.ReadAsStringAsync(ct);
+        return new FactoryIngestResult(false, null, error);
+    }
+
+    // ----- Factory alerts (#116, surfaced on the dashboard via #131) -----------
+
+    public async Task<FactoryAlertView[]> GetFactoryAlertsAsync(CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<FactoryAlertView[]>("/factory/alerts", ct) ?? [];
+
+    /// <summary>
+    /// Marks an alert dismissed. Server is idempotent on the dismiss path —
+    /// re-calling on an already-dismissed alert is a 204, not an error.
+    /// </summary>
+    public async Task<bool> DismissAlertAsync(Guid id, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsync($"/factory/alerts/{id}/dismiss", content: null, ct);
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <summary>
+    /// Upserts a manual resource + purity override for the given node
+    /// reference. The API resolves the node's position from current state
+    /// and persists at that position; subsequent re-parses of the same world
+    /// will pick up the override automatically.
+    /// </summary>
+    public async Task<NodeOverrideResult> SetNodeOverrideAsync(string reference, string resource, string purity, CancellationToken ct = default)
+    {
+        var response = await httpClient.PutAsJsonAsync(
+            "/factory/node-override",
+            new { reference, resource, purity },
+            ct);
+        if (response.IsSuccessStatusCode) return new NodeOverrideResult(true, null);
+        var error = await response.Content.ReadAsStringAsync(ct);
+        return new NodeOverrideResult(false, error);
+    }
+
+    public async Task<NodeOverrideResult> ClearNodeOverrideAsync(string reference, CancellationToken ct = default)
+    {
+        var response = await httpClient.DeleteAsync(
+            $"/factory/node-override?reference={Uri.EscapeDataString(reference)}",
+            ct);
+        if (response.IsSuccessStatusCode) return new NodeOverrideResult(true, null);
+        var error = await response.Content.ReadAsStringAsync(ct);
+        return new NodeOverrideResult(false, error);
+    }
+
+    // ----- Saved plans (issue #77) ------------------------------------------
+    // CRUD around the EF-backed /plans endpoints. Stores only the planner
+    // inputs (targets + available); the computed plan is recomputed on load.
+
+    public async Task<SavedPlanSummary[]> ListSavedPlansAsync(CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<SavedPlanSummary[]>("/plans", ct) ?? [];
+
+    public Task<SavedPlanDetail?> GetSavedPlanAsync(Guid id, CancellationToken ct = default) =>
+        httpClient.GetFromJsonAsync<SavedPlanDetail>($"/plans/{id}", ct);
+
+    public async Task<SavedPlanDetail?> CreateSavedPlanAsync(SavePlanInput input, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("/plans", input, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<SavedPlanDetail>(ct);
+    }
+
+    public async Task<SavedPlanDetail?> UpdateSavedPlanAsync(Guid id, SavePlanInput input, CancellationToken ct = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"/plans/{id}", input, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<SavedPlanDetail>(ct);
+    }
+
+    public async Task<bool> DeleteSavedPlanAsync(Guid id, CancellationToken ct = default)
+    {
+        var response = await httpClient.DeleteAsync($"/plans/{id}", ct);
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <summary>
+    /// Backing call for the filesystem picker (issue #84). `path` is an
+    /// absolute filesystem path on the host machine; pass null to start at the
+    /// user's home directory. `filter` is a comma-separated extension list
+    /// (e.g. "json" or ".sav,.json") — empty means all files.
+    /// </summary>
+    public async Task<FsBrowseResult> BrowseFilesystemAsync(string? path, string? filter, string? purpose = null, CancellationToken ct = default)
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(path)) query.Add($"path={Uri.EscapeDataString(path)}");
+        if (!string.IsNullOrWhiteSpace(filter)) query.Add($"filter={Uri.EscapeDataString(filter)}");
+        if (!string.IsNullOrWhiteSpace(purpose)) query.Add($"purpose={Uri.EscapeDataString(purpose)}");
+        var url = "/fs/browse" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+
+        var response = await httpClient.GetAsync(url, ct);
+        if (response.IsSuccessStatusCode)
+        {
+            var view = await response.Content.ReadFromJsonAsync<FsBrowseView>(ct);
+            return new FsBrowseResult(true, view, null);
+        }
+        var error = await response.Content.ReadAsStringAsync(ct);
+        return new FsBrowseResult(false, null, error);
+    }
+
+    // ---- Saved plans & share links (#80) -----------------------------------
+
+    public async Task<SavedPlanResponse?> SavePlanAsync(SavePlanInput body, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("/plans", body, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<SavedPlanResponse>(ct);
+    }
+
+    public async Task<SavedPlanResponse?> GetSharedPlanAsync(string token, CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync($"/plans/shared/{Uri.EscapeDataString(token)}", ct);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<SavedPlanResponse>(ct);
+    }
+
+    public async Task<ShareTokenResponse?> CreateShareTokenAsync(Guid planId, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsync($"/plans/{planId}/share", content: null, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<ShareTokenResponse>(ct);
+    }
+
+    public async Task<bool> RevokeShareTokenAsync(Guid planId, string token, CancellationToken ct = default)
+    {
+        var response = await httpClient.DeleteAsync($"/plans/{planId}/share/{Uri.EscapeDataString(token)}", ct);
+        return response.IsSuccessStatusCode;
+    }
+
+    // ---- Agent tokens (ADR-0025 §2) ---------------------------------------
+
+    public Task<CurrentPlayerView?> GetCurrentPlayerAsync(CancellationToken ct = default) =>
+        httpClient.GetFromJsonAsync<CurrentPlayerView>("/players/current", ct);
+
+    public async Task<MintAgentTokenResponse?> MintAgentTokenAsync(Guid playerId, string? label, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"/players/{playerId}/agent-tokens", new { label }, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<MintAgentTokenResponse>(ct);
+    }
+
+    public async Task<AgentTokenView[]> ListAgentTokensAsync(Guid playerId, CancellationToken ct = default) =>
+        await httpClient.GetFromJsonAsync<AgentTokenView[]>($"/players/{playerId}/agent-tokens", ct) ?? [];
+
+    public async Task<bool> RevokeAgentTokenAsync(Guid playerId, Guid tokenId, CancellationToken ct = default)
+    {
+        var response = await httpClient.DeleteAsync($"/players/{playerId}/agent-tokens/{tokenId}", ct);
+        return response.IsSuccessStatusCode;
+    }
+
+    // ---- Player catalogue (ADR-0025 §7) -----------------------------------
+
+    public Task<PlayerCatalogueStatusView?> GetPlayerCatalogueAsync(Guid playerId, CancellationToken ct = default) =>
+        httpClient.GetFromJsonAsync<PlayerCatalogueStatusView>($"/players/{playerId}/catalogue/satisfactory", ct);
+
+    public async Task<bool> TriggerReIngestAsync(Guid playerId, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsync($"/players/{playerId}/re-ingest-catalogue", content: null, ct);
+        return response.IsSuccessStatusCode;
+    }
+}
+
+public sealed record CatalogItem(string Id, string Name);
+
+public sealed record RecipeView(
+    string Id,
+    string Name,
+    string BuildingId,
+    string BuildingName,
+    double BuildingPowerMw,
+    bool IsAlternate,
+    double DurationSeconds,
+    IReadOnlyList<AmountView> InputsPerMinute,
+    IReadOnlyList<AmountView> OutputsPerMinute);
+
+public sealed record TargetInput(string ItemId, decimal ItemsPerMinute);
+public sealed record AvailabilityInput(string ItemId, decimal ItemsPerMinute);
+
+/// <summary>Optional per-request node binding (#92). Server picks the
+/// best miner tier (out of <c>AvailableTiers</c>) per node to minimise
+/// total power. Empty <c>AvailableTiers</c> means all three are open.</summary>
+public sealed record NodeAvailabilityInput(
+    string NodeReference,
+    string Resource,
+    string Purity,
+    IReadOnlyList<string>? AvailableTiers);
+
+public sealed record PlanRequest(
+    IReadOnlyList<TargetInput> Targets,
+    IReadOnlyList<AvailabilityInput> Available,
+    IReadOnlyList<NodeAvailabilityInput>? Nodes = null,
+    decimal? PowerTargetMw = null);
+
+/// <summary>Per-generator output entry on a plan (#137).</summary>
+public sealed record GeneratorAllocationView(
+    string Kind,
+    string Fuel,
+    string FuelName,
+    decimal BuildingCount,
+    decimal PowerMw);
+
+public sealed record AmountView(string ItemId, string ItemName, decimal ItemsPerMinute);
+public sealed record StepView(
+    string RecipeId,
+    string RecipeName,
+    string BuildingId,
+    string BuildingName,
+    decimal BuildingCount,
+    decimal PowerMw,
+    IReadOnlyList<AmountView> Inputs,
+    IReadOnlyList<AmountView> Outputs);
+
+public sealed record PlanResponse(
+    bool IsFeasible,
+    IReadOnlyList<StepView> Steps,
+    decimal TotalPowerMw,
+    IReadOnlyList<AmountView> RawInputsConsumed,
+    IReadOnlyList<MissingInputView> MissingInputs,
+    IReadOnlyList<ExtractorAllocationView> ExtractorAllocations,
+    IReadOnlyList<string>? Warnings = null,
+    IReadOnlyList<FluidPipeRequirementView>? FluidPipeRequirements = null,
+    LpSensitivityView? Sensitivity = null,
+    IReadOnlyList<GeneratorAllocationView>? GeneratorAllocations = null)
+{
+    /// <summary>
+    /// Plan-wide advisory strings (e.g. the variable-power-buildings notice
+    /// from #91 v1). Older API builds won't include this field — the nullable
+    /// default keeps the JSON binder happy, and the property below normalises
+    /// to an empty list so render-side code can call <c>.Count</c> without a
+    /// null check.
+    /// </summary>
+    public IReadOnlyList<string> WarningsOrEmpty => Warnings ?? Array.Empty<string>();
+
+    /// <summary>
+    /// Non-null shorthand for the optional <see cref="FluidPipeRequirements"/>
+    /// field — older API responses (and any future server that omits the
+    /// section) read as the empty list, so Razor can iterate without null
+    /// checks.
+    /// </summary>
+    public IReadOnlyList<FluidPipeRequirementView> Pipes =>
+        FluidPipeRequirements ?? [];
+}
+
+/// <summary>Per-node extraction breakdown (#92). Empty when the request
+/// didn't include any node bindings.</summary>
+public sealed record ExtractorAllocationView(
+    string NodeReference,
+    string Resource,
+    string ResourceName,
+    string Purity,
+    string Tier,
+    decimal MinerFraction,
+    decimal OutputPerMinute);
+
+/// <summary>Per-fluid pipe-throughput summary surfaced in the planner UI (#90).
+/// <c>RecommendedTier</c> is the enum name ("Mk1" / "Mk2" / "OverMk2").</summary>
+public sealed record FluidPipeRequirementView(
+    string ItemId,
+    string ItemName,
+    decimal MaxRatePerMinute,
+    string RecommendedTier);
+
+/// <summary>LP sensitivity surface (#129). Null on plans produced by the
+/// recursive engine; populated by the OR-Tools engine.</summary>
+public sealed record LpSensitivityView(
+    IReadOnlyList<ItemShadowPriceView> SupplyConstraints,
+    IReadOnlyList<RecipeReducedCostView> ProductionRecipes);
+
+public sealed record ItemShadowPriceView(
+    string ItemId,
+    string ItemName,
+    decimal ShadowPrice,
+    decimal Slack);
+
+public sealed record RecipeReducedCostView(
+    string RecipeId,
+    string RecipeName,
+    decimal ReducedCost);
+
+/// <summary>Per-item diagnostic for an unsatisfied target (#8).
+/// <c>ItemId</c> + <c>ItemName</c> + <c>ItemsPerMinute</c> match the previous
+/// <see cref="AmountView"/> shape so anything that just rendered the bare
+/// list keeps working; <c>Reason</c>, <c>CouldBeProducedBy</c>, and
+/// <c>TopConsumers</c> are the new actionable surface.</summary>
+public sealed record MissingInputView(
+    string ItemId,
+    string ItemName,
+    decimal ItemsPerMinute,
+    string Reason,
+    IReadOnlyList<RecipeRefView> CouldBeProducedBy,
+    IReadOnlyList<RecipeRefView> TopConsumers);
+
+public sealed record RecipeRefView(string Id, string Name);
+
+public sealed record CatalogueStatusView(
+    bool IsLoaded,
+    string? Source,
+    int ItemCount,
+    int BuildingCount,
+    int RecipeCount,
+    int AlternateRecipeCount,
+    IReadOnlyList<string> Warnings);
+
+public sealed record CatalogueConfigureResult(bool Success, CatalogueStatusView? Status, string? Error);
+
+public sealed record SaveMetadataViewModel(
+    string SessionName,
+    int SaveVersion,
+    int BuildVersion,
+    double PlayedSeconds,
+    DateTime SaveDateTimeUtc);
+
+public sealed record CountViewModel(string Key, int Count);
+
+public sealed record BuildingGroupViewModel(
+    string Building,
+    string? BuildingName,
+    string? Recipe,
+    string? RecipeName,
+    int Count);
+
+public sealed record FactoryStateViewModel(
+    bool IsLoaded,
+    string? Source,
+    SaveMetadataViewModel? Save,
+    IReadOnlyList<CountViewModel> Miners,
+    int MinersBoundToNode,
+    IReadOnlyList<BuildingGroupViewModel> Buildings,
+    int BuildingsWithRecipe,
+    IReadOnlyList<CountViewModel> Belts,
+    IReadOnlyList<CountViewModel> Pipelines,
+    IReadOnlyList<CountViewModel> Generators,
+    int ResourceNodeCount,
+    IReadOnlyList<string> Warnings);
+
+public sealed record FactoryIngestResult(bool Success, FactoryStateViewModel? State, string? Error);
+
+/// <summary>Wire shape of <c>GET /factory/alerts</c> (#116).
+/// Severity is the enum name (string) for clean JSON + ADA pattern-matching.</summary>
+public sealed record FactoryAlertView(
+    Guid Id,
+    string Key,
+    string Severity,
+    string Source,
+    string Title,
+    string Detail,
+    string Fix,
+    DateTime CreatedUtc);
+
+public sealed record DetectedSaveViewModel(string Path, string Name, DateTime LastWriteTimeUtc, long SizeBytes);
+
+public sealed record NodeOverrideResult(bool Success, string? Error);
+
+// ----- Saved plan wire DTOs (issue #77) -------------------------------------
+
+public sealed record SavePlanInput(
+    string Name,
+    IReadOnlyList<TargetInput> Targets,
+    IReadOnlyList<AvailabilityInput> Available);
+
+public sealed record SavedPlanSummary(
+    Guid Id,
+    string Name,
+    DateTime CreatedUtc,
+    DateTime UpdatedUtc,
+    int TargetCount,
+    int AvailableCount);
+
+public sealed record SavedPlanDetail(
+    Guid Id,
+    string Name,
+    DateTime CreatedUtc,
+    DateTime UpdatedUtc,
+    IReadOnlyList<TargetInput> Targets,
+    IReadOnlyList<AvailabilityInput> Available);
+
+public sealed record FsEntryView(string Name, string FullPath, bool IsDirectory, DateTime LastWriteTimeUtc, long? SizeBytes);
+
+public sealed record FsBrowseView(
+    string CurrentPath,
+    string? ParentPath,
+    IReadOnlyList<FsEntryView> Directories,
+    IReadOnlyList<FsEntryView> Files);
+
+public sealed record FsBrowseResult(bool Success, FsBrowseView? View, string? Error);
+
+// ---- Share links (#80) -----------------------------------------------------
+
+public sealed record SavedPlanResponse(
+    Guid Id,
+    string Name,
+    IReadOnlyList<TargetInput> Targets,
+    IReadOnlyList<AvailabilityInput> Available,
+    DateTime CreatedUtc,
+    DateTime UpdatedUtc);
+
+public sealed record ShareTokenResponse(string Token, string Url, DateTime CreatedUtc, DateTime? ExpiresUtc);
+
+// ---- Agent tokens (ADR-0025 §2) -------------------------------------------
+
+public sealed record CurrentPlayerView(Guid PlayerId, string DisplayName, DateTime CreatedUtc);
+
+public sealed record MintAgentTokenResponse(Guid Id, string Plaintext, string Label, DateTime CreatedUtc);
+
+public sealed record AgentTokenView(
+    Guid Id,
+    string Label,
+    DateTime CreatedUtc,
+    DateTime? LastSeenUtc,
+    DateTime? RevokedUtc);
+
+/// <summary>
+/// Catalogue + re-ingest state for one player, returned by
+/// <c>GET /players/{id}/catalogue/satisfactory</c> (ADR-0025 §7). The
+/// <see cref="Catalogue"/> sub-record is null until the agent has
+/// successfully uploaded once.
+/// </summary>
+public sealed record PlayerCatalogueStatusView(
+    Guid PlayerId,
+    bool ReIngestRequested,
+    DateTime? ReIngestRequestedUtc,
+    PlayerCatalogueSummary? Catalogue);
+
+public sealed record PlayerCatalogueSummary(
+    string DocsHash,
+    string? GameVersion,
+    long SizeBytes,
+    DateTime UploadedUtc);
