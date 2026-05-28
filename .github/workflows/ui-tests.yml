@@ -63,11 +63,11 @@ jobs:
           # extensions that actually move pixels.
           filters: |
             web:
-              - 'src/Web/**/*.{cs,razor,razor.css,css,js,html,json}'
-              - 'src/Web/wwwroot/**'
-              - 'src/CaptainOfIndustry/Web/**/*.{cs,razor,razor.css,css,js,html,json}'
-              - 'src/CaptainOfIndustry/Web/wwwroot/**'
-              - 'src/Web.Shared/**/*.{cs,razor,razor.css,css,js,html}'
+              - 'src/Presentation/Web/Satisfactory.Presentation.Web/**/*.{cs,razor,razor.css,css,js,html,json}'
+              - 'src/Presentation/Web/Satisfactory.Presentation.Web/wwwroot/**'
+              - 'src/Presentation/Web/CaptainOfIndustry.Presentation.Web/**/*.{cs,razor,razor.css,css,js,html,json}'
+              - 'src/Presentation/Web/CaptainOfIndustry.Presentation.Web/wwwroot/**'
+              - 'src/Presentation/Web/Erp.Presentation.Web.Common/**/*.{cs,razor,razor.css,css,js,html}'
               - 'test/Web/**'
 
       - name: Compute gate

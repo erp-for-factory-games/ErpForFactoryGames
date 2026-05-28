@@ -10,7 +10,7 @@ var apiService = builder.AddProject<Projects.ApiService>("apiservice")
 // var plansDb = builder.AddPostgres("plans").AddDatabase("plansdb");
 // apiService.WithReference(plansDb).WaitFor(plansDb);
 
-builder.AddProject<Projects.Web>("webfrontend")
+builder.AddProject<Projects.Satisfactory_Presentation_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(apiService)
@@ -19,7 +19,7 @@ builder.AddProject<Projects.Web>("webfrontend")
 // Captain of Industry presentation app — runs independently of the Satisfactory
 // frontend per ADR-0022 (isolated apps, one per supported game). Reads its
 // catalogue in-process from the extractor's JSON; no ApiService dependency in v1.
-builder.AddProject<Projects.CaptainOfIndustry_Web>("coi-webfrontend")
+builder.AddProject<Projects.CaptainOfIndustry_Presentation_Web>("coi-webfrontend")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health");
 

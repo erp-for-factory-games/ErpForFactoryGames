@@ -1,7 +1,7 @@
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 
-namespace Web.UiTests;
+namespace Satisfactory.Presentation.Web.UiTests;
 
 /// <summary>
 /// Regression for the nav-drawer toggle in MainLayout. The button lives to the

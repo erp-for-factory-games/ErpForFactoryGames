@@ -1,0 +1,352 @@
+@page "/factory/ingest"
+@rendermode InteractiveServer
+@inject PlannerApiClient Api
+@inject IDialogService DialogService
+@using Satisfactory.Presentation.Web.Components.Shared
+
+<PageTitle>Factory state</PageTitle>
+
+<h1>Factory state</h1>
+
+@if (state is null)
+{
+    <MudText><em>Loading status...</em></MudText>
+}
+else
+{
+    <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined" Class="mb-3">
+        <MudText Typo="Typo.subtitle2"><strong>@StatusHeadline</strong></MudText>
+        @if (!string.IsNullOrEmpty(state.Source))
+        {
+            <MudText Typo="Typo.caption">Source: <code>@state.Source</code></MudText>
+        }
+        @if (state.Save is { } save)
+        {
+            <MudText Typo="Typo.caption">
+                <strong>@save.SessionName</strong>
+                · save v@(save.SaveVersion) (build @save.BuildVersion)
+                · played @FormatPlayed(save.PlayedSeconds)
+                · saved @save.SaveDateTimeUtc.ToString("u")
+            </MudText>
+        }
+    </MudAlert>
+
+    @if (state.IsLoaded)
+    {
+        <MudGrid Spacing="3" Class="mt-3">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h5" Class="mb-2">Miners <MudText HtmlTag="span" Typo="Typo.caption" Color="Color.Default">by tier</MudText></MudText>
+                @CountTable(state.Miners, "No miners.")
+                @if (state.Miners.Count > 0)
+                {
+                    <MudText Typo="Typo.caption" Class="mt-1 d-block">
+                        @state.MinersBoundToNode / @state.Miners.Sum(m => m.Count) bound to a resource node.
+                    </MudText>
+                }
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h5" Class="mb-2">Belts <MudText HtmlTag="span" Typo="Typo.caption" Color="Color.Default">by tier</MudText></MudText>
+                @CountTable(state.Belts, "No belts.")
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mt-3">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h5" Class="mb-2">Pipelines <MudText HtmlTag="span" Typo="Typo.caption" Color="Color.Default">by tier</MudText></MudText>
+                @CountTable(state.Pipelines, "No pipelines.")
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h5" Class="mb-2">Generators <MudText HtmlTag="span" Typo="Typo.caption" Color="Color.Default">by kind</MudText></MudText>
+                @CountTable(state.Generators, "No generators.")
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mt-3">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h5" Class="mb-2">Resource nodes</MudText>
+                <MudText Class="display-6">@state.ResourceNodeCount.ToString("N0")</MudText>
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mt-3">
+            <MudItem xs="12">
+                <MudText Typo="Typo.h5" Class="mb-2">Production buildings <MudText HtmlTag="span" Typo="Typo.caption" Color="Color.Default">by type × recipe</MudText></MudText>
+                @BuildingTable(state.Buildings, "No production buildings.")
+                <MudText Typo="Typo.caption" Class="mt-1 d-block">
+                    @state.BuildingsWithRecipe / @state.Buildings.Sum(b => b.Count) bound to a recipe.
+                    Clock speed comes through as 100% for default-clocked machines (the game only serializes
+                    overclocked values).
+                </MudText>
+            </MudItem>
+        </MudGrid>
+
+        @if (state.Warnings is { Count: > 0 })
+        {
+            <MudExpansionPanels Elevation="0" Class="mt-3">
+                <MudExpansionPanel Text="@($"{state.Warnings.Count} warning(s) during parse")" Dense="true">
+                    <ul class="small">
+                        @foreach (var w in state.Warnings.Take(50))
+                        {
+                            <li>@w</li>
+                        }
+                        @if (state.Warnings.Count > 50)
+                        {
+                            <li><em>(@(state.Warnings.Count - 50) more not shown)</em></li>
+                        }
+                    </ul>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        }
+    }
+}
+
+<div class="mt-4">
+    @if (detectedSaves is { Length: > 0 })
+    {
+        <MudSelect T="string" Value="selectedSavePath" ValueChanged="OnDetectedSaveSelected"
+                   Label="Detected save files"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   Dense="true"
+                   Class="mb-1">
+            <MudSelectItem Value="@("")">— pick a save —</MudSelectItem>
+            @foreach (var s in detectedSaves)
+            {
+                <MudSelectItem Value="@s.Path">
+                    @s.Name · @s.LastWriteTimeUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @FormatSize(s.SizeBytes)
+                </MudSelectItem>
+            }
+        </MudSelect>
+        <MudText Typo="Typo.caption" Class="d-block mb-3">
+            Found @detectedSaves.Length save(s) under <code>%LocalAppData%\FactoryGame\Saved\SaveGames\</code>.
+            Selecting one fills the path field below.
+        </MudText>
+    }
+
+    <MudTextField @bind-Value="pathInput"
+                  Label="Path to a Satisfactory .sav file or a SaveGames directory"
+                  Placeholder="C:\Users\<you>\AppData\Local\FactoryGame\Saved\SaveGames\<steamId>\Beta Game_autosave_0.sav"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  ReadOnly="true"
+                  Adornment="Adornment.End"
+                  AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                  AdornmentAriaLabel="Browse for save file"
+                  OnAdornmentClick="BrowseSavePath"
+                  Class="mb-1" />
+    <MudText Typo="Typo.caption" Class="d-block mb-2">
+        Either point at a specific <code>.sav</code> file or a directory (we'll pick the most-recently-written
+        <code>*.sav</code>). Startup resolution order:
+        <code>ERP_SATISFACTORY_SAVE_PATH</code> env var → user-saved (this form) →
+        <code>FactoryState:Satisfactory:SavePath</code> in <code>appsettings</code> → auto-detect under
+        <code>%LocalAppData%\FactoryGame\Saved\SaveGames\</code>.
+    </MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Ingest"
+               Disabled="@(string.IsNullOrWhiteSpace(pathInput) || isIngesting)">
+        @if (isIngesting)
+        {
+            <span class="gear-spin" aria-hidden="true"></span>
+            <text>Ingesting</text>
+        }
+        else
+        {
+            <text>Ingest</text>
+        }
+    </MudButton>
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <MudText HtmlTag="span" Color="@(messageIsError ? Color.Error : Color.Success)" Class="ms-3">@message</MudText>
+    }
+</div>
+
+@code {
+    private FactoryStateViewModel? state;
+    private DetectedSaveViewModel[]? detectedSaves;
+    private string? pathInput;
+    private string? selectedSavePath;
+    private string? message;
+    private bool messageIsError;
+    private bool isIngesting;
+
+    private Severity StatusSeverity => state is null
+        ? Severity.Info
+        : state.IsLoaded ? Severity.Success : Severity.Warning;
+
+    private string StatusHeadline => state is null
+        ? ""
+        : state.IsLoaded ? "Factory state loaded."
+        : "No save loaded. Configure your save-file path below.";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var stateTask = Api.GetFactoryStateAsync();
+        var savesTask = Api.GetDetectedSavesAsync();
+        await Task.WhenAll(stateTask, savesTask);
+
+        state = await stateTask;
+        detectedSaves = await savesTask;
+
+        if (state is { IsLoaded: true, Source: { } source })
+        {
+            pathInput = source;
+            if (detectedSaves.Any(s => string.Equals(s.Path, source, StringComparison.OrdinalIgnoreCase)))
+            {
+                selectedSavePath = source;
+            }
+        }
+    }
+
+    private void OnDetectedSaveSelected(string value)
+    {
+        selectedSavePath = value;
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            pathInput = value;
+        }
+    }
+
+    private async Task BrowseSavePath()
+    {
+        var parameters = new DialogParameters<PathPickerDialog>
+        {
+            { x => x.InitialPath, pathInput },
+            { x => x.Mode, PathPickerDialog.PathPickerMode.Either },
+            { x => x.FileFilter, "sav" },
+            { x => x.Purpose, "saves" },
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<PathPickerDialog>("Choose .sav file or SaveGames folder", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string picked })
+        {
+            pathInput = picked;
+        }
+    }
+
+    private async Task Ingest()
+    {
+        if (string.IsNullOrWhiteSpace(pathInput)) return;
+
+        isIngesting = true;
+        message = null;
+        try
+        {
+            var result = await Api.IngestSaveAsync(pathInput!);
+            if (result.Success && result.State is not null)
+            {
+                state = result.State;
+                var totalMiners = result.State.Miners.Sum(m => m.Count);
+                var totalBuildings = result.State.Buildings.Sum(b => b.Count);
+                var totalBelts = result.State.Belts.Sum(b => b.Count);
+                message = $"Loaded {totalMiners} miners, {totalBuildings} buildings, {totalBelts} belts.";
+                messageIsError = false;
+            }
+            else
+            {
+                message = result.Error ?? "Failed to parse save file.";
+                messageIsError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            isIngesting = false;
+        }
+    }
+
+    private static RenderFragment CountTable(IReadOnlyList<CountViewModel> rows, string emptyLabel) => __builder =>
+    {
+        if (rows.Count == 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Default">@emptyLabel</MudText>
+            return;
+        }
+
+        <MudSimpleTable Dense="true" Hover="true" Bordered="false" Elevation="0" Class="fx-mud-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th style="text-align: right;">Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    <tr>
+                        <td><code>@row.Key</code></td>
+                        <td style="text-align: right;">@row.Count.ToString("N0")</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    };
+
+    private static RenderFragment BuildingTable(IReadOnlyList<BuildingGroupViewModel> rows, string emptyLabel) => __builder =>
+    {
+        if (rows.Count == 0)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Default">@emptyLabel</MudText>
+            return;
+        }
+
+        <MudSimpleTable Dense="true" Hover="true" Bordered="false" Elevation="0" Class="fx-mud-table">
+            <thead>
+                <tr>
+                    <th>Building</th>
+                    <th>Recipe</th>
+                    <th style="text-align: right;">Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    <tr>
+                        <td title="@row.Building">
+                            @if (row.BuildingName is not null)
+                            {
+                                <span>@row.BuildingName</span>
+                            }
+                            else
+                            {
+                                <code>@row.Building</code>
+                            }
+                        </td>
+                        <td>
+                            @if (row.RecipeName is not null)
+                            {
+                                <span>@row.RecipeName</span>
+                                <MudText HtmlTag="small" Typo="Typo.caption" Color="Color.Default" Class="ms-1">(<code>@row.Recipe</code>)</MudText>
+                            }
+                            else if (row.Recipe is not null)
+                            {
+                                <code>@row.Recipe</code>
+                            }
+                            else
+                            {
+                                <MudText HtmlTag="span" Typo="Typo.caption" Color="Color.Default">— idle —</MudText>
+                            }
+                        </td>
+                        <td style="text-align: right;">@row.Count.ToString("N0")</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    };
+
+    private static string FormatPlayed(double seconds)
+    {
+        var t = TimeSpan.FromSeconds(seconds);
+        return $"{(int)t.TotalHours}h {t.Minutes:00}m";
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / 1024.0 / 1024.0:F1} MB";
+    }
+}

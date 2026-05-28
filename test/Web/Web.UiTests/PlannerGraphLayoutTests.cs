@@ -1,9 +1,9 @@
-using Web;
+using Satisfactory.Presentation.Web;
 
 // Deliberately NOT under the Web.UiTests namespace so the TestNoUi NUKE
 // target (which filters FullyQualifiedName!~Web.UiTests) picks these up.
 // These are pure unit tests — they never touch Aspire or Playwright.
-namespace Web.LayoutTests;
+namespace Satisfactory.Presentation.Web.LayoutTests;
 
 public class PlannerGraphLayoutTests
 {

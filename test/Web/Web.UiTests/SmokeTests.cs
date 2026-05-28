@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 
-namespace Web.UiTests;
+namespace Satisfactory.Presentation.Web.UiTests;
 
 public class SmokeTests(AspireAppFixture fixture) : IClassFixture<AspireAppFixture>
 {

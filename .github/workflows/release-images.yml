@@ -5,7 +5,7 @@
 # tag, and the always-moving `:latest` label is updated to match.
 #
 # Container images (per ADR-0023):
-#   - Satisfactory Web (src/Web/Dockerfile) -> ghcr.io/<owner>/erp-web
+#   - Satisfactory Web (src/Presentation/Web/Satisfactory.Presentation.Web/Dockerfile) -> ghcr.io/<owner>/erp-web
 #   - Planner ApiService (src/ApiService/Dockerfile) -> ghcr.io/<owner>/erp-api
 #   CoI Web image is deliberately not built here yet — agent milestone solves
 #   catalogue distribution first.
@@ -35,7 +35,7 @@ jobs:
       matrix:
         include:
           - image: erp-web
-            dockerfile: src/Web/Dockerfile
+            dockerfile: src/Presentation/Web/Satisfactory.Presentation.Web/Dockerfile
           - image: erp-api
             dockerfile: src/ApiService/Dockerfile
 

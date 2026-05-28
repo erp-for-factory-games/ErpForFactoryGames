@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>CaptainOfIndustry.Presentation.Web</RootNamespace>
+    <AssemblyName>CaptainOfIndustry.Presentation.Web</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Hosting\Erp.Hosting.ServiceDefaults\Erp.Hosting.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\Application\Erp.Application.Common\Erp.Application.Common.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\CaptainOfIndustry.Infrastructure\CaptainOfIndustry.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="9.4.0" />
+  </ItemGroup>
+
+</Project>

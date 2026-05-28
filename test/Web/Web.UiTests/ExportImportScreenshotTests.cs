@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-namespace Web.UiTests;
+namespace Satisfactory.Presentation.Web.UiTests;
 
 /// <summary>
 /// Captures a screenshot of the Planner page showing the JSON Export/Import buttons
