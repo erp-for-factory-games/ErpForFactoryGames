@@ -14,6 +14,7 @@
     <ProjectReference Include="..\..\Presentation\Api\Satisfactory.Presentation.Api\Satisfactory.Presentation.Api.csproj" />
     <ProjectReference Include="..\..\Presentation\Api\Erp.Presentation.Api.Auth\Erp.Presentation.Api.Auth.csproj" />
     <ProjectReference Include="..\..\Presentation\Api\CaptainOfIndustry.Presentation.Api\CaptainOfIndustry.Presentation.Api.csproj" />
+    <ProjectReference Include="..\..\Presentation\Web\Erp.Presentation.Web.Auth\Erp.Presentation.Web.Auth.csproj" />
     <ProjectReference Include="..\..\Presentation\Web\Satisfactory.Presentation.Web\Satisfactory.Presentation.Web.csproj" />
     <ProjectReference Include="..\..\Presentation\Web\CaptainOfIndustry.Presentation.Web\CaptainOfIndustry.Presentation.Web.csproj" />
   </ItemGroup>

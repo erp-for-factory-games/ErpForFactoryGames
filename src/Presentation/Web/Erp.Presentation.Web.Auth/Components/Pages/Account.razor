@@ -1,0 +1,22 @@
+@page "/account"
+
+<PageTitle>ERP — Account</PageTitle>
+
+<h1>Account</h1>
+
+<MudText Class="mb-4">
+    Profile and identity settings for your ERP for Factory Games player. Today the
+    player is provisioned automatically in development (<code>DevPlayerBootstrap</code>
+    on the Auth API); this page becomes the surface for editing display name,
+    linked providers, and account deletion once sign-in ships.
+</MudText>
+
+<MudAlert Severity="Severity.Info" Class="mb-4">
+    Scaffold only — no editable fields yet. Account data is owned by the Auth API
+    (<code>auth-api</code>) per ADR-0026.
+</MudAlert>
+
+<MudPaper Class="pa-4" Elevation="0" Outlined="true">
+    <MudText Typo="Typo.subtitle2" Class="mb-2">Linked providers</MudText>
+    <MudText Typo="Typo.body2">None — provider linking arrives with the OAuth phase.</MudText>
+</MudPaper>

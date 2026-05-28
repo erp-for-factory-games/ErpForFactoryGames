@@ -1,0 +1,18 @@
+@page "/agents"
+
+<PageTitle>ERP — Agents</PageTitle>
+
+<h1>Agents</h1>
+
+<MudText Class="mb-4">
+    Pair and manage the desktop agents that upload your save files and game
+    catalogues. Agent tokens are owned by the Auth API (<code>auth-api</code>) and
+    shared across every game planner — one set of agents per player, not per game.
+</MudText>
+
+<MudAlert Severity="Severity.Info" Class="mb-4">
+    Scaffold only. The full "My Agents" management UI moves here from the
+    Satisfactory frontend's <code>/settings/agents</code> page in a follow-up
+    (see #260), and the token format switches to JWT in
+    <MudLink Href="https://github.com/ChrisonSimtian/ErpForFactoryGames/blob/main/docs/adr/0027-jwt-hmac-cross-api-auth.md">ADR-0027</MudLink> / phase 5c3 (#279).
+</MudAlert>

@@ -29,6 +29,9 @@
   <Folder Name="/src/Presentation/Web/Erp.Presentation.Web.Common/">
     <Project Path="src/Presentation/Web/Erp.Presentation.Web.Common/Erp.Presentation.Web.Common.csproj" />
   </Folder>
+  <Folder Name="/src/Presentation/Web/Erp.Presentation.Web.Auth/">
+    <Project Path="src/Presentation/Web/Erp.Presentation.Web.Auth/Erp.Presentation.Web.Auth.csproj" />
+  </Folder>
   <Folder Name="/src/Presentation/Web/Satisfactory.Presentation.Web/">
     <Project Path="src/Presentation/Web/Satisfactory.Presentation.Web/Satisfactory.Presentation.Web.csproj" />
   </Folder>

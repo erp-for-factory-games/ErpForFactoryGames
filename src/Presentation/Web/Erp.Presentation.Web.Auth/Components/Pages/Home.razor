@@ -1,0 +1,30 @@
+@page "/"
+
+<PageTitle>ERP — Sign in</PageTitle>
+
+<h1>Sign in</h1>
+
+<MudText Class="mb-4">
+    Single account across every ERP for Factory Games planner. This is the central
+    identity punch-out — game frontends
+    (<MudLink Href="https://satisfactory.erp-for-factory.games">Satisfactory</MudLink>,
+    <MudLink Href="https://coi.erp-for-factory.games">Captain of Industry</MudLink>)
+    redirect here to sign in and manage their account, per
+    <MudLink Href="https://github.com/ChrisonSimtian/ErpForFactoryGames/blob/main/docs/adr/0026-onion-layered-src-with-product-split.md">ADR-0026</MudLink>.
+</MudText>
+
+<MudAlert Severity="Severity.Info" Class="mb-4">
+    Scaffold only. Provider sign-in (Google, Microsoft, Apple, Steam) and the
+    OAuth flow land in a later phase — this project carves out the slot they
+    wire into without touching the game frontends.
+</MudAlert>
+
+<MudPaper Class="pa-4" Elevation="0" Outlined="true">
+    <MudText Typo="Typo.subtitle2" Class="mb-3">Sign in with</MudText>
+    <MudStack Spacing="2">
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" Disabled="true" FullWidth="true">Google — coming soon</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" Disabled="true" FullWidth="true">Microsoft — coming soon</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" Disabled="true" FullWidth="true">Apple — coming soon</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" Disabled="true" FullWidth="true">Steam — coming soon</MudButton>
+    </MudStack>
+</MudPaper>
