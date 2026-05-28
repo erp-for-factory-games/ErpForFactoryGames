@@ -39,6 +39,10 @@
   <Folder Name="/src/CaptainOfIndustry/Web/">
     <Project Path="src/CaptainOfIndustry/Web/CaptainOfIndustry.Web.csproj" />
   </Folder>
+  <Folder Name="/src/Deploy/" />
+  <Folder Name="/src/Deploy/Erp.Deploy/">
+    <Project Path="src/Deploy/Erp.Deploy/Erp.Deploy.csproj" />
+  </Folder>
   <Folder Name="/test/" />
   <Folder Name="/test/Agent.Tests/">
     <Project Path="test/Agent.Tests/Agent.Tests.csproj" />
@@ -71,5 +75,9 @@
   <Folder Name="/test/Web/" />
   <Folder Name="/test/Web/Web.UiTests/">
     <Project Path="test/Web/Web.UiTests/Web.UiTests.csproj" />
+  </Folder>
+  <Folder Name="/test/Deploy/" />
+  <Folder Name="/test/Deploy/Erp.Deploy.Tests/">
+    <Project Path="test/Deploy/Erp.Deploy.Tests/Erp.Deploy.Tests.csproj" />
   </Folder>
 </Solution>

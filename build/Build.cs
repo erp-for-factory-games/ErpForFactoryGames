@@ -1,3 +1,7 @@
+using System.Text.Json;
+using Erp.Deploy;
+using Erp.Deploy.Configuration;
+using Erp.Deploy.Ssh;
 using Fallout.Common;
 using Fallout.Common.CI.GitHubActions;
 using Fallout.Common.IO;
@@ -29,6 +33,32 @@ class Build : FalloutBuild
 
     [Solution(GenerateProjects = true)]
     readonly Solution Solution = null!;
+
+    // -------------------------------------------------------------------------
+    // Deploy parameters (consumed by Provision target).
+    //
+    // CloudflareApiToken: [Secret] makes Fallout prompt for it (masked) when
+    // not supplied via env var or command line, and keeps it out of logs.
+    // Locally we expect `CLOUDFLARE_API_TOKEN=$(bw get password '<vault-item>')`
+    // before ./build.sh Provision; in CI it comes from GitHub Actions secrets.
+    // -------------------------------------------------------------------------
+    [Parameter("Cloudflare API token. Scopes: Account · Cloudflare Tunnel · Edit; Zone · DNS · Edit; Account · Account Settings · Read.")]
+    [Secret]
+    readonly string CloudflareApiToken = null!;
+
+    [Parameter("Plan changes without writing them back to Cloudflare (Provision) or the LXC (Up).")]
+    readonly bool DryRun;
+
+    [Parameter("Output format for Provision: text (human, default) or json.")]
+    readonly string DeployOutput = "text";
+
+    [Parameter("Image tag for erp-web + erp-api. Default: latest.")]
+    readonly string ImageTag = "latest";
+
+    // Populated by Provision when it applies; read by Up. Empty when Provision
+    // ran in dry-run, in which case Up uses a placeholder token for its own
+    // dry-run output and refuses to proceed if asked to apply for real.
+    IReadOnlyList<TunnelOutput> _connectorTokens = Array.Empty<TunnelOutput>();
 
     GitHubActions GitHubActions => GitHubActions.Instance;
 
@@ -294,6 +324,102 @@ class Build : FalloutBuild
                 $"release create {tag} --title \"Release {tag}\" --generate-notes --target {sha}",
                 workingDirectory: RootDirectory);
             process.AssertZeroExitCode();
+        });
+
+    // -------------------------------------------------------------------------
+    // Deploy: reconcile Cloudflare tunnel + ingress + DNS for the production
+    // stack. Consumes deploy/erp-deploy.json. POC for Fallout's deploy-agent
+    // direction — same C#-as-build-script story extended from CI to CD (#263).
+    // -------------------------------------------------------------------------
+    Target Provision => _ => _
+        .Description("Reconcile Cloudflare tunnel + ingress + DNS for the deploy stack. Pass --dry-run to plan without writes.")
+        .Requires(() => CloudflareApiToken)
+        .Executes(async () =>
+        {
+            var configPath = RootDirectory / "deploy" / "erp-deploy.json";
+            if (!configPath.FileExists())
+            {
+                throw new InvalidOperationException($"Deploy config not found at {configPath}");
+            }
+
+            var json = configPath.ReadAllText();
+            var options = JsonSerializer.Deserialize<DeployOptions>(
+                json,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web))
+                ?? throw new InvalidOperationException($"Failed to parse {configPath}");
+
+            var output = string.Equals(DeployOutput, "json", StringComparison.OrdinalIgnoreCase)
+                ? OutputFormat.Json
+                : OutputFormat.Text;
+
+            var provisioner = Provisioner.Create(CloudflareApiToken);
+            var result = await provisioner.RunAsync(new ProvisionRequest(options, DryRun, output));
+
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Provision failed with exit code {result.ExitCode}.");
+            }
+            _connectorTokens = result.Tunnels;
+            Log.Information("Provision complete ({TunnelCount} tunnel(s), DryRun={DryRun}).", result.Tunnels.Count, DryRun);
+        });
+
+    // -------------------------------------------------------------------------
+    // Up: ship the compose stack to the LXC and bring it forward.
+    //
+    // Replaces deploy.ps1 lines 117–183. Uses Renci.SshNet for SFTP + remote
+    // exec so the stack.env body is written as raw bytes — no remote shell
+    // ever re-parses the connector token line, which is the bug deploy.ps1
+    // couldn't shake.
+    //
+    // DependsOn(Provision): every Up runs the Cloudflare reconcile first so
+    // the connector token is fresh. Idempotent for both halves.
+    // -------------------------------------------------------------------------
+    Target Up => _ => _
+        .Description("Ship compose.yml + ingress.json + stack.env to the LXC and `docker compose up -d`. DependsOn(Provision).")
+        .DependsOn(Provision)
+        .Executes(() =>
+        {
+            var configPath = RootDirectory / "deploy" / "erp-deploy.json";
+            var options = JsonSerializer.Deserialize<DeployOptions>(
+                configPath.ReadAllText(),
+                new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+
+            // The compose stack lives in the sister-repo submodule.
+            var composeSource = RootDirectory / "deploy" / "Homelab.Stacks.ErpForFactoryGames";
+
+            string token;
+            if (DryRun)
+            {
+                // Provision ran in dry-run too, so there's no real token.
+                token = "<dry-run-placeholder>";
+            }
+            else
+            {
+                if (_connectorTokens.Count == 0)
+                {
+                    throw new InvalidOperationException(
+                        "No connector token from Provision — did Provision actually apply? " +
+                        "If running Up standalone (not via DependsOn), set --dry-run first to verify, " +
+                        "then full apply.");
+                }
+                // Single-tunnel today; if/when multi-tunnel lands, deploy
+                // needs to know which token to write into stack.env.
+                token = _connectorTokens[0].ConnectorToken;
+            }
+
+            var deployer = Deployer.Create();
+            var result = deployer.Run(new DeployRequest(
+                Options:          options,
+                ConnectorToken:   token,
+                ImageTag:         ImageTag,
+                ComposeSourceDir: composeSource,
+                DryRun:           DryRun));
+
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Up failed with exit code {result.ExitCode}.");
+            }
+            Log.Information("Up complete (ImageTag={ImageTag}, DryRun={DryRun}).", ImageTag, DryRun);
         });
 
     /// <summary>

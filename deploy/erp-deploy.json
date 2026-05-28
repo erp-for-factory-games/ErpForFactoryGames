@@ -1,0 +1,22 @@
+{
+  "Cloudflare": {
+    "Zone": "erp-for-factory.games",
+    "Tunnels": [
+      {
+        "Name": "erp-for-factory-games",
+        "Hostnames": [
+          {
+            "Hostname": "satisfactory.erp-for-factory.games",
+            "Service": "http://erp-web:8080"
+          }
+        ],
+        "Catchall": "http_status:404"
+      }
+    ]
+  },
+  "Remote": {
+    "Host": "10.10.107.175",
+    "User": "chris",
+    "StackDir": "/home/chris/stacks/erp"
+  }
+}
