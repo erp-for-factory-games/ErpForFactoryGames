@@ -7,10 +7,15 @@
   <Folder Name="/src/">
     <Project Path="src/Agent/Agent.csproj" />
     <Project Path="src/ApiService/ApiService.csproj" />
-    <Project Path="src/AppHost/AppHost.csproj" />
-    <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
     <Project Path="src/Web/Web.csproj" />
     <Project Path="src/Web.Shared/Web.Shared.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosting/" />
+  <Folder Name="/src/Hosting/Erp.Hosting.AppHost/">
+    <Project Path="src/Hosting/Erp.Hosting.AppHost/Erp.Hosting.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosting/Erp.Hosting.ServiceDefaults/">
+    <Project Path="src/Hosting/Erp.Hosting.ServiceDefaults/Erp.Hosting.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/src/ERP/" />
   <Folder Name="/src/ERP/Application/">

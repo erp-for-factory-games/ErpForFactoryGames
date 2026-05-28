@@ -20,7 +20,7 @@ RUN --mount=type=secret,id=github_token \
 COPY nuget.config Directory.Build.props version.json ./
 COPY src/Web/Web.csproj                                                src/Web/
 COPY src/Web.Shared/Web.Shared.csproj                                  src/Web.Shared/
-COPY src/ServiceDefaults/ServiceDefaults.csproj                        src/ServiceDefaults/
+COPY src/Hosting/Erp.Hosting.ServiceDefaults/Erp.Hosting.ServiceDefaults.csproj src/Hosting/Erp.Hosting.ServiceDefaults/
 COPY src/ApiService/ApiService.csproj                                  src/ApiService/
 COPY src/ERP/Application/ERP.Application.csproj                        src/ERP/Application/
 COPY src/ERP/Domain/ERP.Domain.csproj                                  src/ERP/Domain/

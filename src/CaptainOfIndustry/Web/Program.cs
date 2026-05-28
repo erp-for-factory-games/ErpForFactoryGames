@@ -1,5 +1,6 @@
 using CaptainOfIndustry.Web.Components;
 using CaptainOfIndustry.Catalog;
+using Erp.Hosting.ServiceDefaults;
 using ERP.Application;
 using ERP.Application.Queries.PlanProduction;
 using Microsoft.Extensions.FileProviders;
