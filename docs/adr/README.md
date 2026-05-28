@@ -40,9 +40,10 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0017](0017-mudblazor-as-ui-framework.md) | MudBlazor as the UI component framework, Bootstrap removed | Accepted |
 | [0018](0018-persistence-stack.md) | Persistence stack: EF Core with SQLite default, Postgres opt-in | Accepted |
 | [0019](0019-tickerq-background-scheduler.md) | TickerQ as the background-job scheduler | Accepted |
-| [0020](0020-rebrand-to-erp-for-factory-games.md) | Rebrand to ERP for Factory Games | Accepted |
+| [0020](0020-rebrand-to-erp-for-factory-games.md) | Rebrand to ERP for Factory Games | Accepted (namespace-refactor deferral superseded by [0026](0026-onion-layered-src-with-product-split.md)) |
 | [0021](0021-migrate-from-nuke-fork-to-fallout.md) | Migrate build system from private Nuke.* fork to Fallout.* on nuget.org | Accepted |
 | [0022](0022-captain-of-industry-support.md) | Captain of Industry as the second supported game | Accepted |
 | [0023](0023-hosting-deployment-approach.md) | Hosting + deployment via homelab Docker behind Cloudflare Tunnel | Accepted |
 | [0024](0024-agent-v1-shape.md) | Game agent v1 PoC — shape, wire protocol, distribution | Accepted |
 | [0025](0025-agent-auth-catalogue-handover.md) | Agent auth & catalogue handover model | Accepted |
+| [0026](0026-onion-layered-src-with-product-split.md) | Onion-layered `src/` with per-game product split | Accepted (supersedes namespace-refactor clause of [0020](0020-rebrand-to-erp-for-factory-games.md); reaffirms [0004](0004-use-onion-architecture.md)) |
