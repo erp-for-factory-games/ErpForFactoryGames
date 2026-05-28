@@ -1,13 +1,17 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Auth API (scaffold) — owns player + agent-token aggregate per ADR-0026.
-// Fleshed out in phase 5c2; for now it's a "hello" endpoint that lets the
-// composition root validate the binary builds + boots. Health check skipped
-// until the scaffold gains real endpoints + launchSettings — see 5c2.
-var authApi = builder.AddProject<Projects.Erp_Presentation_Api_Auth>("auth-api");
-
-var apiService = builder.AddProject<Projects.Satisfactory_Presentation_Api>("apiservice")
+// Auth API owns player + agent-token aggregate per ADR-0026. Phase 5c2
+// landed the /players/* + /api/me endpoints + DevPlayerBootstrap here.
+var authApi = builder.AddProject<Projects.Erp_Presentation_Api_Auth>("auth-api")
     .WithHttpHealthCheck("/health");
+
+// Sat API waits for Auth to be healthy first — both binaries hit the same
+// SQLite file via EF migrations at startup; concurrent migrate races would
+// lock the DB. Phase 5c3 splits the DbContext so each binary owns its own
+// schema and the ordering goes away.
+var apiService = builder.AddProject<Projects.Satisfactory_Presentation_Api>("apiservice")
+    .WithHttpHealthCheck("/health")
+    .WaitFor(authApi);
 
 // Captain of Industry API (scaffold) — same shape as the Satisfactory binary,
 // no real surface yet. Phase 5c5 wires its planner endpoints + health check.
@@ -24,7 +28,9 @@ builder.AddProject<Projects.Satisfactory_Presentation_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(apiService)
-    .WaitFor(apiService);
+    .WithReference(authApi)
+    .WaitFor(apiService)
+    .WaitFor(authApi);
 
 // Captain of Industry presentation app — runs independently of the Satisfactory
 // frontend per ADR-0022 (isolated apps, one per supported game). Reads its

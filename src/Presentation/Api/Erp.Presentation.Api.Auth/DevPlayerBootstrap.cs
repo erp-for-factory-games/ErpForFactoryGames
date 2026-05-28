@@ -1,11 +1,12 @@
 using Erp.Application.Common;
 using Erp.Domain.Common;
+using Erp.Presentation.Api.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Erp.Presentation.Api.Common;
+namespace Erp.Presentation.Api.Auth;
 
 /// <summary>
 /// Seeds the dev <see cref="Player"/> row on startup so the Web UI's

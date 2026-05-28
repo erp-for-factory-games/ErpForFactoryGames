@@ -156,16 +156,26 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
         /// </summary>
         public async Task<string> MintTokenAsync(string? label = null)
         {
-            using var client = CreateClient();
-            var response = await client.PostAsJsonAsync(
-                $"/players/{DevPlayerId}/agent-tokens",
-                new { label });
-            response.EnsureSuccessStatusCode();
-            var payload = await response.Content.ReadFromJsonAsync<MintResponse>();
-            return payload!.Plaintext;
-        }
+            // After ADR-0026 phase 5c2 the mint endpoint lives on Auth API,
+            // not on the Sat API binary this fixture spins up. Bypass HTTP
+            // and mint via DI so this test fixture keeps targeting Sat.
+            using var scope = Services.CreateScope();
+            var tokens = scope.ServiceProvider.GetRequiredService<Erp.Application.Common.IAgentTokenRepository>();
+            var hasher = scope.ServiceProvider.GetRequiredService<Erp.Application.Common.IAgentTokenHasher>();
+            var clock = scope.ServiceProvider.GetRequiredService<TimeProvider>();
 
-        private sealed record MintResponse(Guid Id, string Plaintext, string Label, DateTime CreatedUtc);
+            var plaintext = hasher.MintPlaintext();
+            var hash = hasher.Hash(plaintext);
+            var token = new Erp.Domain.Common.AgentToken(
+                Erp.Domain.Common.AgentTokenId.New(),
+                new Erp.Domain.Common.PlayerId(DevPlayerId),
+                label ?? $"test-{Guid.NewGuid():N}",
+                hash,
+                clock.GetUtcNow().UtcDateTime);
+            await tokens.AddAsync(token, default);
+            await tokens.SaveChangesAsync(default);
+            return plaintext;
+        }
 
         protected override void Dispose(bool disposing)
         {

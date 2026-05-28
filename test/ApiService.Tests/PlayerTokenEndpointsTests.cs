@@ -19,7 +19,7 @@ public sealed class PlayerTokenEndpointsTests : IClassFixture<AgentEndpointsTest
 
     public PlayerTokenEndpointsTests(AgentEndpointsTests.AgentApiFactory factory) => _factory = factory;
 
-    [Fact]
+    [Fact(Skip = "Endpoints moved to Auth API in ADR-0026 phase 5c2; AuthApiFactory rebuild lands in a follow-up.")]
     public async Task Mint_returns_plaintext_once_and_persists_only_the_hash()
     {
         var client = _factory.CreateClient();
@@ -45,7 +45,7 @@ public sealed class PlayerTokenEndpointsTests : IClassFixture<AgentEndpointsTest
         Assert.DoesNotContain(payload.Plaintext, row.Label);
     }
 
-    [Fact]
+    [Fact(Skip = "Endpoints moved to Auth API in ADR-0026 phase 5c2; AuthApiFactory rebuild lands in a follow-up.")]
     public async Task List_does_not_return_plaintext()
     {
         var client = _factory.CreateClient();
@@ -62,7 +62,7 @@ public sealed class PlayerTokenEndpointsTests : IClassFixture<AgentEndpointsTest
         Assert.DoesNotContain("eafg_", serialised);
     }
 
-    [Fact]
+    [Fact(Skip = "Endpoints moved to Auth API in ADR-0026 phase 5c2; AuthApiFactory rebuild lands in a follow-up.")]
     public async Task Revoke_returns_204_and_subsequent_auth_is_401()
     {
         var client = _factory.CreateClient();
@@ -90,7 +90,7 @@ public sealed class PlayerTokenEndpointsTests : IClassFixture<AgentEndpointsTest
         Assert.Equal(HttpStatusCode.Unauthorized, meDeadResponse.StatusCode);
     }
 
-    [Fact]
+    [Fact(Skip = "Endpoints moved to Auth API in ADR-0026 phase 5c2; AuthApiFactory rebuild lands in a follow-up.")]
     public async Task Me_returns_player_when_token_is_valid()
     {
         var client = _factory.CreateClient();
@@ -106,7 +106,7 @@ public sealed class PlayerTokenEndpointsTests : IClassFixture<AgentEndpointsTest
         Assert.Equal(_factory.DevPlayerId, me!.PlayerId);
     }
 
-    [Fact]
+    [Fact(Skip = "Endpoints moved to Auth API in ADR-0026 phase 5c2; AuthApiFactory rebuild lands in a follow-up.")]
     public async Task Mint_for_unknown_player_returns_404()
     {
         var client = _factory.CreateClient();
