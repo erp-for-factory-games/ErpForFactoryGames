@@ -1,7 +1,7 @@
 using Erp.Application.Common;
 using Erp.Domain.Common;
 
-namespace CaptainOfIndustry.Catalog.Tests;
+namespace CaptainOfIndustry.Infrastructure.Tests;
 
 /// <summary>
 /// Smoke test that runs only when a real extracted CoI catalogue is present

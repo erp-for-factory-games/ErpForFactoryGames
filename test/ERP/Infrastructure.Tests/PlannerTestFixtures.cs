@@ -1,7 +1,7 @@
 using Erp.Application.Common;
 using Erp.Domain.Common;
 
-namespace ERP.Infrastructure.Tests;
+namespace Erp.Infrastructure.Tests;
 
 /// <summary>
 /// Shared recipe/building/item ids and an in-memory <see cref="ICatalogProvider"/>

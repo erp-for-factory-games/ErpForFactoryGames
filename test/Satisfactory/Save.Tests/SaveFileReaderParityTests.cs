@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Satisfactory.Save.Tests;
+namespace Satisfactory.Infrastructure.Tests;
 
 /// <summary>
 /// End-to-end parity check: parse a real v1.2 save and confirm the adapter's

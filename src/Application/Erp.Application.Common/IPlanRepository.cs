@@ -4,7 +4,7 @@ namespace Erp.Application.Common;
 
 /// <summary>
 /// Persistence port for <see cref="SavedPlan"/> aggregates. Implementations live in
-/// the Infrastructure layer (currently <c>ERP.Infrastructure.Persistence</c> backed
+/// the Infrastructure layer (currently <c>Erp.Infrastructure.Persistence</c> backed
 /// by EF Core, provider TBD — see ADR-pending for persistence stack).
 ///
 /// <para>

@@ -15,10 +15,9 @@ COPY src/ApiService/ApiService.csproj                                  src/ApiSe
 COPY src/Hosting/Erp.Hosting.ServiceDefaults/Erp.Hosting.ServiceDefaults.csproj src/Hosting/Erp.Hosting.ServiceDefaults/
 COPY src/Application/Erp.Application.Common/Erp.Application.Common.csproj src/Application/Erp.Application.Common/
 COPY src/Domain/Erp.Domain.Common/Erp.Domain.Common.csproj             src/Domain/Erp.Domain.Common/
-COPY src/ERP/Infrastructure/ERP.Infrastructure.csproj                  src/ERP/Infrastructure/
-COPY src/ERP/Infrastructure/Persistence/ERP.Infrastructure.Persistence.csproj src/ERP/Infrastructure/Persistence/
-COPY src/Satisfactory/Catalog/Satisfactory.Catalog.csproj              src/Satisfactory/Catalog/
-COPY src/Satisfactory/Save/Satisfactory.Save.csproj                    src/Satisfactory/Save/
+COPY src/Infrastructure/Erp.Infrastructure/Erp.Infrastructure.csproj   src/Infrastructure/Erp.Infrastructure/
+COPY src/Infrastructure/Persistence/Erp.Infrastructure.Persistence/Erp.Infrastructure.Persistence.csproj src/Infrastructure/Persistence/Erp.Infrastructure.Persistence/
+COPY src/Infrastructure/Satisfactory.Infrastructure/Satisfactory.Infrastructure.csproj src/Infrastructure/Satisfactory.Infrastructure/
 
 RUN --mount=type=secret,id=github_token \
     GITHUB_TOKEN=$(cat /run/secrets/github_token) \

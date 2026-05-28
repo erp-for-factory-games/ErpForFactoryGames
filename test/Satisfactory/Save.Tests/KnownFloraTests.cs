@@ -1,4 +1,4 @@
-namespace Satisfactory.Save.Tests;
+namespace Satisfactory.Infrastructure.Tests;
 
 public class KnownFloraTests
 {

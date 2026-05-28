@@ -4,7 +4,7 @@ namespace Erp.Application.Common;
 
 /// <summary>
 /// Persistence port for <see cref="FactoryAlert"/> aggregates (#116).
-/// Implementation lives in <c>ERP.Infrastructure.Persistence</c> alongside the
+/// Implementation lives in <c>Erp.Infrastructure.Persistence</c> alongside the
 /// plan repositories — same <see cref="PlanShareToken"/>-style scoped
 /// unit-of-work.
 ///

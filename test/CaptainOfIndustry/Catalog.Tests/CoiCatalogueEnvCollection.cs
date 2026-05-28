@@ -1,4 +1,4 @@
-namespace CaptainOfIndustry.Catalog.Tests;
+namespace CaptainOfIndustry.Infrastructure.Tests;
 
 /// <summary>
 /// xUnit collection that serializes any test class touching the

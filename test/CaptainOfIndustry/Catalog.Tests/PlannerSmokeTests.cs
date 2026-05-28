@@ -2,7 +2,7 @@ using Erp.Application.Common;
 using Erp.Application.Common.Queries.PlanProduction;
 using Erp.Domain.Common;
 
-namespace CaptainOfIndustry.Catalog.Tests;
+namespace CaptainOfIndustry.Infrastructure.Tests;
 
 /// <summary>
 /// The e2e proof for the milestone (#182): wire the JsonCoiCatalogProvider

@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using Erp.Domain.Common;
-using ERP.Infrastructure.Persistence;
+using Erp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiService.Tests;

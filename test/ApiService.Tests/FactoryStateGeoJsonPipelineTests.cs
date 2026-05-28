@@ -1,6 +1,6 @@
 using Erp.Application.Common;
 using Erp.Domain.Common;
-using Satisfactory.Save;
+using Satisfactory.Infrastructure;
 
 namespace ApiService.Tests;
 

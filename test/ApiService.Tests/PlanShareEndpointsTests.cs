@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using ERP.Infrastructure.Persistence;
+using Erp.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;

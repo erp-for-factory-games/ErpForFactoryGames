@@ -4,12 +4,12 @@ using Erp.Application.Common;
 using Erp.Application.Common.Commands.IngestSave;
 using Erp.Application.Common.Queries.PlanProduction;
 using Erp.Domain.Common;
-using ERP.Infrastructure;
-using ERP.Infrastructure.Persistence;
+using Erp.Infrastructure;
+using Erp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Satisfactory.Save;
+using Satisfactory.Infrastructure;
 using TickerQ.DependencyInjection;
 using Wolverine;
 
@@ -156,7 +156,7 @@ app.MapPost("/catalogue/configure", (ConfigureCatalogueRequest request, ICatalog
 app.MapGet("/factory/state", (IFactoryStateProvider provider, ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
     NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Ok(FactoryStateView.From(provider, catalog)));
 
-app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider, ICatalogProvider catalog, Satisfactory.Save.KnownFlora flora, IOptions<CatalogueOptions> catOpts) =>
+app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider, ICatalogProvider catalog, Satisfactory.Infrastructure.KnownFlora flora, IOptions<CatalogueOptions> catOpts) =>
     NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Json(FactoryStateGeoJson.From(provider, catalog, flora), contentType: "application/geo+json"));
 
 app.MapGet("/factory/saves", () =>
@@ -409,7 +409,7 @@ app.MapPost("/factory/ingest", async (
 
 app.MapPut("/factory/node-override", (
     NodeOverrideRequest request,
-    Satisfactory.Save.ManualNodeOverrides overrides,
+    Satisfactory.Infrastructure.ManualNodeOverrides overrides,
     IFactoryStateProvider provider) =>
 {
     if (string.IsNullOrWhiteSpace(request.Reference))
@@ -431,7 +431,7 @@ app.MapPut("/factory/node-override", (
 
 app.MapDelete("/factory/node-override", (
     string reference,
-    Satisfactory.Save.ManualNodeOverrides overrides,
+    Satisfactory.Infrastructure.ManualNodeOverrides overrides,
     IFactoryStateProvider provider) =>
 {
     if (string.IsNullOrWhiteSpace(reference))
@@ -1396,12 +1396,12 @@ public sealed record FactoryStateGeoJson(
     Dictionary<string, object?> Metadata)
 {
     public static FactoryStateGeoJson From(IFactoryStateProvider provider, ICatalogProvider catalog)
-        => From(provider, catalog, Satisfactory.Save.KnownFlora.Empty);
+        => From(provider, catalog, Satisfactory.Infrastructure.KnownFlora.Empty);
 
     public static FactoryStateGeoJson From(
         IFactoryStateProvider provider,
         ICatalogProvider catalog,
-        Satisfactory.Save.KnownFlora flora)
+        Satisfactory.Infrastructure.KnownFlora flora)
     {
         var s = provider.Current;
         var features = new List<GeoFeature>();

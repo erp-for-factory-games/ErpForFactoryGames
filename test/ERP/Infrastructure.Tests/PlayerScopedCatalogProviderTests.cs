@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
-namespace ERP.Infrastructure.Tests;
+namespace Erp.Infrastructure.Tests;
 
 public class PlayerScopedCatalogProviderTests
 {
