@@ -39,4 +39,14 @@ builder.AddProject<Projects.CaptainOfIndustry_Presentation_Web>("coi-webfrontend
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health");
 
+// Central auth web frontend (ADR-0026 phase 5c4) — the identity punch-out the
+// game frontends redirect to for sign-in + account/agent management. Talks to
+// auth-api; deploys behind auth.erp-for-factory.games (CNAME wired in 5c5).
+// Scaffold only for now: no OAuth flow, no live Auth-API calls yet.
+builder.AddProject<Projects.Erp_Presentation_Web_Auth>("auth-webfrontend")
+    .WithExternalHttpEndpoints()
+    .WithHttpHealthCheck("/health")
+    .WithReference(authApi)
+    .WaitFor(authApi);
+
 builder.Build().Run();
