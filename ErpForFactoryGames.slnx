@@ -7,41 +7,45 @@
   <Folder Name="/src/">
     <Project Path="src/Agent/Agent.csproj" />
     <Project Path="src/ApiService/ApiService.csproj" />
-    <Project Path="src/AppHost/AppHost.csproj" />
-    <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
     <Project Path="src/Web/Web.csproj" />
     <Project Path="src/Web.Shared/Web.Shared.csproj" />
   </Folder>
-  <Folder Name="/src/ERP/" />
-  <Folder Name="/src/ERP/Application/">
-    <Project Path="src/ERP/Application/ERP.Application.csproj" />
+  <Folder Name="/src/Hosting/" />
+  <Folder Name="/src/Hosting/Erp.Hosting.AppHost/">
+    <Project Path="src/Hosting/Erp.Hosting.AppHost/Erp.Hosting.AppHost.csproj" />
   </Folder>
-  <Folder Name="/src/ERP/Domain/">
-    <Project Path="src/ERP/Domain/ERP.Domain.csproj" />
+  <Folder Name="/src/Hosting/Erp.Hosting.ServiceDefaults/">
+    <Project Path="src/Hosting/Erp.Hosting.ServiceDefaults/Erp.Hosting.ServiceDefaults.csproj" />
   </Folder>
-  <Folder Name="/src/ERP/Infrastructure/">
-    <Project Path="src/ERP/Infrastructure/ERP.Infrastructure.csproj" />
+  <Folder Name="/src/Application/" />
+  <Folder Name="/src/Application/Erp.Application.Common/">
+    <Project Path="src/Application/Erp.Application.Common/Erp.Application.Common.csproj" />
   </Folder>
-  <Folder Name="/src/ERP/Infrastructure/Persistence/">
-    <Project Path="src/ERP/Infrastructure/Persistence/ERP.Infrastructure.Persistence.csproj" />
+  <Folder Name="/src/Domain/" />
+  <Folder Name="/src/Domain/Erp.Domain.Common/">
+    <Project Path="src/Domain/Erp.Domain.Common/Erp.Domain.Common.csproj" />
   </Folder>
-  <Folder Name="/src/Satisfactory/" />
-  <Folder Name="/src/Satisfactory/Catalog/">
-    <Project Path="src/Satisfactory/Catalog/Satisfactory.Catalog.csproj" />
+  <Folder Name="/src/Infrastructure/" />
+  <Folder Name="/src/Infrastructure/Erp.Infrastructure/">
+    <Project Path="src/Infrastructure/Erp.Infrastructure/Erp.Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/src/Satisfactory/Save/">
-    <Project Path="src/Satisfactory/Save/Satisfactory.Save.csproj" />
+  <Folder Name="/src/Infrastructure/Satisfactory.Infrastructure/">
+    <Project Path="src/Infrastructure/Satisfactory.Infrastructure/Satisfactory.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Infrastructure/CaptainOfIndustry.Infrastructure/">
+    <Project Path="src/Infrastructure/CaptainOfIndustry.Infrastructure/CaptainOfIndustry.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Infrastructure/Persistence/" />
+  <Folder Name="/src/Infrastructure/Persistence/Erp.Infrastructure.Persistence/">
+    <Project Path="src/Infrastructure/Persistence/Erp.Infrastructure.Persistence/Erp.Infrastructure.Persistence.csproj" />
   </Folder>
   <Folder Name="/src/CaptainOfIndustry/" />
-  <Folder Name="/src/CaptainOfIndustry/Catalog/">
-    <Project Path="src/CaptainOfIndustry/Catalog/CaptainOfIndustry.Catalog.csproj" />
-  </Folder>
   <Folder Name="/src/CaptainOfIndustry/Web/">
     <Project Path="src/CaptainOfIndustry/Web/CaptainOfIndustry.Web.csproj" />
   </Folder>
-  <Folder Name="/src/Deploy/" />
-  <Folder Name="/src/Deploy/Erp.Deploy/">
-    <Project Path="src/Deploy/Erp.Deploy/Erp.Deploy.csproj" />
+  <Folder Name="/tools/" />
+  <Folder Name="/tools/Erp.Deploy/">
+    <Project Path="tools/Erp.Deploy/Erp.Deploy.csproj" />
   </Folder>
   <Folder Name="/test/" />
   <Folder Name="/test/Agent.Tests/">

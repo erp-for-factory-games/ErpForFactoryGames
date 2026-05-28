@@ -1,0 +1,19 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.2.4">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Erp.Hosting.AppHost</RootNamespace>
+    <AssemblyName>Erp.Hosting.AppHost</AssemblyName>
+    <UserSecretsId>7c964c83-0170-4f31-8314-ae3569267de9</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ApiService\ApiService.csproj" />
+    <ProjectReference Include="..\..\Web\Web.csproj" />
+    <ProjectReference Include="..\..\CaptainOfIndustry\Web\CaptainOfIndustry.Web.csproj" />
+  </ItemGroup>
+
+</Project>

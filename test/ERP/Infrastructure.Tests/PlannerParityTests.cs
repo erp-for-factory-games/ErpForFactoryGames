@@ -1,9 +1,9 @@
-using ERP.Application;
-using ERP.Application.Queries.PlanProduction;
-using ERP.Domain;
-using static ERP.Infrastructure.Tests.PlannerTestFixtures;
+using Erp.Application.Common;
+using Erp.Application.Common.Queries.PlanProduction;
+using Erp.Domain.Common;
+using static Erp.Infrastructure.Tests.PlannerTestFixtures;
 
-namespace ERP.Infrastructure.Tests;
+namespace Erp.Infrastructure.Tests;
 
 /// <summary>
 /// Both <see cref="RecursiveRecipePlanner"/> and <see cref="OrToolsRecipePlanner"/>

@@ -19,9 +19,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
-    <ProjectReference Include="..\ERP\Application\ERP.Application.csproj" />
-    <ProjectReference Include="..\ERP\Infrastructure\ERP.Infrastructure.csproj" />
+    <ProjectReference Include="..\Hosting\Erp.Hosting.ServiceDefaults\Erp.Hosting.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Application/Erp.Application.Common/Erp.Application.Common.csproj" />
+    <ProjectReference Include="..\Infrastructure\Erp.Infrastructure\Erp.Infrastructure.csproj" />
     <ProjectReference Include="..\Web.Shared\Web.Shared.csproj" />
   </ItemGroup>
 

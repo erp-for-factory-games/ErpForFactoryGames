@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <!-- Deploy library: Cloudflare reconcile + plan primitives consumed by the Provision target. -->
-    <ProjectReference Include="..\src\Deploy\Erp.Deploy\Erp.Deploy.csproj" />
+    <ProjectReference Include="..\tools\Erp.Deploy\Erp.Deploy.csproj" />
   </ItemGroup>
 
 </Project>

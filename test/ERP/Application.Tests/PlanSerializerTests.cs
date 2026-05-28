@@ -1,7 +1,7 @@
-using ERP.Application;
-using ERP.Domain;
+using Erp.Application.Common;
+using Erp.Domain.Common;
 
-namespace ERP.Application.Tests;
+namespace Erp.Application.Common.Tests;
 
 /// <summary>
 /// Round-trip coverage for the JSON export/import envelope (issue #79). The

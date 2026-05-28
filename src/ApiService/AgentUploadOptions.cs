@@ -10,7 +10,7 @@ public sealed class AgentUploadOptions
     /// Directory the server writes uploaded saves into. The agent's last
     /// upload is also persisted at <c>{UploadDirectory}/satisfactory-latest.sav</c>
     /// so a process restart can pick up where we left off via the existing
-    /// <see cref="ERP.Application.IFactoryStateProvider.LoadFromPath"/>.
+    /// <see cref="Erp.Application.Common.IFactoryStateProvider.LoadFromPath"/>.
     /// Defaults to <c>%LocalAppData%/ErpForFactoryGames/uploads/</c> on
     /// Windows or <c>$XDG_STATE_HOME/ErpForFactoryGames/uploads/</c> on
     /// Linux. Override for containerised deployments to point at a mounted

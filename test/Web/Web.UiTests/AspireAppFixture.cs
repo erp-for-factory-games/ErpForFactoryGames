@@ -27,7 +27,7 @@ public sealed class AspireAppFixture : IAsyncLifetime
             throw new InvalidOperationException($"Playwright chromium install failed with exit code {exitCode}.");
         }
 
-        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.AppHost>();
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Erp_Hosting_AppHost>();
         App = await builder.BuildAsync();
         await App.StartAsync();
 

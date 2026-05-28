@@ -1,5 +1,5 @@
-using ERP.Application;
-using ERP.Domain;
+using Erp.Application.Common;
+using Erp.Domain.Common;
 using Microsoft.Extensions.Options;
 
 namespace ApiService;

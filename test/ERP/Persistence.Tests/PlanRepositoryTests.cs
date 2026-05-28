@@ -1,10 +1,10 @@
-using ERP.Application;
-using ERP.Domain;
-using ERP.Infrastructure.Persistence;
-using ERP.Infrastructure.Persistence.Repositories;
+using Erp.Application.Common;
+using Erp.Domain.Common;
+using Erp.Infrastructure.Persistence;
+using Erp.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace ERP.Infrastructure.Persistence.Tests;
+namespace Erp.Infrastructure.Persistence.Tests;
 
 /// <summary>
 /// Integration tests for the EF Core <see cref="PlanRepository"/> exercised

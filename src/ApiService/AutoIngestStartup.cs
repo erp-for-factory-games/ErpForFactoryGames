@@ -1,5 +1,5 @@
-using ERP.Infrastructure;
-using ERP.Infrastructure.Persistence;
+using Erp.Infrastructure;
+using Erp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

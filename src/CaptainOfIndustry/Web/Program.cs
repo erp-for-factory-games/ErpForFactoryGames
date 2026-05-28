@@ -1,7 +1,8 @@
 using CaptainOfIndustry.Web.Components;
-using CaptainOfIndustry.Catalog;
-using ERP.Application;
-using ERP.Application.Queries.PlanProduction;
+using CaptainOfIndustry.Infrastructure;
+using Erp.Hosting.ServiceDefaults;
+using Erp.Application.Common;
+using Erp.Application.Common.Queries.PlanProduction;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
@@ -26,7 +27,7 @@ builder.Services.AddSingleton<ICatalogProvider>(sp =>
 
 // Planner: in-process. RecursiveRecipePlanner is the cheap default that
 // matches the Satisfactory app's v1 surface; the LP planner (#88) requires
-// OR-Tools and is wired through ERP.Infrastructure which we don't pull in.
+// OR-Tools and is wired through Erp.Infrastructure which we don't pull in.
 builder.Services.AddSingleton<IRecipePlanner, RecursiveRecipePlanner>();
 
 var app = builder.Build();

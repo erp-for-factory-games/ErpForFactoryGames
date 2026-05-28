@@ -1,4 +1,4 @@
-namespace Satisfactory.Catalog.Tests;
+namespace Satisfactory.Infrastructure.Tests;
 
 public class CatalogueFileResolverTests
 {

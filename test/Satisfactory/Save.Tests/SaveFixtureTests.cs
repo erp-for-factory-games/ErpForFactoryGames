@@ -1,6 +1,6 @@
-using ERP.Domain;
+using Erp.Domain.Common;
 
-namespace Satisfactory.Save.Tests;
+namespace Satisfactory.Infrastructure.Tests;
 
 public class SaveFixtureTests
 {

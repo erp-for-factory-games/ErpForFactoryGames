@@ -1,7 +1,7 @@
-using ERP.Application;
-using ERP.Domain;
+using Erp.Application.Common;
+using Erp.Domain.Common;
 
-namespace CaptainOfIndustry.Catalog.Tests;
+namespace CaptainOfIndustry.Infrastructure.Tests;
 
 [Collection(nameof(CoiCatalogueEnvCollection))]
 public class JsonCoiCatalogProviderTests : IDisposable

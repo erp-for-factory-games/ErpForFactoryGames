@@ -1,7 +1,7 @@
-using ERP.Application.Queries.PlanProduction;
-using ERP.Domain;
+using Erp.Application.Common.Queries.PlanProduction;
+using Erp.Domain.Common;
 
-namespace ERP.Application.Tests;
+namespace Erp.Application.Common.Tests;
 
 /// <summary>
 /// Direct tests for <see cref="FluidPipeRequirements"/> — the shared post-solve

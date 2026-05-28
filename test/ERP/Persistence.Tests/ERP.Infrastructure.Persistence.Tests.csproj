@@ -21,9 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\ERP\Application\ERP.Application.csproj" />
-    <ProjectReference Include="..\..\..\src\ERP\Domain\ERP.Domain.csproj" />
-    <ProjectReference Include="..\..\..\src\ERP\Infrastructure\Persistence\ERP.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\..\..\src\Application/Erp.Application.Common/Erp.Application.Common.csproj" />
+    <ProjectReference Include="..\..\..\src\Domain/Erp.Domain.Common/Erp.Domain.Common.csproj" />
+    <ProjectReference Include="..\..\..\src\Infrastructure\Persistence\Erp.Infrastructure.Persistence\Erp.Infrastructure.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

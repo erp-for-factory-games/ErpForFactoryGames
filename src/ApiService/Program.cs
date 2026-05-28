@@ -1,14 +1,15 @@
 using ApiService;
-using ERP.Application;
-using ERP.Application.Commands.IngestSave;
-using ERP.Application.Queries.PlanProduction;
-using ERP.Domain;
-using ERP.Infrastructure;
-using ERP.Infrastructure.Persistence;
+using Erp.Hosting.ServiceDefaults;
+using Erp.Application.Common;
+using Erp.Application.Common.Commands.IngestSave;
+using Erp.Application.Common.Queries.PlanProduction;
+using Erp.Domain.Common;
+using Erp.Infrastructure;
+using Erp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Satisfactory.Save;
+using Satisfactory.Infrastructure;
 using TickerQ.DependencyInjection;
 using Wolverine;
 
@@ -155,7 +156,7 @@ app.MapPost("/catalogue/configure", (ConfigureCatalogueRequest request, ICatalog
 app.MapGet("/factory/state", (IFactoryStateProvider provider, ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
     NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Ok(FactoryStateView.From(provider, catalog)));
 
-app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider, ICatalogProvider catalog, Satisfactory.Save.KnownFlora flora, IOptions<CatalogueOptions> catOpts) =>
+app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider, ICatalogProvider catalog, Satisfactory.Infrastructure.KnownFlora flora, IOptions<CatalogueOptions> catOpts) =>
     NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Json(FactoryStateGeoJson.From(provider, catalog, flora), contentType: "application/geo+json"));
 
 app.MapGet("/factory/saves", () =>
@@ -408,14 +409,14 @@ app.MapPost("/factory/ingest", async (
 
 app.MapPut("/factory/node-override", (
     NodeOverrideRequest request,
-    Satisfactory.Save.ManualNodeOverrides overrides,
+    Satisfactory.Infrastructure.ManualNodeOverrides overrides,
     IFactoryStateProvider provider) =>
 {
     if (string.IsNullOrWhiteSpace(request.Reference))
         return Results.BadRequest(new { error = "Reference is required." });
     if (string.IsNullOrWhiteSpace(request.Resource))
         return Results.BadRequest(new { error = "Resource is required (e.g. Desc_OreIron_C)." });
-    if (!Enum.TryParse<ERP.Domain.NodePurity>(request.Purity, ignoreCase: true, out var purity))
+    if (!Enum.TryParse<Erp.Domain.Common.NodePurity>(request.Purity, ignoreCase: true, out var purity))
         return Results.BadRequest(new { error = $"Unknown purity '{request.Purity}'. Use Impure, Normal, or Pure." });
 
     var node = provider.Current.ResourceNodes
@@ -430,7 +431,7 @@ app.MapPut("/factory/node-override", (
 
 app.MapDelete("/factory/node-override", (
     string reference,
-    Satisfactory.Save.ManualNodeOverrides overrides,
+    Satisfactory.Infrastructure.ManualNodeOverrides overrides,
     IFactoryStateProvider provider) =>
 {
     if (string.IsNullOrWhiteSpace(reference))
@@ -1395,12 +1396,12 @@ public sealed record FactoryStateGeoJson(
     Dictionary<string, object?> Metadata)
 {
     public static FactoryStateGeoJson From(IFactoryStateProvider provider, ICatalogProvider catalog)
-        => From(provider, catalog, Satisfactory.Save.KnownFlora.Empty);
+        => From(provider, catalog, Satisfactory.Infrastructure.KnownFlora.Empty);
 
     public static FactoryStateGeoJson From(
         IFactoryStateProvider provider,
         ICatalogProvider catalog,
-        Satisfactory.Save.KnownFlora flora)
+        Satisfactory.Infrastructure.KnownFlora flora)
     {
         var s = provider.Current;
         var features = new List<GeoFeature>();
@@ -1554,7 +1555,7 @@ public sealed record StepDto(
 
 // ---- Saved plan DTOs (issue #77) -------------------------------------------
 // Wire shapes for /plans endpoints. Kept thin and string-typed so the Web
-// client doesn't take a reference on the ERP.Domain assembly.
+// client doesn't take a reference on the Erp.Domain.Common assembly.
 
 public sealed record SavePlanRequest(
     string Name,

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Deploy\Erp.Deploy\Erp.Deploy.csproj" />
+    <ProjectReference Include="..\..\..\tools\Erp.Deploy\Erp.Deploy.csproj" />
   </ItemGroup>
 
 </Project>

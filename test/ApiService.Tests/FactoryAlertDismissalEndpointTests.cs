@@ -1,8 +1,8 @@
 using System.Net;
-using ERP.Application;
-using ERP.Domain;
-using ERP.Infrastructure.Persistence;
-using ERP.Infrastructure.Persistence.Repositories;
+using Erp.Application.Common;
+using Erp.Domain.Common;
+using Erp.Infrastructure.Persistence;
+using Erp.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;

@@ -1,4 +1,4 @@
-namespace CaptainOfIndustry.Catalog.Tests;
+namespace CaptainOfIndustry.Infrastructure.Tests;
 
 [Collection(nameof(CoiCatalogueEnvCollection))]
 public class CoiCataloguePathResolverTests : IDisposable
