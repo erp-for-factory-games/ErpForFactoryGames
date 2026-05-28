@@ -25,6 +25,12 @@ builder.Services.AddHttpClient<Satisfactory.Presentation.Web.PlannerApiClient>(c
         client.BaseAddress = new("https+http://apiservice");
     });
 
+// Player + agent-token operations live on the Auth API after ADR-0026 phase 5c2.
+builder.Services.AddHttpClient<Satisfactory.Presentation.Web.AuthApiClient>(client =>
+    {
+        client.BaseAddress = new("https+http://auth-api");
+    });
+
 // Agent management page surface (#236, ADR-0025 §8). Feature-flagged off
 // in production until the deployment hides the page behind its own auth.
 builder.Services.Configure<Satisfactory.Presentation.Web.AgentManagementOptions>(

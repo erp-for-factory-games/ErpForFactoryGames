@@ -1,10 +1,9 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Auth API (scaffold) — owns player + agent-token aggregate per ADR-0026.
-// Fleshed out in phase 5c2; for now it's a "hello" endpoint that lets the
-// composition root validate the binary builds + boots. Health check skipped
-// until the scaffold gains real endpoints + launchSettings — see 5c2.
-var authApi = builder.AddProject<Projects.Erp_Presentation_Api_Auth>("auth-api");
+// Auth API owns player + agent-token aggregate per ADR-0026. Phase 5c2
+// landed the /players/* + /api/me endpoints + DevPlayerBootstrap here.
+var authApi = builder.AddProject<Projects.Erp_Presentation_Api_Auth>("auth-api")
+    .WithHttpHealthCheck("/health");
 
 var apiService = builder.AddProject<Projects.Satisfactory_Presentation_Api>("apiservice")
     .WithHttpHealthCheck("/health");
@@ -24,7 +23,9 @@ builder.AddProject<Projects.Satisfactory_Presentation_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(apiService)
-    .WaitFor(apiService);
+    .WithReference(authApi)
+    .WaitFor(apiService)
+    .WaitFor(authApi);
 
 // Captain of Industry presentation app — runs independently of the Satisfactory
 // frontend per ADR-0022 (isolated apps, one per supported game). Reads its

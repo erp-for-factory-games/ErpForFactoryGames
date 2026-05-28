@@ -15,7 +15,7 @@
     refresh the token list; cancel without minting returns Cancel.
 *@
 
-@inject PlannerApiClient Api
+@inject AuthApiClient Auth
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 
@@ -114,7 +114,7 @@
         _error = null;
         try
         {
-            _mintedToken = await Api.MintAgentTokenAsync(PlayerId, string.IsNullOrWhiteSpace(_label) ? null : _label);
+            _mintedToken = await Auth.MintAgentTokenAsync(PlayerId, string.IsNullOrWhiteSpace(_label) ? null : _label);
             if (_mintedToken is null)
             {
                 _error = "Server returned no token. Check API logs.";

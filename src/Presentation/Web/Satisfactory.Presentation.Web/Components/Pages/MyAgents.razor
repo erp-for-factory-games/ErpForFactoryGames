@@ -11,6 +11,7 @@
 @rendermode InteractiveServer
 @implements IDisposable
 @inject PlannerApiClient Api
+@inject AuthApiClient Auth
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
@@ -178,13 +179,13 @@ else
         _loadError = null;
         try
         {
-            _currentPlayer = await Api.GetCurrentPlayerAsync();
+            _currentPlayer = await Auth.GetCurrentPlayerAsync();
             if (_currentPlayer is null)
             {
                 _loadError = "No player provisioned. Check Auth:DevPlayerId on the server.";
                 return;
             }
-            _tokens = await Api.ListAgentTokensAsync(_currentPlayer.PlayerId);
+            _tokens = await Auth.ListAgentTokensAsync(_currentPlayer.PlayerId);
             _catalogueStatus = await Api.GetPlayerCatalogueAsync(_currentPlayer.PlayerId);
         }
         catch (Exception ex)
@@ -309,7 +310,7 @@ else
             $"Revoke \"{token.Label}\"? The agent will stop talking to this server immediately. This can't be undone.");
         if (!confirmed || _currentPlayer is null) return;
 
-        var ok = await Api.RevokeAgentTokenAsync(_currentPlayer.PlayerId, token.Id);
+        var ok = await Auth.RevokeAgentTokenAsync(_currentPlayer.PlayerId, token.Id);
         if (ok)
         {
             Snackbar.Add("Token revoked.", Severity.Success);
