@@ -30,7 +30,7 @@ jobs:
   # ---------------------------------------------------------------------------
   # Decide whether to run. Two signals:
   #   1. `run-ui-tests` label present on the PR → manual opt-in.
-  #   2. Web paths changed (src/Web/**, test/Web/**) → auto-detected.
+  #   2. Web paths changed (src/Presentation/Web/**, test/Presentation/Web/**) → auto-detected.
   # Either signal flips `run=true`. The path check is wired now even though
   # the auto-add-label job below is disabled, so a path-touching PR still
   # gets UI coverage if the human forgets the label.
@@ -68,7 +68,7 @@ jobs:
               - 'src/Presentation/Web/CaptainOfIndustry.Presentation.Web/**/*.{cs,razor,razor.css,css,js,html,json}'
               - 'src/Presentation/Web/CaptainOfIndustry.Presentation.Web/wwwroot/**'
               - 'src/Presentation/Web/Erp.Presentation.Web.Common/**/*.{cs,razor,razor.css,css,js,html}'
-              - 'test/Web/**'
+              - 'test/Presentation/Web/**'
 
       - name: Compute gate
         id: gate
@@ -191,8 +191,8 @@ jobs:
         with:
           name: playwright-traces
           path: |
-            test/Web/Web.UiTests/bin/**/playwright-traces/**
-            test/Web/Web.UiTests/bin/**/test-results/**
+            test/Presentation/Web/Satisfactory.Presentation.Web.UiTests/bin/**/playwright-traces/**
+            test/Presentation/Web/Satisfactory.Presentation.Web.UiTests/bin/**/test-results/**
           if-no-files-found: ignore
 
   # ---------------------------------------------------------------------------

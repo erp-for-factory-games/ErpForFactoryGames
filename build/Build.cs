@@ -104,7 +104,7 @@ class Build : FalloutBuild
         .Executes(() =>
         {
             // playwright.ps1 is emitted into the test project's output by Microsoft.Playwright.
-            var script = RootDirectory / "test" / "Web" / "Web.UiTests" / "bin" / Configuration / "net10.0" / "playwright.ps1";
+            var script = RootDirectory / "test" / "Presentation" / "Web" / "Satisfactory.Presentation.Web.UiTests" / "bin" / Configuration / "net10.0" / "playwright.ps1";
             if (!script.FileExists())
             {
                 Log.Warning("playwright.ps1 not found at {Script} — skipping browser install. Did the test project build?", script);
