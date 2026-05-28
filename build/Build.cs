@@ -199,7 +199,7 @@ class Build : FalloutBuild
             // Tool restore is idempotent — pulls dotnet-ef from .config/dotnet-tools.json.
             DotNet("tool restore", workingDirectory: RootDirectory, logOutput: false);
 
-            var persistenceProject = RootDirectory / "src" / "ERP" / "Infrastructure" / "Persistence";
+            var persistenceProject = RootDirectory / "src" / "Infrastructure" / "Persistence" / "Erp.Infrastructure.Persistence";
             var startupProject = RootDirectory / "src" / "ApiService";
 
             void Check(string contextName, params (string Key, string Value)[] extraEnv)
@@ -262,7 +262,7 @@ class Build : FalloutBuild
 
             DotNet("tool restore", workingDirectory: RootDirectory, logOutput: false);
 
-            var persistenceProject = RootDirectory / "src" / "ERP" / "Infrastructure" / "Persistence";
+            var persistenceProject = RootDirectory / "src" / "Infrastructure" / "Persistence" / "Erp.Infrastructure.Persistence";
             var startupProject = RootDirectory / "src" / "ApiService";
 
             var env = new Dictionary<string, string>(EnvironmentInfo.Variables)
