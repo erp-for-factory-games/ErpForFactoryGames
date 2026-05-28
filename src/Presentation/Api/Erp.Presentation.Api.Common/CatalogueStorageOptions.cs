@@ -1,4 +1,4 @@
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Where the catalogue blob store keeps uploaded <c>Docs.json</c> bytes

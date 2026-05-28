@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>CaptainOfIndustry.Presentation.Api</RootNamespace>
+    <AssemblyName>CaptainOfIndustry.Presentation.Api</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Hosting\Erp.Hosting.ServiceDefaults\Erp.Hosting.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Erp.Presentation.Api.Common\Erp.Presentation.Api.Common.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\CaptainOfIndustry.Infrastructure\CaptainOfIndustry.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
-# Multi-stage build for the ERP planner API (Wolverine + EF Core).
+# Multi-stage build for the Satisfactory planner API (Wolverine + EF Core).
 # Build context = repo root:
-#   docker build -f src/ApiService/Dockerfile -t erp-api .
+#   docker build -f src/Presentation/Api/Satisfactory.Presentation.Api/Dockerfile -t erp-api .
 
 ARG DOTNET_VERSION=10.0
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
@@ -11,7 +11,8 @@ RUN --mount=type=secret,id=github_token \
     || (echo "GITHUB_TOKEN secret missing. Pass: docker build --secret id=github_token,env=GITHUB_TOKEN ..." && exit 1)
 
 COPY nuget.config Directory.Build.props version.json ./
-COPY src/ApiService/ApiService.csproj                                  src/ApiService/
+COPY src/Presentation/Api/Satisfactory.Presentation.Api/Satisfactory.Presentation.Api.csproj src/Presentation/Api/Satisfactory.Presentation.Api/
+COPY src/Presentation/Api/Erp.Presentation.Api.Common/Erp.Presentation.Api.Common.csproj src/Presentation/Api/Erp.Presentation.Api.Common/
 COPY src/Hosting/Erp.Hosting.ServiceDefaults/Erp.Hosting.ServiceDefaults.csproj src/Hosting/Erp.Hosting.ServiceDefaults/
 COPY src/Application/Erp.Application.Common/Erp.Application.Common.csproj src/Application/Erp.Application.Common/
 COPY src/Domain/Erp.Domain.Common/Erp.Domain.Common.csproj             src/Domain/Erp.Domain.Common/
@@ -21,14 +22,14 @@ COPY src/Infrastructure/Satisfactory.Infrastructure/Satisfactory.Infrastructure.
 
 RUN --mount=type=secret,id=github_token \
     GITHUB_TOKEN=$(cat /run/secrets/github_token) \
-    dotnet restore src/ApiService/ApiService.csproj
+    dotnet restore src/Presentation/Api/Satisfactory.Presentation.Api/Satisfactory.Presentation.Api.csproj
 
 COPY src/ src/
 COPY .git .git/
 
 RUN --mount=type=secret,id=github_token \
     GITHUB_TOKEN=$(cat /run/secrets/github_token) \
-    dotnet publish src/ApiService/ApiService.csproj \
+    dotnet publish src/Presentation/Api/Satisfactory.Presentation.Api/Satisfactory.Presentation.Api.csproj \
         --configuration Release \
         --no-restore \
         --output /app/publish
@@ -62,4 +63,4 @@ COPY --from=build --chown=app:app /app/publish ./
 ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "ApiService.dll"]
+ENTRYPOINT ["dotnet", "Satisfactory.Presentation.Api.dll"]

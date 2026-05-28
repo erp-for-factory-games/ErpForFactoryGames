@@ -1,4 +1,4 @@
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// v2 auth configuration (ADR-0025). No login yet — the Web UI resolves

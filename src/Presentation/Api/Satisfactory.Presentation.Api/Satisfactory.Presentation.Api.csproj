@@ -4,13 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>Satisfactory.Presentation.Api</RootNamespace>
+    <AssemblyName>Satisfactory.Presentation.Api</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hosting\Erp.Hosting.ServiceDefaults\Erp.Hosting.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Application/Erp.Application.Common/Erp.Application.Common.csproj" />
-    <ProjectReference Include="..\Infrastructure\Erp.Infrastructure\Erp.Infrastructure.csproj" />
-    <ProjectReference Include="..\Infrastructure\Persistence\Erp.Infrastructure.Persistence\Erp.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\..\..\Hosting\Erp.Hosting.ServiceDefaults\Erp.Hosting.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Erp.Presentation.Api.Common\Erp.Presentation.Api.Common.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\Satisfactory.Infrastructure\Satisfactory.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

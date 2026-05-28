@@ -6,7 +6,7 @@
 #
 # Container images (per ADR-0023):
 #   - Satisfactory Web (src/Presentation/Web/Satisfactory.Presentation.Web/Dockerfile) -> ghcr.io/<owner>/erp-web
-#   - Planner ApiService (src/ApiService/Dockerfile) -> ghcr.io/<owner>/erp-api
+#   - Planner ApiService (src/Presentation/Api/Satisfactory.Presentation.Api/Dockerfile) -> ghcr.io/<owner>/erp-api
 #   CoI Web image is deliberately not built here yet — agent milestone solves
 #   catalogue distribution first.
 #
@@ -37,7 +37,7 @@ jobs:
           - image: erp-web
             dockerfile: src/Presentation/Web/Satisfactory.Presentation.Web/Dockerfile
           - image: erp-api
-            dockerfile: src/ApiService/Dockerfile
+            dockerfile: src/Presentation/Api/Satisfactory.Presentation.Api/Dockerfile
 
     steps:
       - name: Checkout

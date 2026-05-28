@@ -1,4 +1,4 @@
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Bound from <c>AgentUploads</c> in configuration. Controls where uploaded

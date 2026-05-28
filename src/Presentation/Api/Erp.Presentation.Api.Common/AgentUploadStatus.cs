@@ -1,4 +1,4 @@
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Server-side snapshot of what the agent last uploaded, for the

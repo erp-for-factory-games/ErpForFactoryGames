@@ -200,13 +200,13 @@ class Build : FalloutBuild
             DotNet("tool restore", workingDirectory: RootDirectory, logOutput: false);
 
             var persistenceProject = RootDirectory / "src" / "Infrastructure" / "Persistence" / "Erp.Infrastructure.Persistence";
-            var startupProject = RootDirectory / "src" / "ApiService";
+            var startupProject = RootDirectory / "src" / "Presentation" / "Api" / "Satisfactory.Presentation.Api";
 
             void Check(string contextName, params (string Key, string Value)[] extraEnv)
             {
                 Log.Information("Checking pending model changes for {Context}", contextName);
                 // --configuration matches what Compile produced so --no-build can find
-                // the right bin/<Configuration>/net10.0/ApiService.deps.json. Without
+                // the right bin/<Configuration>/net10.0/Satisfactory.Presentation.Api.deps.json. Without
                 // this, ef defaults to Debug while CI builds Release and the lookup fails.
                 var args = $"ef migrations has-pending-model-changes " +
                            $"--project \"{persistenceProject}\" " +
@@ -263,7 +263,7 @@ class Build : FalloutBuild
             DotNet("tool restore", workingDirectory: RootDirectory, logOutput: false);
 
             var persistenceProject = RootDirectory / "src" / "Infrastructure" / "Persistence" / "Erp.Infrastructure.Persistence";
-            var startupProject = RootDirectory / "src" / "ApiService";
+            var startupProject = RootDirectory / "src" / "Presentation" / "Api" / "Satisfactory.Presentation.Api";
 
             var env = new Dictionary<string, string>(EnvironmentInfo.Variables)
             {

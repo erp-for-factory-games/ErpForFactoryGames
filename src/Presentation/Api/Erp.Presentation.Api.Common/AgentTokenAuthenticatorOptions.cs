@@ -1,4 +1,4 @@
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Tunables for <see cref="IAgentTokenAuthenticator"/> (ADR-0025 §3).

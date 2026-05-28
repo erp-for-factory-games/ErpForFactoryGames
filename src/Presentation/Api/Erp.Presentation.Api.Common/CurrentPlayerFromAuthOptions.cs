@@ -2,7 +2,7 @@ using Erp.Application.Common;
 using Erp.Domain.Common;
 using Microsoft.Extensions.Options;
 
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// v2 <see cref="ICurrentPlayer"/> adapter: returns the dev player from
