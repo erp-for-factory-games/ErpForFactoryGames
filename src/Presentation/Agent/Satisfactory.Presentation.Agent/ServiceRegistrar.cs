@@ -1,3 +1,4 @@
+using Erp.Presentation.Agent.Common;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -5,7 +6,7 @@ using System.Security.Principal;
 using Microsoft.Win32;
 #pragma warning restore CA1416
 
-namespace Agent;
+namespace Satisfactory.Presentation.Agent;
 
 /// <summary>
 /// Self-install / self-uninstall handlers driven from the agent CLI

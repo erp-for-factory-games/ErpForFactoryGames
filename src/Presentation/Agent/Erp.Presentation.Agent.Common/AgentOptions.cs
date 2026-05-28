@@ -1,4 +1,4 @@
-namespace Agent;
+namespace Erp.Presentation.Agent.Common;
 
 /// <summary>
 /// Bound from the <c>Agent</c> configuration section. Env vars win

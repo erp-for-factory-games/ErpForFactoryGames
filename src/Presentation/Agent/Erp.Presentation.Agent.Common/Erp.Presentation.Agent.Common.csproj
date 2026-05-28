@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Erp.Presentation.Agent.Common</RootNamespace>
+    <AssemblyName>Erp.Presentation.Agent.Common</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Generic host plumbing used by the long-running upload + log-tail
+         background services. The actual host binary lives in the per-game
+         agent project; this library only consumes the abstractions. -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Per-game host binaries register concrete implementations of the
+         internal HttpLogTailUploader / AgentStatus etc. via DI. Expose the
+         internals to the per-game projects so they can keep registering by
+         type without our needing to promote every class to public. -->
+    <InternalsVisibleTo Include="erp-agent" />
+    <InternalsVisibleTo Include="Agent.Tests" />
+  </ItemGroup>
+
+</Project>

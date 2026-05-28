@@ -1,9 +1,10 @@
+using Erp.Presentation.Agent.Common;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Agent;
+namespace Satisfactory.Presentation.Agent;
 
 /// <summary>
 /// HTTP implementation of <see cref="ICatalogueUploader"/>. Posts the

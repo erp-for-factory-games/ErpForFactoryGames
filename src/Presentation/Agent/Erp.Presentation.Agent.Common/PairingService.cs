@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 
-namespace Agent;
+namespace Erp.Presentation.Agent.Common;
 
 /// <summary>
 /// Validates a token against the planner API and writes the agent's

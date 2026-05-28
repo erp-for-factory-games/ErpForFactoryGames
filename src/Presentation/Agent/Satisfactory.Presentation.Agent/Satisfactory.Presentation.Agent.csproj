@@ -5,7 +5,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Agent</RootNamespace>
+    <RootNamespace>Satisfactory.Presentation.Agent</RootNamespace>
+    <!-- AssemblyName stays as erp-agent so the binary on disk doesn't rename.
+         Installer scripts, packaging manifests, service names all reference
+         the executable as erp-agent — that's a user-facing contract, not a
+         project-internal name. -->
     <AssemblyName>erp-agent</AssemblyName>
     <UserSecretsId>erp-agent-7c964c83-0170-4f31-8314-ae3569267de9</UserSecretsId>
     <!-- Single-file self-contained publish per ADR-0024 §7. Set on the
@@ -35,6 +39,10 @@
     <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="INSTALL.md" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="agent.json.example" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Erp.Presentation.Agent.Common\Erp.Presentation.Agent.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

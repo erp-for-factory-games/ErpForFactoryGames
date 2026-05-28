@@ -1,4 +1,5 @@
-using Agent;
+using Erp.Presentation.Agent.Common;
+using Satisfactory.Presentation.Agent;
 
 namespace Agent.Tests;
 

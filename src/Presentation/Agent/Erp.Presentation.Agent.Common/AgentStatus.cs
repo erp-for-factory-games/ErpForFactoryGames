@@ -1,4 +1,4 @@
-namespace Agent;
+namespace Erp.Presentation.Agent.Common;
 
 /// <summary>
 /// In-process snapshot of what the agent is doing. The future Web UI

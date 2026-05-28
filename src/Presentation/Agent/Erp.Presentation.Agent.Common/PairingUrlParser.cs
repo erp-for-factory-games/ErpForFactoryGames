@@ -1,4 +1,4 @@
-namespace Agent;
+namespace Erp.Presentation.Agent.Common;
 
 /// <summary>
 /// Parses <c>erp-agent://pair?token=...&amp;api=...</c> deep-link URLs

@@ -1,9 +1,10 @@
 using System.Collections.Concurrent;
+using Erp.Presentation.Agent.Common;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Agent;
+namespace Satisfactory.Presentation.Agent;
 
 /// <summary>
 /// Watches the resolved Satisfactory save folder and ships new/changed
