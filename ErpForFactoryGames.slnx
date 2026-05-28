@@ -76,4 +76,8 @@
   <Folder Name="/test/Web/Web.UiTests/">
     <Project Path="test/Web/Web.UiTests/Web.UiTests.csproj" />
   </Folder>
+  <Folder Name="/test/Deploy/" />
+  <Folder Name="/test/Deploy/Erp.Deploy.Tests/">
+    <Project Path="test/Deploy/Erp.Deploy.Tests/Erp.Deploy.Tests.csproj" />
+  </Folder>
 </Solution>

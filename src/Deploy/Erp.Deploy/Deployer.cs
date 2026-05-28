@@ -1,4 +1,3 @@
-using System.Text;
 using Erp.Deploy.Configuration;
 using Erp.Deploy.Ssh;
 using Microsoft.Extensions.Logging;
@@ -54,7 +53,7 @@ public sealed class Deployer
     {
         var remote = req.Options.Remote;
         var conn = _resolver.Resolve(remote);
-        var stackEnv = BuildStackEnv(req.ConnectorToken, req.ImageTag);
+        var stackEnv = StackEnvBuilder.Build(req.ConnectorToken, req.ImageTag);
         var uploads = BuildUploads(req.ComposeSourceDir, remote.StackDir, stackEnv);
 
         // Pre-flight: complain about missing source files before touching SSH.
@@ -106,16 +105,6 @@ public sealed class Deployer
 
         AnsiConsole.MarkupLine("[green]✓[/] deploy complete");
         return new DeployResult(0);
-    }
-
-    private static byte[] BuildStackEnv(string connectorToken, string imageTag)
-    {
-        // Match the existing PS-written shape so the compose file's env-var
-        // references (TUNNEL_TOKEN, ERP_IMAGE_TAG) keep working unchanged.
-        var sb = new StringBuilder();
-        sb.Append("TUNNEL_TOKEN=").Append(connectorToken).Append('\n');
-        sb.Append("ERP_IMAGE_TAG=").Append(imageTag).Append('\n');
-        return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
     private static IReadOnlyList<RemoteFileUpload> BuildUploads(string sourceDir, string stackDir, byte[] stackEnv)
