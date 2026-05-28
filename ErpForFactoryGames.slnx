@@ -5,10 +5,16 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/src/">
-    <Project Path="src/Agent/Agent.csproj" />
     <Project Path="src/ApiService/ApiService.csproj" />
   </Folder>
   <Folder Name="/src/Presentation/" />
+  <Folder Name="/src/Presentation/Agent/" />
+  <Folder Name="/src/Presentation/Agent/Erp.Presentation.Agent.Common/">
+    <Project Path="src/Presentation/Agent/Erp.Presentation.Agent.Common/Erp.Presentation.Agent.Common.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/Agent/Satisfactory.Presentation.Agent/">
+    <Project Path="src/Presentation/Agent/Satisfactory.Presentation.Agent/Satisfactory.Presentation.Agent.csproj" />
+  </Folder>
   <Folder Name="/src/Presentation/Web/" />
   <Folder Name="/src/Presentation/Web/Erp.Presentation.Web.Common/">
     <Project Path="src/Presentation/Web/Erp.Presentation.Web.Common/Erp.Presentation.Web.Common.csproj" />

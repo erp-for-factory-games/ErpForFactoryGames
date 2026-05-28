@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Agent;
+namespace Erp.Presentation.Agent.Common;
 
 /// <summary>
 /// Ships a batch of log lines to the hosted API. Returns the upload

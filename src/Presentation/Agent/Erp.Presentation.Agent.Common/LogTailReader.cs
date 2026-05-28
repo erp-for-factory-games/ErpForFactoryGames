@@ -1,4 +1,4 @@
-namespace Agent;
+namespace Erp.Presentation.Agent.Common;
 
 /// <summary>
 /// Reads newly-appended lines from the Serilog daily-rolled file sink.

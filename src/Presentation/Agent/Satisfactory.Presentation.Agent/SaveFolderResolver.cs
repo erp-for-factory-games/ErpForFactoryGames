@@ -1,7 +1,8 @@
+using Erp.Presentation.Agent.Common;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Options;
 
-namespace Agent;
+namespace Satisfactory.Presentation.Agent;
 
 /// <summary>
 /// Decides where the Satisfactory save folder lives on this machine. Order

@@ -1,4 +1,4 @@
-namespace Agent;
+namespace Erp.Presentation.Agent.Common;
 
 /// <summary>
 /// Uploads the player's local <c>Docs.json</c> to the hosted planner

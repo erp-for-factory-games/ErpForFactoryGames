@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Agent;
+using Erp.Presentation.Agent.Common;
+using Satisfactory.Presentation.Agent;
 
 namespace Agent.Tests;
 

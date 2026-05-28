@@ -1,4 +1,5 @@
-namespace Agent;
+using Erp.Presentation.Agent.Common;
+namespace Satisfactory.Presentation.Agent;
 
 /// <summary>
 /// Where the agent finds the user's <c>Docs.json</c> to upload to the

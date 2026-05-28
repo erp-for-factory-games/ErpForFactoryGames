@@ -1,4 +1,4 @@
-namespace Agent;
+namespace Erp.Presentation.Agent.Common;
 
 /// <summary>
 /// Interactive (and non-interactive via flags) first-run wizard for the

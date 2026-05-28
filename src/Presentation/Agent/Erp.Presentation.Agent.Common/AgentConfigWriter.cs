@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Agent;
+namespace Erp.Presentation.Agent.Common;
 
 /// <summary>
 /// Atomic writer for <c>agent.json</c> (ADR-0025 §8). Reads the existing

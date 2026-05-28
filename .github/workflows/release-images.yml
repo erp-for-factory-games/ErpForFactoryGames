@@ -137,7 +137,7 @@ jobs:
         # this just pins the RID and output dir for this run.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # nuget.config reads it
-        run: dotnet publish src/Agent/Agent.csproj -c Release -r ${{ matrix.rid }} -o publish/${{ matrix.rid }}
+        run: dotnet publish src/Presentation/Agent/Satisfactory.Presentation.Agent/Satisfactory.Presentation.Agent.csproj -c Release -r ${{ matrix.rid }} -o publish/${{ matrix.rid }}
 
       - name: Pack zip (Windows)
         if: matrix.archive_ext == 'zip'
@@ -191,7 +191,7 @@ jobs:
   # winget — bump the ErpForFactoryGames.Agent manifest in winget-pkgs.
   #
   # Bootstrap (first submission) is manual via `wingetcreate submit` against
-  # the templates in src/Agent/packaging/winget/. From the second release
+  # the templates in src/Presentation/Agent/Satisfactory.Presentation.Agent/packaging/winget/. From the second release
   # onwards this job picks it up: downloads the new zip, recomputes SHA256,
   # opens a PR against microsoft/winget-pkgs with the bumped version.
   #

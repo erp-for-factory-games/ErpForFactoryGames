@@ -1,24 +1,17 @@
 using System.Net.Http.Headers;
+using Erp.Presentation.Agent.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Agent;
-
-/// <summary>
-/// Ships a Satisfactory <c>.sav</c> file to the hosted API. Returns the
-/// outcome rather than throwing so the watcher can record it in the status
-/// ledger and surface the failure to the user without restarting the host.
-/// </summary>
-public interface ISaveUploader
-{
-    Task<UploadAttempt> UploadAsync(string filePath, CancellationToken ct);
-}
+namespace Satisfactory.Presentation.Agent;
 
 /// <summary>
 /// HTTP implementation. Wire shape per ADR-0024 §4 — raw bytes,
-/// <c>application/octet-stream</c>, three custom headers.
+/// <c>application/octet-stream</c>, three custom headers. URL is the
+/// Satisfactory-specific savegames endpoint; CoI ships its own
+/// implementation when its agent lands.
 /// </summary>
-internal sealed class HttpSaveUploader : ISaveUploader
+public sealed class HttpSaveUploader : ISaveUploader
 {
     private const string UploadPath = "/api/agent/savegames/satisfactory";
 
