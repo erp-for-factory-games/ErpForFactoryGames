@@ -27,12 +27,15 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IAgentTokenAuthenticator, AgentTokenAuthenticator>();
 builder.Services.AddHostedService<DevPlayerBootstrap>();
 
-// ICurrentPlayer is needed by transitive registrations in
+// ICurrentPlayer + ICatalogueStorage are needed transitively by
 // AddErpInfrastructure (PlayerScopedCatalogProvider). Auth API never
-// actually serves catalog requests so this registration is satisfying the
-// DI validator more than anything; the actual /api/me endpoint
-// authenticates via the token directly.
+// actually serves catalog requests so these registrations are satisfying
+// the DI validator more than anything. Phase 5c3 splits the service
+// registration so this dead-weight goes away.
 builder.Services.AddScoped<ICurrentPlayer, CurrentPlayerFromAuthOptions>();
+builder.Services.Configure<CatalogueStorageOptions>(
+    builder.Configuration.GetSection(CatalogueStorageOptions.SectionName));
+builder.Services.AddSingleton<ICatalogueStorage, FileSystemCatalogueStorage>();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
