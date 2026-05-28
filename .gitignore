@@ -63,5 +63,8 @@ test/ui-tests/
 *.db-shm
 *.db-wal
 
+# Planner scratch snapshot (Steam ID + local save path inside) — dev-only
+factory_state.json
+
 
 *.lscache

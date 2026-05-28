@@ -25,6 +25,16 @@ Assumes:
 - **Unprivileged** with `nesting=1` and `keyctl=1` Features enabled
   (Proxmox UI → LXC → Options → Features).
 - An SSH alias `erp-lxc` configured in `~/.ssh/config` on the dev box.
+  This is also what `deploy/erp-deploy.json` references, so `./build.sh Up`
+  and `./build.sh Provision` go through the same alias. A minimal stanza:
+
+  ```
+  Host erp-lxc
+      HostName <your-lxc-ip>
+      User chris
+      IdentityFile ~/.ssh/id_ed25519
+  ```
+
 - Your SSH public key already pasted into `/root/.ssh/authorized_keys`
   on the LXC (one-time, via the Proxmox console).
 

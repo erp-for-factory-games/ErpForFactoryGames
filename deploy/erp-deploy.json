@@ -15,7 +15,7 @@
     ]
   },
   "Remote": {
-    "Host": "10.10.107.175",
+    "Host": "erp-lxc",
     "User": "chris",
     "StackDir": "/home/chris/stacks/erp"
   }
