@@ -5,8 +5,13 @@ var builder = DistributedApplication.CreateBuilder(args);
 var authApi = builder.AddProject<Projects.Erp_Presentation_Api_Auth>("auth-api")
     .WithHttpHealthCheck("/health");
 
+// Sat API waits for Auth to be healthy first — both binaries hit the same
+// SQLite file via EF migrations at startup; concurrent migrate races would
+// lock the DB. Phase 5c3 splits the DbContext so each binary owns its own
+// schema and the ordering goes away.
 var apiService = builder.AddProject<Projects.Satisfactory_Presentation_Api>("apiservice")
-    .WithHttpHealthCheck("/health");
+    .WithHttpHealthCheck("/health")
+    .WaitFor(authApi);
 
 // Captain of Industry API (scaffold) — same shape as the Satisfactory binary,
 // no real surface yet. Phase 5c5 wires its planner endpoints + health check.
