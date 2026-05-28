@@ -1,7 +1,17 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var apiService = builder.AddProject<Projects.ApiService>("apiservice")
+// Auth API (scaffold) — owns player + agent-token aggregate per ADR-0026.
+// Fleshed out in phase 5c2; for now it's a "hello" endpoint that lets the
+// composition root validate the binary builds + boots. Health check skipped
+// until the scaffold gains real endpoints + launchSettings — see 5c2.
+var authApi = builder.AddProject<Projects.Erp_Presentation_Api_Auth>("auth-api");
+
+var apiService = builder.AddProject<Projects.Satisfactory_Presentation_Api>("apiservice")
     .WithHttpHealthCheck("/health");
+
+// Captain of Industry API (scaffold) — same shape as the Satisfactory binary,
+// no real surface yet. Phase 5c5 wires its planner endpoints + health check.
+var coiApi = builder.AddProject<Projects.CaptainOfIndustry_Presentation_Api>("coi-api");
 
 // ---- Optional Postgres for plan storage (ADR-0018) -------------------------
 // SQLite is the default and needs no orchestration. Uncomment the block below

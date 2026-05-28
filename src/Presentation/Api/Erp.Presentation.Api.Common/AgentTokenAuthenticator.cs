@@ -2,9 +2,11 @@ using System.Collections.Concurrent;
 using Erp.Application.Common;
 using Erp.Domain.Common;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// In-memory cached <see cref="IAgentTokenAuthenticator"/> (ADR-0025 §3).

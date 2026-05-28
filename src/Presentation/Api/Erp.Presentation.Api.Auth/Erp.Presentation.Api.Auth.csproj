@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Erp.Presentation.Api.Auth</RootNamespace>
+    <AssemblyName>Erp.Presentation.Api.Auth</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Hosting\Erp.Hosting.ServiceDefaults\Erp.Hosting.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Erp.Presentation.Api.Common\Erp.Presentation.Api.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

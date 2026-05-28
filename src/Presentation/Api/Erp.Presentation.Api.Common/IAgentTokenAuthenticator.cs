@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Auth pipeline for agent requests (ADR-0025 §3). Wraps the

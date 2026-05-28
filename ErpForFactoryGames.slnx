@@ -4,10 +4,20 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/src/">
-    <Project Path="src/ApiService/ApiService.csproj" />
-  </Folder>
   <Folder Name="/src/Presentation/" />
+  <Folder Name="/src/Presentation/Api/" />
+  <Folder Name="/src/Presentation/Api/Erp.Presentation.Api.Common/">
+    <Project Path="src/Presentation/Api/Erp.Presentation.Api.Common/Erp.Presentation.Api.Common.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/Api/Erp.Presentation.Api.Auth/">
+    <Project Path="src/Presentation/Api/Erp.Presentation.Api.Auth/Erp.Presentation.Api.Auth.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/Api/Satisfactory.Presentation.Api/">
+    <Project Path="src/Presentation/Api/Satisfactory.Presentation.Api/Satisfactory.Presentation.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/Api/CaptainOfIndustry.Presentation.Api/">
+    <Project Path="src/Presentation/Api/CaptainOfIndustry.Presentation.Api/CaptainOfIndustry.Presentation.Api.csproj" />
+  </Folder>
   <Folder Name="/src/Presentation/Agent/" />
   <Folder Name="/src/Presentation/Agent/Erp.Presentation.Agent.Common/">
     <Project Path="src/Presentation/Agent/Erp.Presentation.Agent.Common/Erp.Presentation.Agent.Common.csproj" />

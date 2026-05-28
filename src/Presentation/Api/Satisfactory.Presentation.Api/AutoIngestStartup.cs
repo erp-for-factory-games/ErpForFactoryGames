@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using TickerQ.Utilities.Entities;
 using TickerQ.Utilities.Interfaces.Managers;
 
-namespace ApiService;
+namespace Satisfactory.Presentation.Api;
 
 /// <summary>
 /// One-shot startup helper that reconciles the persisted TickerQ cron entry

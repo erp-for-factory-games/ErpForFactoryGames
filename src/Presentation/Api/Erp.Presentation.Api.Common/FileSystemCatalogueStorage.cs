@@ -1,7 +1,7 @@
 using Erp.Application.Common;
 using Microsoft.Extensions.Options;
 
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Filesystem-backed <see cref="ICatalogueStorage"/>. Stores each blob

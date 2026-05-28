@@ -21,7 +21,8 @@ COPY nuget.config Directory.Build.props version.json ./
 COPY src/Presentation/Web/Satisfactory.Presentation.Web/Satisfactory.Presentation.Web.csproj src/Presentation/Web/Satisfactory.Presentation.Web/
 COPY src/Presentation/Web/Erp.Presentation.Web.Common/Erp.Presentation.Web.Common.csproj src/Presentation/Web/Erp.Presentation.Web.Common/
 COPY src/Hosting/Erp.Hosting.ServiceDefaults/Erp.Hosting.ServiceDefaults.csproj src/Hosting/Erp.Hosting.ServiceDefaults/
-COPY src/ApiService/ApiService.csproj                                  src/ApiService/
+COPY src/Presentation/Api/Satisfactory.Presentation.Api/Satisfactory.Presentation.Api.csproj src/Presentation/Api/Satisfactory.Presentation.Api/
+COPY src/Presentation/Api/Erp.Presentation.Api.Common/Erp.Presentation.Api.Common.csproj src/Presentation/Api/Erp.Presentation.Api.Common/
 COPY src/Application/Erp.Application.Common/Erp.Application.Common.csproj src/Application/Erp.Application.Common/
 COPY src/Domain/Erp.Domain.Common/Erp.Domain.Common.csproj             src/Domain/Erp.Domain.Common/
 COPY src/Infrastructure/Erp.Infrastructure/Erp.Infrastructure.csproj   src/Infrastructure/Erp.Infrastructure/

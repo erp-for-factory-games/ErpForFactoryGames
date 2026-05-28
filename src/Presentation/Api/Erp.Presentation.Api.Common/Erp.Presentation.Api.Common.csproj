@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Erp.Presentation.Api.Common</RootNamespace>
+    <AssemblyName>Erp.Presentation.Api.Common</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Application\Erp.Application.Common\Erp.Application.Common.csproj" />
+    <ProjectReference Include="..\..\..\Domain\Erp.Domain.Common\Erp.Domain.Common.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\Erp.Infrastructure\Erp.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\Persistence\Erp.Infrastructure.Persistence\Erp.Infrastructure.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Satisfactory.Presentation.Api" />
+    <InternalsVisibleTo Include="Erp.Presentation.Api.Auth" />
+    <InternalsVisibleTo Include="CaptainOfIndustry.Presentation.Api" />
+    <InternalsVisibleTo Include="ApiService.Tests" />
+  </ItemGroup>
+
+</Project>

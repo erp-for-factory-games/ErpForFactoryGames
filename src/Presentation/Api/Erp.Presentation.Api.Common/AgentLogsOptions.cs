@@ -1,4 +1,4 @@
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Bound from <c>AgentLogs</c> in configuration. Controls the in-memory

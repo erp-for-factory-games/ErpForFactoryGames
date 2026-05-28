@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Outcome of an <see cref="IAgentTokenAuthenticator.AuthenticateAsync"/>

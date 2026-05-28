@@ -1,8 +1,9 @@
 using Erp.Application.Common;
 using Erp.Infrastructure;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Maps a player's missing-catalogue state to a structured ProblemDetails

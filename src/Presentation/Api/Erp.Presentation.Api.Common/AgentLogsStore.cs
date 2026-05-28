@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 
-namespace ApiService;
+namespace Erp.Presentation.Api.Common;
 
 /// <summary>
 /// Server-side ring buffer of agent log lines, populated by
