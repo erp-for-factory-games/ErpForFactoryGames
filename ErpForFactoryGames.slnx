@@ -43,9 +43,9 @@
   <Folder Name="/src/CaptainOfIndustry/Web/">
     <Project Path="src/CaptainOfIndustry/Web/CaptainOfIndustry.Web.csproj" />
   </Folder>
-  <Folder Name="/src/Deploy/" />
-  <Folder Name="/src/Deploy/Erp.Deploy/">
-    <Project Path="src/Deploy/Erp.Deploy/Erp.Deploy.csproj" />
+  <Folder Name="/tools/" />
+  <Folder Name="/tools/Erp.Deploy/">
+    <Project Path="tools/Erp.Deploy/Erp.Deploy.csproj" />
   </Folder>
   <Folder Name="/test/" />
   <Folder Name="/test/Agent.Tests/">

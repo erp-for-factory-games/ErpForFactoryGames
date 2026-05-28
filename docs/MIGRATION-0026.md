@@ -114,19 +114,20 @@ durable wisdom.
 - [x] ADR-0026 written + committed.
 - [x] Memory + MEMORY.md index updated.
 - [x] MIGRATION-0026.md (this file).
-- [ ] **Phase 1: Hosting**
-  - [ ] `src/AppHost` → `src/Hosting/Erp.Hosting.AppHost`
-  - [ ] `src/ServiceDefaults` → `src/Hosting/Erp.Hosting.ServiceDefaults`
-  - [ ] Update consumers (`Web`, `ApiService`, `CaptainOfIndustry/Web`)
-  - [ ] slnx + build green
-- [ ] **Phase 2: Domain**
-- [ ] **Phase 3: Application**
-- [ ] **Phase 4: Infrastructure (+ splits)**
-- [ ] **Phase 5: Presentation (+ splits)**
-- [ ] **Phase 6: Tools**
-- [ ] **Phase 7: Tests**
-- [ ] **Phase 8: Final pass (slnx, CI, Dockerfiles, scripts)**
-- [ ] dotnet build green
-- [ ] dotnet test green
-- [ ] dotnet format clean
-- [ ] PR opened (draft, then ready)
+- [x] **Phase 1: Hosting** — AppHost + ServiceDefaults moved, build green.
+- [x] **Phase 2: Domain** — moved, namespace flipped, build green.
+- [x] **Phase 3: Application** — moved, namespace flipped, build green.
+- [x] **Phase 4: Infrastructure** — moved, Satisfactory.Catalog+Save merged into Satisfactory.Infrastructure, CoI.Catalog renamed to CoI.Infrastructure, build green. **Deferred:** extracting Satisfactory-specific files (`DocsCatalogProvider`, `SatisfactorySaveNetFactoryStateProvider`) out of `Erp.Infrastructure` into `Satisfactory.Infrastructure`. Splitting `OrToolsRecipePlanner` between Application + Infrastructure.
+- [x] **Phase 6: Tools** — `src/Deploy/Erp.Deploy` → `tools/Erp.Deploy`, `build/Build.cs` and test project references updated.
+- [ ] **Phase 5: Presentation** — **DEFERRED to follow-up PR.** Three items, each non-trivial:
+  - Rename `src/Web` → `src/Presentation/Web/Satisfactory.Presentation.Web`; flip namespace `Web.*` → `Satisfactory.Presentation.Web.*` (Razor files have implicit namespace derivation via `RootNamespace`; needs careful `@using` rewrites alongside `.cs` `using` rewrites).
+  - Rename `src/Web.Shared` → `src/Presentation/Web/Erp.Presentation.Web.Common`; same Razor concern.
+  - Rename `src/CaptainOfIndustry/Web` → `src/Presentation/Web/CaptainOfIndustry.Presentation.Web`.
+  - **Split `src/Agent`** into `Erp.Presentation.Agent.Common` (HTTP plumbing, log tail, pairing, config) + `Satisfactory.Presentation.Agent` (SaveFolderResolver + binary entry).
+  - **Split `src/ApiService`** into `Erp.Presentation.Api.Common` (agent auth, agent endpoints, shared middleware) + `Satisfactory.Presentation.Api` + `CaptainOfIndustry.Presentation.Api` (per-game planner endpoints + binary entry).
+- [ ] **Phase 7: Tests** — **DEFERRED to follow-up PR.** Mirror the layered structure (`test/Domain/`, `test/Application/`, `test/Infrastructure/`, `test/Presentation/`). Merge `test/Satisfactory/{Catalog,Save}.Tests` to match the source-side merge.
+- [ ] **Phase 8: Final pass** — Dockerfile / CI workflow scan after Phase 5 lands.
+- [x] dotnet build green for everything done so far (via `Erp.Hosting.AppHost` as transitive root).
+- [ ] dotnet test green — pending Phase 7.
+- [ ] dotnet format clean — pending Phase 5+7.
+- [ ] PR ready — opened as WIP/draft after Phase 6.
