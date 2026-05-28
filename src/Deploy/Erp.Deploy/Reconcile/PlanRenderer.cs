@@ -25,7 +25,7 @@ public static class PlanRenderer
             {
                 PlanAction.Create => "[green]+ CREATE[/]",
                 PlanAction.Update => "[yellow]~ UPDATE[/]",
-                PlanAction.NoOp   => "[dim]  no-op[/]",
+                PlanAction.NoOp => "[dim]  no-op[/]",
                 _ => p.Action.ToString(),
             };
             table.AddRow(
@@ -70,7 +70,7 @@ public static class PlanRenderer
         foreach (var c in changes)
         {
             var before = c.Before is null ? "[dim]∅[/]" : Markup.Escape(c.Before);
-            var after  = c.After  is null ? "[dim]∅[/]" : Markup.Escape(c.After);
+            var after = c.After is null ? "[dim]∅[/]" : Markup.Escape(c.After);
             if (c.IsChange)
             {
                 lines.Add($"[yellow]{Markup.Escape(c.Name)}[/]: {before} → [bold]{after}[/]");

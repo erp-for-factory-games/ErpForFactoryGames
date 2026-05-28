@@ -122,6 +122,6 @@ public sealed class SshDeployer : IDisposable
     public void Dispose()
     {
         try { _sftp.Disconnect(); _sftp.Dispose(); } catch { /* best effort */ }
-        try { _ssh.Disconnect();  _ssh.Dispose();  } catch { /* best effort */ }
+        try { _ssh.Disconnect(); _ssh.Dispose(); } catch { /* best effort */ }
     }
 }
