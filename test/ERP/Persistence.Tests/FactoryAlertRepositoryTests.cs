@@ -1,5 +1,5 @@
 using ERP.Application;
-using ERP.Domain;
+using Erp.Domain.Common;
 using ERP.Infrastructure.Persistence;
 using ERP.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;

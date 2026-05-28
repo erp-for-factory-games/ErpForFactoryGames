@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Application\ERP.Application.csproj" />
-    <ProjectReference Include="..\..\Domain\ERP.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Domain\Erp.Domain.Common\Erp.Domain.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

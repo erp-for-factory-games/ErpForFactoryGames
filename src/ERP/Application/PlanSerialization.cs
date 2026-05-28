@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using ERP.Domain;
+using Erp.Domain.Common;
 
 namespace ERP.Application;
 

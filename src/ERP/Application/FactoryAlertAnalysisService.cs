@@ -1,4 +1,4 @@
-using ERP.Domain;
+using Erp.Domain.Common;
 using Microsoft.Extensions.Logging;
 
 namespace ERP.Application;

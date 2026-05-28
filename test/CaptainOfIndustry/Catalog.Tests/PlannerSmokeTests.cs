@@ -1,6 +1,6 @@
 using ERP.Application;
 using ERP.Application.Queries.PlanProduction;
-using ERP.Domain;
+using Erp.Domain.Common;
 
 namespace CaptainOfIndustry.Catalog.Tests;
 

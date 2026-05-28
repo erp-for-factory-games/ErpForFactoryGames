@@ -1,4 +1,4 @@
-using ERP.Domain;
+using Erp.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using TickerQ.EntityFrameworkCore;
 using TickerQ.EntityFrameworkCore.Configurations;

@@ -21,8 +21,9 @@
   <Folder Name="/src/ERP/Application/">
     <Project Path="src/ERP/Application/ERP.Application.csproj" />
   </Folder>
-  <Folder Name="/src/ERP/Domain/">
-    <Project Path="src/ERP/Domain/ERP.Domain.csproj" />
+  <Folder Name="/src/Domain/" />
+  <Folder Name="/src/Domain/Erp.Domain.Common/">
+    <Project Path="src/Domain/Erp.Domain.Common/Erp.Domain.Common.csproj" />
   </Folder>
   <Folder Name="/src/ERP/Infrastructure/">
     <Project Path="src/ERP/Infrastructure/ERP.Infrastructure.csproj" />

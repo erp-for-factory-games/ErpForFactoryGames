@@ -3,7 +3,7 @@ using Erp.Hosting.ServiceDefaults;
 using ERP.Application;
 using ERP.Application.Commands.IngestSave;
 using ERP.Application.Queries.PlanProduction;
-using ERP.Domain;
+using Erp.Domain.Common;
 using ERP.Infrastructure;
 using ERP.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -416,7 +416,7 @@ app.MapPut("/factory/node-override", (
         return Results.BadRequest(new { error = "Reference is required." });
     if (string.IsNullOrWhiteSpace(request.Resource))
         return Results.BadRequest(new { error = "Resource is required (e.g. Desc_OreIron_C)." });
-    if (!Enum.TryParse<ERP.Domain.NodePurity>(request.Purity, ignoreCase: true, out var purity))
+    if (!Enum.TryParse<Erp.Domain.Common.NodePurity>(request.Purity, ignoreCase: true, out var purity))
         return Results.BadRequest(new { error = $"Unknown purity '{request.Purity}'. Use Impure, Normal, or Pure." });
 
     var node = provider.Current.ResourceNodes
@@ -1555,7 +1555,7 @@ public sealed record StepDto(
 
 // ---- Saved plan DTOs (issue #77) -------------------------------------------
 // Wire shapes for /plans endpoints. Kept thin and string-typed so the Web
-// client doesn't take a reference on the ERP.Domain assembly.
+// client doesn't take a reference on the Erp.Domain.Common assembly.
 
 public sealed record SavePlanRequest(
     string Name,

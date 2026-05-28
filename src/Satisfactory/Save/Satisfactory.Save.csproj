@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ERP\Domain\ERP.Domain.csproj" />
+    <ProjectReference Include="..\..\Domain/Erp.Domain.Common/Erp.Domain.Common.csproj" />
     <!--
       Consumed from the fork's GitHub Packages feed (see nuget.config). Bump
       the version when the fork ships a new tagged release; the submodule under

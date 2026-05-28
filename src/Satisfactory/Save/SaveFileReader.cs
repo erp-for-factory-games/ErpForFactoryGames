@@ -1,4 +1,4 @@
-using ERP.Domain;
+using Erp.Domain.Common;
 using SatisfactorySaveNet;
 using SatisfactorySaveNet.Abstracts.Extra;
 using SatisfactorySaveNet.Abstracts.Model;
@@ -208,7 +208,7 @@ public sealed class SaveFileReader
         var kind = BuildingIdentifiers.ResourceNodeKind(typePath);
 
         // Geysers are always geothermal (Pure) — known purely from BP type.
-        if (kind == ERP.Domain.ResourceNodeKind.Geyser)
+        if (kind == Erp.Domain.Common.ResourceNodeKind.Geyser)
         {
             return new ResourceNode(reference, kind, Resource: null, NodePurity.Pure, position);
         }
@@ -216,9 +216,9 @@ public sealed class SaveFileReader
         // Mining nodes / fracking sites need a coordinate lookup. We consult
         // user overrides first (per-machine file) then the bundled dataset.
         // Either source can be empty; falls back to Unknown on full miss.
-        if (kind is ERP.Domain.ResourceNodeKind.MiningNode
-                 or ERP.Domain.ResourceNodeKind.FrackingCore
-                 or ERP.Domain.ResourceNodeKind.FrackingSatellite)
+        if (kind is Erp.Domain.Common.ResourceNodeKind.MiningNode
+                 or Erp.Domain.Common.ResourceNodeKind.FrackingCore
+                 or Erp.Domain.Common.ResourceNodeKind.FrackingSatellite)
         {
             var hit = _overrides.Lookup(position) ?? _knownNodes.Lookup(position);
             if (hit is not null)

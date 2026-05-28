@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using ERP.Domain;
+using Erp.Domain.Common;
 
 namespace Satisfactory.Catalog;
 

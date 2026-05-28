@@ -1,5 +1,5 @@
 using ERP.Application;
-using ERP.Domain;
+using Erp.Domain.Common;
 
 namespace ERP.Application.Queries.PlanProduction;
 

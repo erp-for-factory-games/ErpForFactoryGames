@@ -1,5 +1,5 @@
 using System.Text.Json;
-using ERP.Domain;
+using Erp.Domain.Common;
 
 namespace Satisfactory.Save;
 

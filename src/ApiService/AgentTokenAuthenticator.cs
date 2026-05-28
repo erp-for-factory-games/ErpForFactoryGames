@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using ERP.Application;
-using ERP.Domain;
+using Erp.Domain.Common;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 

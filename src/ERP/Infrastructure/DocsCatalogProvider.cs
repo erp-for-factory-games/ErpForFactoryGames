@@ -1,5 +1,5 @@
 using ERP.Application;
-using ERP.Domain;
+using Erp.Domain.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Satisfactory.Catalog;

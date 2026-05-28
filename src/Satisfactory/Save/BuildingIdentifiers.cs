@@ -1,4 +1,4 @@
-using ERP.Domain;
+using Erp.Domain.Common;
 
 namespace Satisfactory.Save;
 
@@ -14,27 +14,27 @@ internal static class BuildingIdentifiers
 {
     public static MinerTier? MinerTier(string typePath) => ShortName(typePath) switch
     {
-        "Build_MinerMk1_C" => ERP.Domain.MinerTier.Mk1,
-        "Build_MinerMk2_C" => ERP.Domain.MinerTier.Mk2,
-        "Build_MinerMk3_C" => ERP.Domain.MinerTier.Mk3,
+        "Build_MinerMk1_C" => Erp.Domain.Common.MinerTier.Mk1,
+        "Build_MinerMk2_C" => Erp.Domain.Common.MinerTier.Mk2,
+        "Build_MinerMk3_C" => Erp.Domain.Common.MinerTier.Mk3,
         _ => null,
     };
 
     public static BeltTier? BeltTier(string typePath) => ShortName(typePath) switch
     {
-        "Build_ConveyorBeltMk1_C" => ERP.Domain.BeltTier.Mk1,
-        "Build_ConveyorBeltMk2_C" => ERP.Domain.BeltTier.Mk2,
-        "Build_ConveyorBeltMk3_C" => ERP.Domain.BeltTier.Mk3,
-        "Build_ConveyorBeltMk4_C" => ERP.Domain.BeltTier.Mk4,
-        "Build_ConveyorBeltMk5_C" => ERP.Domain.BeltTier.Mk5,
-        "Build_ConveyorBeltMk6_C" => ERP.Domain.BeltTier.Mk6,
+        "Build_ConveyorBeltMk1_C" => Erp.Domain.Common.BeltTier.Mk1,
+        "Build_ConveyorBeltMk2_C" => Erp.Domain.Common.BeltTier.Mk2,
+        "Build_ConveyorBeltMk3_C" => Erp.Domain.Common.BeltTier.Mk3,
+        "Build_ConveyorBeltMk4_C" => Erp.Domain.Common.BeltTier.Mk4,
+        "Build_ConveyorBeltMk5_C" => Erp.Domain.Common.BeltTier.Mk5,
+        "Build_ConveyorBeltMk6_C" => Erp.Domain.Common.BeltTier.Mk6,
         _ => null,
     };
 
     public static PipelineTier? PipelineTier(string typePath) => ShortName(typePath) switch
     {
-        "Build_Pipeline_C" => ERP.Domain.PipelineTier.Mk1,
-        "Build_PipelineMk2_C" => ERP.Domain.PipelineTier.Mk2,
+        "Build_Pipeline_C" => Erp.Domain.Common.PipelineTier.Mk1,
+        "Build_PipelineMk2_C" => Erp.Domain.Common.PipelineTier.Mk2,
         _ => null,
     };
 
@@ -42,11 +42,11 @@ internal static class BuildingIdentifiers
     {
         "Build_GeneratorBiomass_Automated_C" or
         "Build_GeneratorIntegratedBiomass_C" or
-        "Build_GeneratorBiomass_C" => ERP.Domain.GeneratorKind.Biomass,
-        "Build_GeneratorCoal_C" => ERP.Domain.GeneratorKind.Coal,
-        "Build_GeneratorFuel_C" => ERP.Domain.GeneratorKind.Fuel,
-        "Build_GeneratorNuclear_C" => ERP.Domain.GeneratorKind.Nuclear,
-        "Build_GeneratorGeoThermal_C" => ERP.Domain.GeneratorKind.Geothermal,
+        "Build_GeneratorBiomass_C" => Erp.Domain.Common.GeneratorKind.Biomass,
+        "Build_GeneratorCoal_C" => Erp.Domain.Common.GeneratorKind.Coal,
+        "Build_GeneratorFuel_C" => Erp.Domain.Common.GeneratorKind.Fuel,
+        "Build_GeneratorNuclear_C" => Erp.Domain.Common.GeneratorKind.Nuclear,
+        "Build_GeneratorGeoThermal_C" => Erp.Domain.Common.GeneratorKind.Geothermal,
         _ => null,
     };
 
@@ -78,12 +78,12 @@ internal static class BuildingIdentifiers
     /// </summary>
     public static ResourceNodeKind ResourceNodeKind(string typePath) => ShortName(typePath) switch
     {
-        "BP_ResourceNode_C" => ERP.Domain.ResourceNodeKind.MiningNode,
-        "BP_ResourceNodeGeyser_C" => ERP.Domain.ResourceNodeKind.Geyser,
-        "BP_ResourceDeposit_C" => ERP.Domain.ResourceNodeKind.Deposit,
-        "BP_FrackingCore_C" => ERP.Domain.ResourceNodeKind.FrackingCore,
-        "BP_FrackingSatellite_C" => ERP.Domain.ResourceNodeKind.FrackingSatellite,
-        _ => ERP.Domain.ResourceNodeKind.Unknown,
+        "BP_ResourceNode_C" => Erp.Domain.Common.ResourceNodeKind.MiningNode,
+        "BP_ResourceNodeGeyser_C" => Erp.Domain.Common.ResourceNodeKind.Geyser,
+        "BP_ResourceDeposit_C" => Erp.Domain.Common.ResourceNodeKind.Deposit,
+        "BP_FrackingCore_C" => Erp.Domain.Common.ResourceNodeKind.FrackingCore,
+        "BP_FrackingSatellite_C" => Erp.Domain.Common.ResourceNodeKind.FrackingSatellite,
+        _ => Erp.Domain.Common.ResourceNodeKind.Unknown,
     };
 
     /// <summary>

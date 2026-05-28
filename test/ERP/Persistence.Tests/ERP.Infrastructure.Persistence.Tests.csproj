@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\ERP\Application\ERP.Application.csproj" />
-    <ProjectReference Include="..\..\..\src\ERP\Domain\ERP.Domain.csproj" />
+    <ProjectReference Include="..\..\..\src\Domain/Erp.Domain.Common/Erp.Domain.Common.csproj" />
     <ProjectReference Include="..\..\..\src\ERP\Infrastructure\Persistence\ERP.Infrastructure.Persistence.csproj" />
   </ItemGroup>
 
