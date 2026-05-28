@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace ERP.Application.Queries.PlanProduction;
+namespace Erp.Application.Common.Queries.PlanProduction;
 
 /// <summary>
 /// Shared post-solve helper that turns the raw shortfall map both planners

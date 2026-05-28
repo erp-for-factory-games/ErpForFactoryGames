@@ -1,5 +1,5 @@
 using System.Text.Json;
-using ERP.Application;
+using Erp.Application.Common;
 using Erp.Domain.Common;
 
 namespace CaptainOfIndustry.Catalog;

@@ -1,4 +1,4 @@
-using ERP.Application;
+using Erp.Application.Common;
 using ERP.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

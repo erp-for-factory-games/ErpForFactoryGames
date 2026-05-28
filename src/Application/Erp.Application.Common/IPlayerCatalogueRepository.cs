@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace ERP.Application;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Persistence port for <see cref="PlayerCatalogue"/> rows (ADR-0025 §4).

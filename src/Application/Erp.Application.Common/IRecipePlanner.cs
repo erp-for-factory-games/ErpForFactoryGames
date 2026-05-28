@@ -1,7 +1,7 @@
-using ERP.Application.Queries.PlanProduction;
+using Erp.Application.Common.Queries.PlanProduction;
 using Erp.Domain.Common;
 
-namespace ERP.Application;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Port for planning production: take a set of <see cref="ProductionTarget"/>s

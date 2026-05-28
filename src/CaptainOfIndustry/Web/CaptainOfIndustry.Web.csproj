@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Hosting\Erp.Hosting.ServiceDefaults\Erp.Hosting.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\..\ERP\Application\ERP.Application.csproj" />
+    <ProjectReference Include="..\..\Application/Erp.Application.Common/Erp.Application.Common.csproj" />
     <ProjectReference Include="..\Catalog\CaptainOfIndustry.Catalog.csproj" />
   </ItemGroup>
 

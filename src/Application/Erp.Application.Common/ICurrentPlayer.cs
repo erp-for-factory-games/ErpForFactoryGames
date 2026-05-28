@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace ERP.Application;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Resolves the <see cref="PlayerId"/> for the current request scope

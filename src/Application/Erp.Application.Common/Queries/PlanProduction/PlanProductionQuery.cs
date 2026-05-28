@@ -1,7 +1,7 @@
-using ERP.Application;
+using Erp.Application.Common;
 using Erp.Domain.Common;
 
-namespace ERP.Application.Queries.PlanProduction;
+namespace Erp.Application.Common.Queries.PlanProduction;
 
 public sealed record PlanProductionQuery(
     IReadOnlyList<ProductionTarget> Targets,

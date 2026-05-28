@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace ERP.Application;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Persistence port for <see cref="Player"/> aggregates (ADR-0025 §1).

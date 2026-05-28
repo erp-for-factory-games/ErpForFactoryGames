@@ -1,7 +1,7 @@
 using Erp.Domain.Common;
 using Microsoft.Extensions.Logging;
 
-namespace ERP.Application;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Post-ingest analysis pass that turns the current

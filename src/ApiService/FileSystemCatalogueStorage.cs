@@ -1,4 +1,4 @@
-using ERP.Application;
+using Erp.Application.Common;
 using Microsoft.Extensions.Options;
 
 namespace ApiService;

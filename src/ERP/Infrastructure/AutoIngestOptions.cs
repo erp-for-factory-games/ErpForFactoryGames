@@ -3,7 +3,7 @@ namespace ERP.Infrastructure;
 /// <summary>
 /// Bound from <c>FactoryState:Satisfactory:AutoIngest</c>. Drives the
 /// TickerQ-backed background job that watches the SaveGames directory and
-/// dispatches <see cref="ERP.Application.Commands.IngestSave.IngestSaveCommand"/>
+/// dispatches <see cref="Erp.Application.Common.Commands.IngestSave.IngestSaveCommand"/>
 /// when a newer <c>.sav</c> appears (#115). Off by default — opt-in until
 /// proven harmless in real play.
 /// </summary>

@@ -1,8 +1,8 @@
 using CaptainOfIndustry.Web.Components;
 using CaptainOfIndustry.Catalog;
 using Erp.Hosting.ServiceDefaults;
-using ERP.Application;
-using ERP.Application.Queries.PlanProduction;
+using Erp.Application.Common;
+using Erp.Application.Common.Queries.PlanProduction;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;

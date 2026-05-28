@@ -1,5 +1,5 @@
-using ERP.Application;
-using ERP.Application.Queries.PlanProduction;
+using Erp.Application.Common;
+using Erp.Application.Common.Queries.PlanProduction;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

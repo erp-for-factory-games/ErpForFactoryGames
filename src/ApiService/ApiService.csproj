@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Hosting\Erp.Hosting.ServiceDefaults\Erp.Hosting.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\ERP\Application\ERP.Application.csproj" />
+    <ProjectReference Include="..\Application/Erp.Application.Common/Erp.Application.Common.csproj" />
     <ProjectReference Include="..\ERP\Infrastructure\ERP.Infrastructure.csproj" />
     <ProjectReference Include="..\ERP\Infrastructure\Persistence\ERP.Infrastructure.Persistence.csproj" />
   </ItemGroup>

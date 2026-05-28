@@ -1,4 +1,4 @@
-namespace ERP.Application;
+namespace Erp.Application.Common;
 
 public sealed record CatalogueStatus(
     bool IsLoaded,

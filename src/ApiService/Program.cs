@@ -1,8 +1,8 @@
 using ApiService;
 using Erp.Hosting.ServiceDefaults;
-using ERP.Application;
-using ERP.Application.Commands.IngestSave;
-using ERP.Application.Queries.PlanProduction;
+using Erp.Application.Common;
+using Erp.Application.Common.Commands.IngestSave;
+using Erp.Application.Common.Queries.PlanProduction;
 using Erp.Domain.Common;
 using ERP.Infrastructure;
 using ERP.Infrastructure.Persistence;

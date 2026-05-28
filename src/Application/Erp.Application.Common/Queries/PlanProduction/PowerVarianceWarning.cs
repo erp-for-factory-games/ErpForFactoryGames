@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace ERP.Application.Queries.PlanProduction;
+namespace Erp.Application.Common.Queries.PlanProduction;
 
 /// <summary>
 /// Detects plan-wide power-variance caveats and produces user-facing warnings

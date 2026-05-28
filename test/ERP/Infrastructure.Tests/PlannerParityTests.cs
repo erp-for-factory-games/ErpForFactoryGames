@@ -1,5 +1,5 @@
-using ERP.Application;
-using ERP.Application.Queries.PlanProduction;
+using Erp.Application.Common;
+using Erp.Application.Common.Queries.PlanProduction;
 using Erp.Domain.Common;
 using static ERP.Infrastructure.Tests.PlannerTestFixtures;
 

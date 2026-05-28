@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace ERP.Application;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Source of live factory state — what's actually placed in the player's save.

@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Application\ERP.Application.csproj" />
+    <ProjectReference Include="..\..\Application\Erp.Application.Common\Erp.Application.Common.csproj" />
     <ProjectReference Include="..\..\Domain\Erp.Domain.Common\Erp.Domain.Common.csproj" />
     <ProjectReference Include="..\..\Satisfactory\Catalog\Satisfactory.Catalog.csproj" />
     <ProjectReference Include="..\..\Satisfactory\Save\Satisfactory.Save.csproj" />

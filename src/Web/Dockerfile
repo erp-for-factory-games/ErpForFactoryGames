@@ -22,7 +22,7 @@ COPY src/Web/Web.csproj                                                src/Web/
 COPY src/Web.Shared/Web.Shared.csproj                                  src/Web.Shared/
 COPY src/Hosting/Erp.Hosting.ServiceDefaults/Erp.Hosting.ServiceDefaults.csproj src/Hosting/Erp.Hosting.ServiceDefaults/
 COPY src/ApiService/ApiService.csproj                                  src/ApiService/
-COPY src/ERP/Application/ERP.Application.csproj                        src/ERP/Application/
+COPY src/Application/Erp.Application.Common/Erp.Application.Common.csproj src/Application/Erp.Application.Common/
 COPY src/Domain/Erp.Domain.Common/Erp.Domain.Common.csproj             src/Domain/Erp.Domain.Common/
 COPY src/ERP/Infrastructure/ERP.Infrastructure.csproj                  src/ERP/Infrastructure/
 COPY src/ERP/Infrastructure/Persistence/ERP.Infrastructure.Persistence.csproj src/ERP/Infrastructure/Persistence/

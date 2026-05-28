@@ -1,4 +1,4 @@
-namespace ERP.Application;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Hashing seam for agent token plaintexts (ADR-0025 §2).

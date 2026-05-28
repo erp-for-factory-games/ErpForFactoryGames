@@ -1,4 +1,4 @@
-namespace ERP.Application;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Filesystem-or-other blob store for uploaded catalogue bytes

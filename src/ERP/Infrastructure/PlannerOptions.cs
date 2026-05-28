@@ -2,7 +2,7 @@ namespace ERP.Infrastructure;
 
 /// <summary>
 /// Bound from configuration section <c>Planner</c>. Selects which
-/// <see cref="ERP.Application.IRecipePlanner"/> implementation gets wired in
+/// <see cref="Erp.Application.Common.IRecipePlanner"/> implementation gets wired in
 /// <c>AddErpInfrastructure</c>.
 /// </summary>
 public sealed class PlannerOptions

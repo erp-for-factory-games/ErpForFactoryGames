@@ -1,4 +1,4 @@
-namespace ERP.Application.Commands.IngestSave;
+namespace Erp.Application.Common.Commands.IngestSave;
 
 public sealed record IngestSaveCommand(string SavePath);
 

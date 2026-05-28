@@ -1,4 +1,4 @@
-using ERP.Application;
+using Erp.Application.Common;
 using Erp.Domain.Common;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;

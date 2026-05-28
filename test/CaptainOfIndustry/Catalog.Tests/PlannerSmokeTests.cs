@@ -1,12 +1,12 @@
-using ERP.Application;
-using ERP.Application.Queries.PlanProduction;
+using Erp.Application.Common;
+using Erp.Application.Common.Queries.PlanProduction;
 using Erp.Domain.Common;
 
 namespace CaptainOfIndustry.Catalog.Tests;
 
 /// <summary>
 /// The e2e proof for the milestone (#182): wire the JsonCoiCatalogProvider
-/// (CoI module) into the planner core (ERP.Application) and confirm a real
+/// (CoI module) into the planner core (Erp.Application.Common) and confirm a real
 /// production target resolves to a sensible recipe graph. If this test ever
 /// flips red, the "planner is genuinely game-agnostic" claim from ADR-0022
 /// has regressed — investigate the catalogue mapping, not the planner.

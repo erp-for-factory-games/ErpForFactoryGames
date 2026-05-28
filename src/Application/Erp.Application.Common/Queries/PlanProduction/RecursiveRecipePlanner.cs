@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace ERP.Application.Queries.PlanProduction;
+namespace Erp.Application.Common.Queries.PlanProduction;
 
 /// <summary>
 /// Default <see cref="IRecipePlanner"/>: recursive recipe expansion. For each

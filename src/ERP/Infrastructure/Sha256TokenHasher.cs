@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using ERP.Application;
+using Erp.Application.Common;
 
 namespace ERP.Infrastructure;
 

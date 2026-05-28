@@ -1,7 +1,7 @@
-using ERP.Application;
+using Erp.Application.Common;
 using Erp.Domain.Common;
 
-namespace ERP.Application.Tests;
+namespace Erp.Application.Common.Tests;
 
 /// <summary>
 /// Tests for the heuristic bottleneck analysis (#116, phase B). Split into

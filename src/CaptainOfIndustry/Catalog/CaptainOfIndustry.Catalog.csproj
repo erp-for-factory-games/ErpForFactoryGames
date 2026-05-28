@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Domain/Erp.Domain.Common/Erp.Domain.Common.csproj" />
-    <ProjectReference Include="..\..\ERP\Application\ERP.Application.csproj" />
+    <ProjectReference Include="..\..\Application/Erp.Application.Common/Erp.Application.Common.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
