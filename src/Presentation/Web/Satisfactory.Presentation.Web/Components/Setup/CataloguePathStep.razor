@@ -1,67 +1,141 @@
 @inject PlannerApiClient Api
+@inject AuthApiClient Auth
 @inject IDialogService DialogService
+@inject Microsoft.Extensions.Options.IOptions<AgentManagementOptions> Options
 @using Satisfactory.Presentation.Web.Components.Shared
+@implements IDisposable
 
-@* Required step: points the planner at a Docs.json so the recipe graph can load.
-   Mirrors the catalogue section of Settings.razor so users see the same UX
-   whether they're onboarding or reconfiguring later. *@
+@* Required step: gets a Docs.json catalogue in front of the planner so the
+   recipe graph can load.
 
-<MudText Typo="Typo.body2" Class="mb-3">
-    The planner walks the recipe graph from Satisfactory's <code>Docs.json</code>.
-    Point us at the file or its containing <code>Docs</code> directory.
-</MudText>
+   Two shapes (issues #268 / #269 / #270):
+     • Hosted (CatalogueViaAgent=true) — the catalogue is uploaded by the
+       user's paired agent. We can't browse the user's filesystem from the
+       server (that would enumerate the LXC), so this step just reflects the
+       per-player upload status and completes when the agent's Docs.json lands.
+     • Dev / self-host (CatalogueViaAgent=false) — the API and the browser are
+       the same machine, so the legacy filesystem picker is offered. *@
 
-@if (status is null)
+@if (UseAgent)
 {
-    <MudText><em>Loading status...</em></MudText>
+    <MudText Typo="Typo.body2" Class="mb-3">
+        The planner walks the recipe graph from Satisfactory's <code>Docs.json</code>. Your
+        <strong>agent</strong> finds it in your game install and uploads it automatically —
+        nothing to pick here. This step completes once the upload arrives.
+    </MudText>
+
+    @if (agentStatus is null)
+    {
+        <MudText><em>Loading status…</em></MudText>
+    }
+    else
+    {
+        <MudAlert Severity="@AgentSeverity" Variant="Variant.Outlined" Class="mb-3" data-testid="catalogue-agent-status">
+            <MudText Typo="Typo.subtitle2"><strong>@AgentHeadline</strong></MudText>
+            @if (agentStatus.Catalogue is { } cat)
+            {
+                <MudText Typo="Typo.caption">
+                    Hash <code>@cat.DocsHash[..Math.Min(12, cat.DocsHash.Length)]</code> ·
+                    @($"{cat.SizeBytes / 1024:N0}") KB ·
+                    uploaded @cat.UploadedUtc.ToString("u")
+                </MudText>
+            }
+            else if (agentStatus.ReIngestRequested)
+            {
+                <MudText Typo="Typo.caption">Re-ingest queued — your agent will upload on its next check-in (~1 min).</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption">
+                    Waiting for your agent to upload <code>Docs.json</code>. Make sure it's paired and running on your game machine.
+                </MudText>
+            }
+        </MudAlert>
+
+        <MudText Typo="Typo.caption" Class="d-block mud-text-secondary">
+            Not connected yet? Pair or check your agent on the
+            <MudLink Href="/settings/agents">My Agents</MudLink> page.
+        </MudText>
+    }
 }
 else
 {
-    <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined" Class="mb-3">
-        <MudText Typo="Typo.subtitle2"><strong>@StatusHeadline</strong></MudText>
-        @if (!string.IsNullOrEmpty(status.Source))
-        {
-            <MudText Typo="Typo.caption">Source: <code>@status.Source</code></MudText>
-        }
-        @if (status.IsLoaded)
-        {
-            <MudText Typo="Typo.caption">
-                @status.ItemCount items · @status.BuildingCount buildings · @status.RecipeCount recipes
-            </MudText>
-        }
-    </MudAlert>
-}
+    <MudText Typo="Typo.body2" Class="mb-3">
+        The planner walks the recipe graph from Satisfactory's <code>Docs.json</code>.
+        Point us at the file or its containing <code>Docs</code> directory.
+    </MudText>
 
-<MudTextField @bind-Value="pathInput"
-              Label="Path to the Satisfactory Docs directory or a specific locale file"
-              Placeholder="@DocsPathPlaceholder"
-              Variant="Variant.Outlined"
-              Margin="Margin.Dense"
-              ReadOnly="true"
-              Adornment="Adornment.End"
-              AdornmentIcon="@Icons.Material.Filled.FolderOpen"
-              AdornmentAriaLabel="Browse for Docs folder"
-              OnAdornmentClick="Browse"
-              Class="mb-2" />
+    @if (status is null)
+    {
+        <MudText><em>Loading status...</em></MudText>
+    }
+    else
+    {
+        <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined" Class="mb-3">
+            <MudText Typo="Typo.subtitle2"><strong>@StatusHeadline</strong></MudText>
+            @if (!string.IsNullOrEmpty(status.Source))
+            {
+                <MudText Typo="Typo.caption">Source: <code>@status.Source</code></MudText>
+            }
+            @if (status.IsLoaded)
+            {
+                <MudText Typo="Typo.caption">
+                    @status.ItemCount items · @status.BuildingCount buildings · @status.RecipeCount recipes
+                </MudText>
+            }
+        </MudAlert>
+    }
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply"
-           Disabled="@(string.IsNullOrWhiteSpace(pathInput) || isApplying)">
-    @(isApplying ? "Loading..." : "Load catalogue")
-</MudButton>
-@if (!string.IsNullOrEmpty(message))
-{
-    <MudText HtmlTag="span" Color="@(messageIsError ? Color.Error : Color.Success)" Class="ms-3">@message</MudText>
+    <MudTextField @bind-Value="pathInput"
+                  Label="Path to the Satisfactory Docs directory or a specific locale file"
+                  Placeholder="@DocsPathPlaceholder"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  ReadOnly="true"
+                  Adornment="Adornment.End"
+                  AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                  AdornmentAriaLabel="Browse for Docs folder"
+                  OnAdornmentClick="Browse"
+                  Class="mb-2" />
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply"
+               Disabled="@(string.IsNullOrWhiteSpace(pathInput) || isApplying)">
+        @(isApplying ? "Loading..." : "Load catalogue")
+    </MudButton>
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <MudText HtmlTag="span" Color="@(messageIsError ? Color.Error : Color.Success)" Class="ms-3">@message</MudText>
+    }
 }
 
 @code {
     [Parameter] public EventCallback<bool> CompletedChanged { get; set; }
 
+    private bool UseAgent => Options.Value.CatalogueViaAgent;
+
+    // ---- Agent-upload mode state -------------------------------------------
+    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
+    private CurrentPlayerView? _currentPlayer;
+    private PlayerCatalogueStatusView? agentStatus;
+    private CancellationTokenSource? _pollCts;
+
+    // ---- Dev filesystem-picker mode state ----------------------------------
     private CatalogueStatusView? status;
     private string? pathInput;
     private string? message;
     private bool messageIsError;
     private bool isApplying;
+
     private bool lastEmittedCompleted;
+
+    private Severity AgentSeverity =>
+        agentStatus?.Catalogue is not null ? Severity.Success
+        : agentStatus?.ReIngestRequested == true ? Severity.Info
+        : Severity.Warning;
+
+    private string AgentHeadline =>
+        agentStatus?.Catalogue is not null ? "Catalogue uploaded by your agent."
+        : "No catalogue uploaded yet.";
 
     private Severity StatusSeverity => status is null
         ? Severity.Info
@@ -72,22 +146,84 @@ else
         : status.IsLoaded ? "Catalogue loaded."
         : "No catalogue loaded yet.";
 
-    // Same OS-aware placeholder as Settings.razor — keeps onboarding friendly on
-    // mac (CrossOver bottle path) without forcing Windows defaults on everyone.
+    // #269: with no agent OS reported to the server, default the hint to the
+    // Windows install path (largest user share) rather than the webapp host's
+    // OS — which in the hosted shape is always Linux and so was always wrong.
+    // Only shown in dev/self-host (filesystem-picker) mode.
     private static string DocsPathPlaceholder =>
-        OperatingSystem.IsMacOS()
-            ? "~/Library/Application Support/CrossOver/Bottles/Steam/drive_c/Program Files (x86)/Steam/steamapps/common/Satisfactory/CommunityResources/Docs"
-            : @"C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources\Docs";
+        @"C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources\Docs";
 
     protected override async Task OnInitializedAsync()
     {
-        status = await Api.GetCatalogueStatusAsync();
-        if (status is { IsLoaded: true, Source: { } source } && source != "(empty)")
+        if (UseAgent)
         {
-            pathInput = source;
+            await LoadAgentStatusAsync();
+            StartPolling();
         }
-        await EmitCompletedAsync(status?.IsLoaded ?? false);
+        else
+        {
+            status = await Api.GetCatalogueStatusAsync();
+            if (status is { IsLoaded: true, Source: { } source } && source != "(empty)")
+            {
+                pathInput = source;
+            }
+            await EmitCompletedAsync(status?.IsLoaded ?? false);
+        }
     }
+
+    // ===== Agent-upload mode =================================================
+
+    private async Task LoadAgentStatusAsync()
+    {
+        try
+        {
+            _currentPlayer ??= await Auth.GetCurrentPlayerAsync();
+            if (_currentPlayer is null) return;
+            agentStatus = await Api.GetPlayerCatalogueAsync(_currentPlayer.PlayerId);
+        }
+        catch
+        {
+            // Best-effort; the poll loop retries.
+        }
+        finally
+        {
+            await EmitCompletedAsync(agentStatus?.Catalogue is not null);
+        }
+    }
+
+    private void StartPolling()
+    {
+        _pollCts?.Cancel();
+        _pollCts = new CancellationTokenSource();
+        _ = PollAsync(_pollCts.Token);
+    }
+
+    private async Task PollAsync(CancellationToken ct)
+    {
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                await Task.Delay(PollInterval, ct);
+                if (_currentPlayer is null)
+                {
+                    try { _currentPlayer = await Auth.GetCurrentPlayerAsync(ct); } catch { }
+                    continue;
+                }
+                try
+                {
+                    agentStatus = await Api.GetPlayerCatalogueAsync(_currentPlayer.PlayerId, ct);
+                    await EmitCompletedAsync(agentStatus?.Catalogue is not null);
+                    await InvokeAsync(StateHasChanged);
+                }
+                catch (OperationCanceledException) { throw; }
+                catch { /* retry next tick */ }
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    // ===== Dev filesystem-picker mode ========================================
 
     private async Task Browse()
     {
@@ -140,6 +276,8 @@ else
         }
     }
 
+    // ===== Shared ============================================================
+
     private async Task EmitCompletedAsync(bool completed)
     {
         if (completed == lastEmittedCompleted) return;
@@ -148,5 +286,11 @@ else
         {
             await CompletedChanged.InvokeAsync(completed);
         }
+    }
+
+    public void Dispose()
+    {
+        _pollCts?.Cancel();
+        _pollCts?.Dispose();
     }
 }

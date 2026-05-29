@@ -65,7 +65,7 @@ else
             <MudButton StartIcon="@Icons.Material.Filled.Refresh"
                        Color="Color.Primary" Variant="Variant.Outlined"
                        OnClick="TriggerReIngestAsync"
-                       Disabled="_reIngestBusy || _currentPlayer is null"
+                       Disabled="!_interactive || _reIngestBusy || _currentPlayer is null"
                        data-testid="reingest-button">
                 Re-ingest catalogue
             </MudButton>
@@ -101,7 +101,7 @@ else
             <MudButton StartIcon="@Icons.Material.Filled.Add"
                        Color="Color.Primary" Variant="Variant.Filled"
                        OnClick="ShowMintDialogAsync"
-                       Disabled="_currentPlayer is null"
+                       Disabled="!_interactive || _currentPlayer is null"
                        data-testid="add-agent-button">
                 Add an agent
             </MudButton>
@@ -142,6 +142,7 @@ else
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                        Color="Color.Error" Size="Size.Small"
                                        OnClick="() => RevokeAsync(token)"
+                                       Disabled="!_interactive"
                                        data-testid="revoke-button"
                                        title="Revoke token" />
                     }
@@ -166,11 +167,28 @@ else
     private string? _loadError;
     private CancellationTokenSource? _pollCts;
 
+    // #260: the prerendered HTML shows the action buttons enabled, but their
+    // C# click handlers aren't wired until the InteractiveServer circuit
+    // attaches. Clicks landing in that window are silently dropped. Gate every
+    // interactive control on this flag — flipped true once the first
+    // interactive render runs (firstRender is only ever true post-hydration,
+    // never during prerender) — so a button only looks clickable once it is.
+    private bool _interactive;
+
     protected override async Task OnInitializedAsync()
     {
         if (!Options.Value.Enabled) { _loading = false; return; }
         await LoadAsync();
         StartCataloguePolling();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && Options.Value.Enabled)
+        {
+            _interactive = true;
+            StateHasChanged();
+        }
     }
 
     private async Task LoadAsync()

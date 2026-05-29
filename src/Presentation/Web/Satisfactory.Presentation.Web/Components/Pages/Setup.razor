@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 @inject NavigationManager Nav
 @inject SetupState SetupState
+@inject Microsoft.Extensions.Options.IOptions<AgentManagementOptions> Options
 @using Satisfactory.Presentation.Web.Components.Setup
 
 <PageTitle>Setup</PageTitle>
@@ -71,32 +72,46 @@
 </MudContainer>
 
 @code {
-    private sealed record WizardStep(string Title, bool IsRequired, RenderFragment Body);
+    // IsComplete is null for optional steps; required steps carry a predicate
+    // that gates leaving the step and finishing the wizard.
+    private sealed record WizardStep(string Title, bool IsRequired, RenderFragment Body, Func<bool>? IsComplete = null);
 
     private enum StepState { Upcoming, Current, Complete }
 
     private List<WizardStep> steps = new();
     private int current;
     private bool catalogueComplete;
+    private bool agentComplete;
 
     protected override void OnInitialized()
     {
-        steps = new List<WizardStep>
+        steps = new List<WizardStep>();
+
+        // Hosted topology (#268): the catalogue + saves arrive from a paired
+        // agent, so onboarding has to start by getting one connected. In
+        // dev/self-host this step is omitted — the API can read the local
+        // filesystem directly.
+        if (Options.Value.CatalogueViaAgent)
         {
-            new("Catalogue (required)", IsRequired: true,
-                Body: @<CataloguePathStep CompletedChanged="OnCatalogueCompletedChanged" />),
-            new("Map backdrop", IsRequired: false,
-                Body: @<MapBackdropStep />),
-            new("First save", IsRequired: false,
-                Body: @<SaveIngestStep />),
-            new("Plan storage", IsRequired: false,
-                Body: @<PersistenceProviderStep />),
-        };
+            steps.Add(new("Agent (required)", IsRequired: true,
+                Body: @<AgentSetupStep CompletedChanged="OnAgentCompletedChanged" />,
+                IsComplete: () => agentComplete));
+        }
+
+        steps.Add(new("Catalogue (required)", IsRequired: true,
+            Body: @<CataloguePathStep CompletedChanged="OnCatalogueCompletedChanged" />,
+            IsComplete: () => catalogueComplete));
+        steps.Add(new("Map backdrop", IsRequired: false,
+            Body: @<MapBackdropStep />));
+        steps.Add(new("First save", IsRequired: false,
+            Body: @<SaveIngestStep />));
+        steps.Add(new("Plan storage", IsRequired: false,
+            Body: @<PersistenceProviderStep />));
     }
 
     private bool IsLastStep => current == steps.Count - 1;
-    private bool CanLeaveCurrent => !steps[current].IsRequired || catalogueComplete;
-    private bool CanFinish => catalogueComplete;
+    private bool CanLeaveCurrent => !steps[current].IsRequired || (steps[current].IsComplete?.Invoke() ?? true);
+    private bool CanFinish => steps.Where(s => s.IsRequired).All(s => s.IsComplete?.Invoke() ?? true);
 
     private StepState StateFor(int idx) =>
         idx < current ? StepState.Complete
@@ -144,6 +159,12 @@
     private void OnCatalogueCompletedChanged(bool completed)
     {
         catalogueComplete = completed;
+        StateHasChanged();
+    }
+
+    private void OnAgentCompletedChanged(bool completed)
+    {
+        agentComplete = completed;
         StateHasChanged();
     }
 
