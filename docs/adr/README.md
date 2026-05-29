@@ -47,4 +47,4 @@ ADRs are numbered sequentially starting at `0001`. The filename is
 | [0024](0024-agent-v1-shape.md) | Game agent v1 PoC — shape, wire protocol, distribution | Accepted |
 | [0025](0025-agent-auth-catalogue-handover.md) | Agent auth & catalogue handover model | Accepted |
 | [0026](0026-onion-layered-src-with-product-split.md) | Onion-layered `src/` with per-game product split | Accepted (supersedes namespace-refactor clause of [0020](0020-rebrand-to-erp-for-factory-games.md); reaffirms [0004](0004-use-onion-architecture.md)) |
-| [0027](0027-jwt-hmac-cross-api-auth.md) | JWT/HMAC-signed agent tokens across Auth + game APIs | Proposed (partial supersession of [0025](0025-agent-auth-catalogue-handover.md) §3) |
+| [0027](0027-jwt-hmac-cross-api-auth.md) | JWT/HMAC-signed agent tokens across Auth + game APIs | Accepted (implemented 5c3; partial supersession of [0025](0025-agent-auth-catalogue-handover.md) §3) |

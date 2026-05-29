@@ -43,17 +43,13 @@ builder.Services.AddSingleton<IAgentUploadStatus, AgentUploadStatus>();
 builder.Services.Configure<AgentLogsOptions>(builder.Configuration.GetSection("AgentLogs"));
 builder.Services.AddSingleton<IAgentLogsStore, AgentLogsStore>();
 
-// Agent auth pipeline (ADR-0025 §3). Hash-based lookup with an
-// IMemoryCache hot-path and LastSeenUtc write-debounce. The hashing
-// algorithm itself is wired by AddErpInfrastructure (Sha256TokenHasher).
-builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
-builder.Services.Configure<AgentTokenAuthenticatorOptions>(
-    builder.Configuration.GetSection(AgentTokenAuthenticatorOptions.SectionName));
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<IAgentTokenAuthenticator, AgentTokenAuthenticator>();
-// DevPlayerBootstrap moved to the Auth API in phase 5c2 — the Player + AgentToken
-// aggregate is owned there. Sat still validates tokens by hash via the shared
-// authenticator until 5c3 swaps token verification to JWT-via-HMAC.
+// Agent auth pipeline (ADR-0027 / 5c3). Hybrid authenticator: a JWT minted by
+// the Auth API is verified locally via the shared HMAC key (no DB hit), with a
+// fallback to the legacy eafg_* hash-DB lookup during the deprecation window.
+// The hashing algorithm + token repo are wired by AddErpInfrastructure.
+builder.Services.AddAgentTokenAuth(builder.Configuration);
+// DevPlayerBootstrap stays on the Auth API (phase 5c2) — the Player + AgentToken
+// aggregate is owned there.
 
 // Current-player accessor (ADR-0025 §2). v2 returns Auth:DevPlayerId; the
 // future authenticated adapter swaps this registration for an HttpContext-

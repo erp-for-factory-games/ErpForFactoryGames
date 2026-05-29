@@ -1,8 +1,19 @@
 # 27. JWT/HMAC-signed agent tokens across Auth + game APIs
 
-- Status: Proposed
+- Status: Accepted (implemented in phase 5c3, #279)
 - Date: 2026-05-28
 - Deciders: Chris
+
+> **Implementation note (5c3).** The JWT rides the existing `X-Agent-Token`
+> header as an opaque string rather than `Authorization: Bearer`, so no agent
+> change was needed (a JWT is just a longer token). Game APIs therefore verify
+> it inside the existing `IAgentTokenAuthenticator` seam (a
+> `HybridAgentTokenAuthenticator` that tries JWT-via-`JsonWebTokenHandler`
+> first, then the legacy hash-DB path) instead of ASP.NET `JwtBearer`
+> middleware — same HS256 verification, fits the established wire protocol.
+> CoI API auth wiring lands with its endpoints in 5c5; the agent re-pair
+> banner + `token-format=jwt` deeplink param + operator docs are deferred
+> follow-ups (the agent already works unchanged).
 
 ## Context
 
