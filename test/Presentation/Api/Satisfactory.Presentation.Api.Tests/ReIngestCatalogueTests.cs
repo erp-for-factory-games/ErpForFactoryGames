@@ -6,7 +6,7 @@ using Erp.Domain.Common;
 using Erp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiService.Tests;
+namespace Satisfactory.Presentation.Api.Tests;
 
 /// <summary>
 /// End-to-end tests for the catalogue re-ingest trigger (#239, ADR-0025 §7).
@@ -96,6 +96,11 @@ public sealed class ReIngestCatalogueTests : IClassFixture<AgentEndpointsTests.A
         // Fresh isolated factory so no previous test's upload bleeds in.
         await using var fresh = new AgentEndpointsTests.AgentApiFactory();
         var client = fresh.CreateClient();
+
+        // The dev player must exist — /players/{id}/catalogue/* 404s for unknown
+        // players (see Re_ingest_for_unknown_player_returns_404), and the Sat API
+        // no longer seeds it (DevPlayerBootstrap moved to the Auth API in 5c2).
+        await fresh.EnsureDevPlayerAsync();
 
         var status = await client.GetFromJsonAsync<CatalogueStatusEnvelope>(
             $"/players/{fresh.DevPlayerId}/catalogue/satisfactory");

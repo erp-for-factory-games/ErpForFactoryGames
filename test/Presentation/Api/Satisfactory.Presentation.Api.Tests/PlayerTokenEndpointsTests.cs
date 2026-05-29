@@ -6,7 +6,7 @@ using Erp.Domain.Common;
 using Erp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiService.Tests;
+namespace Satisfactory.Presentation.Api.Tests;
 
 /// <summary>
 /// Integration tests for the agent-token management surface (ADR-0025 §2).

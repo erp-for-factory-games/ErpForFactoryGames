@@ -78,7 +78,9 @@
   <Folder Name="/test/Presentation/Agent/Satisfactory.Presentation.Agent.Tests/">
     <Project Path="test/Presentation/Agent/Satisfactory.Presentation.Agent.Tests/Satisfactory.Presentation.Agent.Tests.csproj" />
   </Folder>
-  <Folder Name="/test/ApiService.Tests/" />
+  <Folder Name="/test/Presentation/Api/Satisfactory.Presentation.Api.Tests/">
+    <Project Path="test/Presentation/Api/Satisfactory.Presentation.Api.Tests/Satisfactory.Presentation.Api.Tests.csproj" />
+  </Folder>
   <Folder Name="/test/Application/" />
   <Folder Name="/test/Application/Erp.Application.Common.Tests/">
     <Project Path="test/Application/Erp.Application.Common.Tests/Erp.Application.Common.Tests.csproj" />

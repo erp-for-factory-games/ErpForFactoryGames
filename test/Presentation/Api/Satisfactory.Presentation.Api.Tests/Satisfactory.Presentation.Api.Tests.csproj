@@ -5,7 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <!-- The ApiService project under test has top-level statements only; we reference its assembly via the WebApplicationFactory<Program> generic. -->
+    <RootNamespace>Satisfactory.Presentation.Api.Tests</RootNamespace>
+    <!-- The Satisfactory API project under test has top-level statements only; we reference its assembly via the WebApplicationFactory<Program> generic. -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,9 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Presentation\Api\Satisfactory.Presentation.Api\Satisfactory.Presentation.Api.csproj" />
-    <ProjectReference Include="..\..\src\Presentation\Api\Erp.Presentation.Api.Common\Erp.Presentation.Api.Common.csproj" />
-    <ProjectReference Include="..\..\src\Infrastructure\Persistence\Erp.Infrastructure.Persistence\Erp.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Presentation\Api\Satisfactory.Presentation.Api\Satisfactory.Presentation.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Presentation\Api\Erp.Presentation.Api.Common\Erp.Presentation.Api.Common.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Infrastructure\Persistence\Erp.Infrastructure.Persistence\Erp.Infrastructure.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
