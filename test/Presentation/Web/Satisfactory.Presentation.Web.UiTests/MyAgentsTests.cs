@@ -45,13 +45,16 @@ public class MyAgentsTests(AspireAppFixture fixture) : IClassFixture<AspireAppFi
         await page.GotoAsync($"{fixture.WebFrontendUrl.TrimEnd('/')}/settings/agents");
 
         // ToBeEnabledAsync (not just ToBeVisibleAsync) — the button is
-        // visible during prerender but disabled until hydration completes.
+        // visible during prerender but disabled until the InteractiveServer
+        // circuit attaches and OnAfterRender flips _interactive (#260). On a
+        // cold CI runner the circuit attach can take well over 15s, so wait
+        // generously: this is exactly the post-hydration window the fix gates.
         var addButton = page.Locator("[data-testid='add-agent-button']");
-        await Expect(addButton).ToBeEnabledAsync(new() { Timeout = 15_000 });
+        await Expect(addButton).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await addButton.ClickAsync();
 
         var mintButton = page.Locator("[data-testid='mint-button']");
-        await Expect(mintButton).ToBeVisibleAsync();
+        await Expect(mintButton).ToBeVisibleAsync(new() { Timeout = 15_000 });
         await mintButton.ClickAsync();
 
         // The reveal phase's "Save this token now" warning is the cheapest
@@ -71,7 +74,8 @@ public class MyAgentsTests(AspireAppFixture fixture) : IClassFixture<AspireAppFi
 
         // Close the dialog; the table should now include the new row.
         await page.Locator("[data-testid='close-button']").ClickAsync();
-        await Expect(page.Locator("[data-testid='agent-tokens-table'] tbody tr")).ToHaveCountAsync(1);
+        await Expect(page.Locator("[data-testid='agent-tokens-table'] tbody tr"))
+            .ToHaveCountAsync(1, new() { Timeout = 15_000 });
     }
 
     [Fact]
