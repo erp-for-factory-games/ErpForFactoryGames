@@ -102,6 +102,9 @@
   <Folder Name="/test/Infrastructure/Persistence/Erp.Infrastructure.Persistence.Tests/">
     <Project Path="test/Infrastructure/Persistence/Erp.Infrastructure.Persistence.Tests/Erp.Infrastructure.Persistence.Tests.csproj" />
   </Folder>
+  <Folder Name="/test/Presentation/Web/Erp.Presentation.Web.Auth.Tests/">
+    <Project Path="test/Presentation/Web/Erp.Presentation.Web.Auth.Tests/Erp.Presentation.Web.Auth.Tests.csproj" />
+  </Folder>
   <Folder Name="/test/Presentation/Web/Satisfactory.Presentation.Web.UiTests/">
     <Project Path="test/Presentation/Web/Satisfactory.Presentation.Web.UiTests/Satisfactory.Presentation.Web.UiTests.csproj" />
   </Folder>
