@@ -1,7 +1,6 @@
 using Erp.Presentation.Agent.Common;
-using Satisfactory.Presentation.Agent;
 
-namespace Agent.Tests;
+namespace Erp.Presentation.Agent.Common.Tests;
 
 public class PairingUrlParserTests
 {

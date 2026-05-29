@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>Agent.Tests</RootNamespace>
+    <RootNamespace>Erp.Presentation.Agent.Common.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,8 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Presentation\Agent\Erp.Presentation.Agent.Common\Erp.Presentation.Agent.Common.csproj" />
-    <ProjectReference Include="..\..\src\Presentation\Agent\Satisfactory.Presentation.Agent\Satisfactory.Presentation.Agent.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Presentation\Agent\Erp.Presentation.Agent.Common\Erp.Presentation.Agent.Common.csproj" />
   </ItemGroup>
 
 </Project>

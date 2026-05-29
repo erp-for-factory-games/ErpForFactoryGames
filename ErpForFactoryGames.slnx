@@ -72,8 +72,11 @@
     <Project Path="tools/Erp.Deploy/Erp.Deploy.csproj" />
   </Folder>
   <Folder Name="/test/" />
-  <Folder Name="/test/Agent.Tests/">
-    <Project Path="test/Agent.Tests/Agent.Tests.csproj" />
+  <Folder Name="/test/Presentation/Agent/Erp.Presentation.Agent.Common.Tests/">
+    <Project Path="test/Presentation/Agent/Erp.Presentation.Agent.Common.Tests/Erp.Presentation.Agent.Common.Tests.csproj" />
+  </Folder>
+  <Folder Name="/test/Presentation/Agent/Satisfactory.Presentation.Agent.Tests/">
+    <Project Path="test/Presentation/Agent/Satisfactory.Presentation.Agent.Tests/Satisfactory.Presentation.Agent.Tests.csproj" />
   </Folder>
   <Folder Name="/test/ApiService.Tests/" />
   <Folder Name="/test/Application/" />

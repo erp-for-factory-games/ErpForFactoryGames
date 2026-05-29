@@ -2,7 +2,7 @@ using Erp.Presentation.Agent.Common;
 using Satisfactory.Presentation.Agent;
 using Microsoft.Extensions.Options;
 
-namespace Agent.Tests;
+namespace Satisfactory.Presentation.Agent.Tests;
 
 public class SaveFolderResolverTests : IDisposable
 {
