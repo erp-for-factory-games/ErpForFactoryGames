@@ -1,7 +1,6 @@
-using Erp.Application.Common;
 using Erp.Domain.Common;
 
-namespace Erp.Infrastructure;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Immutable in-memory snapshot of a parsed catalogue. Used by

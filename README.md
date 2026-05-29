@@ -118,7 +118,7 @@ Then:
 git clone https://github.com/ChrisonSimtian/ErpForFactoryGames.git
 cd ErpForFactoryGames
 export GITHUB_TOKEN=$(gh auth token)
-dotnet run --project src/AppHost
+dotnet run --project src/Hosting/Erp.Hosting.AppHost
 ```
 
 The Aspire dashboard URL prints in the console — open it and click `webfrontend`.
@@ -141,13 +141,13 @@ Windows: `./build.ps1 <Target>` or `build.cmd <Target>`. Mac/Linux: `./build.sh
 <Target>` (executable bit is tracked in git). Targets live in
 [`build/Build.cs`](build/Build.cs).
 
-UI tests (`test/Web/Web.UiTests`) drive a real browser via Playwright. `./build.sh
+UI tests (`test/Presentation/Web/Satisfactory.Presentation.Web.UiTests`) drive a real browser via Playwright. `./build.sh
 Test` installs the required chromium build automatically — the
 `InstallPlaywrightBrowsers` target runs before `Test`. If you'd rather pre-install
 manually:
 
 ```powershell
-pwsh test/Web/Web.UiTests/bin/Debug/net10.0/playwright.ps1 install chromium
+pwsh test/Presentation/Web/Satisfactory.Presentation.Web.UiTests/bin/Debug/net10.0/playwright.ps1 install chromium
 ```
 
 ## Game catalogue
@@ -183,7 +183,7 @@ To populate `.assets/`:
 
 ```powershell
 # 1. Start the app (the script reads /catalog/items from the running ApiService).
-dotnet run --project src/AppHost
+dotnet run --project src/Hosting/Erp.Hosting.AppHost
 
 # 2. In another shell:
 pwsh tools/Update-Assets.ps1
@@ -283,10 +283,10 @@ into how each one is wired.
 
 | Library | Role |
 |---------|------|
-| [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/) | Local-dev orchestrator — `dotnet run --project src/AppHost` |
+| [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/) | Local-dev orchestrator — `dotnet run --project src/Hosting/Erp.Hosting.AppHost` |
 | [Blazor](https://learn.microsoft.com/en-us/aspnet/core/blazor/) + [MudBlazor](https://mudblazor.com/) | Server-side UI ([ADR-0002](docs/adr/0002-use-blazor-for-ui.md), [ADR-0017](docs/adr/0017-mudblazor-as-ui-framework.md)) |
 | [Wolverine](https://wolverinefx.net/) | In-process CQRS mediator ([ADR-0006](docs/adr/0006-use-wolverine-as-mediator.md)) |
-| [Google OR-Tools](https://developers.google.com/optimization) (GLOP) | The LP planner under [`OrToolsRecipePlanner`](src/ERP/Infrastructure/OrToolsRecipePlanner.cs) |
+| [Google OR-Tools](https://developers.google.com/optimization) (GLOP) | The LP planner under [`OrToolsRecipePlanner`](src/Infrastructure/Erp.Infrastructure/OrToolsRecipePlanner.cs) |
 | [TickerQ](https://github.com/Arcenox-co/TickerQ) | Background scheduler — auto-ingest, plan re-optimisation ([ADR-0019](docs/adr/0019-tickerq-background-scheduler.md)) |
 | [EF Core](https://learn.microsoft.com/en-us/ef/core/) + [Npgsql](https://www.npgsql.org/efcore/) | Dual-provider persistence (SQLite default, Postgres opt-in) ([ADR-0018](docs/adr/0018-persistence-stack.md)) |
 | [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) | Version stamping from git height + `version.json` |

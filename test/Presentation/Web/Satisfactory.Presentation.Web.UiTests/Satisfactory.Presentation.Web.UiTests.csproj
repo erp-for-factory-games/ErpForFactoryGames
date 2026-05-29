@@ -23,7 +23,7 @@
   <ItemGroup>
     <!--
       IsAspireProjectResource=false tells the Aspire source generator this is
-      a host reference (for DistributedApplicationTestingBuilder<Projects.AppHost>),
+      a host reference (for DistributedApplicationTestingBuilder<Projects.Erp_Hosting_AppHost>),
       not a child resource the host should orchestrate.
     -->
     <ProjectReference Include="..\..\..\..\src\Hosting\Erp.Hosting.AppHost\Erp.Hosting.AppHost.csproj" IsAspireProjectResource="false" />

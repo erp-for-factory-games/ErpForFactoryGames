@@ -22,7 +22,7 @@ and what's deliberately out of scope (UI rebrand, namespace refactor).
 ```powershell
 export GITHUB_TOKEN=$(gh auth token)   # nuget.config reads it for GitHub Packages
 dotnet build ErpForFactoryGames.slnx
-dotnet run --project src/AppHost
+dotnet run --project src/Hosting/Erp.Hosting.AppHost
 ```
 
 ERP consumes `SatisfactorySaveNet` from the `ChrisonSimtian` GitHub Packages

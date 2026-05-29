@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Erp.Infrastructure;
+namespace Satisfactory.Infrastructure;
 
 /// <summary>
 /// Persists user-specific catalogue config (currently just the Docs.json path) to

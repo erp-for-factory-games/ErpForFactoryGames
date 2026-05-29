@@ -42,7 +42,7 @@ docs/
 ## Folder / namespace convention
 
 Folder names drop the full namespace prefix. The parent folder denotes the bounded
-context — e.g. `src/ERP/Domain` → `ERP.Domain.csproj` → namespace `ERP.Domain`.
+context — e.g. `src/Domain/Erp.Domain.Common` → `Erp.Domain.Common.csproj` → namespace `Erp.Domain.Common`.
 
 If we ever add a CRM module, it lives in `src/CRM/...` with namespace `CRM.*`.
 
@@ -61,5 +61,5 @@ dependencies. Domain logic must not leak into Infrastructure or Web.
 
 ```powershell
 dotnet build ErpForFactoryGames.slnx
-dotnet run --project src/AppHost
+dotnet run --project src/Hosting/Erp.Hosting.AppHost
 ```

@@ -1,14 +1,14 @@
 # Power generators (reference)
 
 Starting point for the generator-aware planning follow-up to issue #91. The
-v1 ship of #91 added the [variable-power variance warning](../src/ERP/Application/Queries/PlanProduction/PowerVarianceWarning.cs) —
+v1 ship of #91 added the [variable-power variance warning](../src/Application/Erp.Application.Common/Queries/PlanProduction/PowerVarianceWarning.cs) —
 this table covers the *other* half of the issue (the generator side) so a
 future LP-backed "produce N MW of power" target has the canonical numbers in
 one place. **No planner code reads this file today** — these figures are not
 yet wired into the catalogue or the LP objective.
 
 All numbers are nominal Update-8/1.0 values from the in-game wiki; the
-parser-exposed `GeneratorKind` enum (see `src/ERP/Domain/GeneratorKind.cs`)
+parser-exposed `GeneratorKind` enum (see `src/Domain/Erp.Domain.Common/GeneratorKind.cs`)
 already maps save-state generators to the same five kinds.
 
 | Generator kind | Building ID                  | Base power (MW) | Fuel inputs (per generator at 100%)               | Notes                                                                              |

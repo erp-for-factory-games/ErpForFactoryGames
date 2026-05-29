@@ -1,4 +1,4 @@
-namespace Erp.Infrastructure;
+namespace Erp.Application.Common;
 
 public sealed class FactoryStateOptions
 {

@@ -41,7 +41,7 @@ resource-node extent (roughly correct but pixel-imprecise).
 ## Adding a new backdrop
 
 1. Drop the image in this directory.
-2. Add an entry to `MAP_BACKDROPS` in `src/Web/wwwroot/js/factory-map.js`.
+2. Add an entry to `MAP_BACKDROPS` in `src/Presentation/Web/Satisfactory.Presentation.Web/wwwroot/js/factory-map.js`.
    If the image uses the same projection as the existing wiki maps, point
    its `bounds` at `WIKI_MAP_BOUNDS`; otherwise calibrate per-image.
-3. Add a `MudSelectItem` in `src/Web/Components/Pages/Settings.razor`.
+3. Add a `MudSelectItem` in `src/Presentation/Web/Satisfactory.Presentation.Web/Components/Pages/Settings.razor`.
