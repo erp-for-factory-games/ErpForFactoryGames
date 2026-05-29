@@ -22,6 +22,17 @@ public sealed class TunnelSpec
 public sealed class HostnameSpec
 {
     public string Hostname { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Optional Cloudflare ingress path matcher (regex), e.g. <c>/api/me</c>.
+    /// When set the rule only matches that path on the hostname — used to split
+    /// <c>/api/me</c> (→ auth-api) from the rest of <c>/api/*</c> (→ erp-api)
+    /// per ADR-0027 / 5c2. Null matches the whole hostname. Order matters: list
+    /// more-specific path rules BEFORE the bare-hostname rule (Cloudflare
+    /// evaluates top-down).
+    /// </summary>
+    public string? Path { get; init; }
+
     public string Service { get; init; } = string.Empty;
 }
 

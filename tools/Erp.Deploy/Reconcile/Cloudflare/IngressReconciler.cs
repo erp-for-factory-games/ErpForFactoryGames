@@ -56,12 +56,16 @@ public sealed class IngressReconciler
             note: $"{target.Config.Ingress.Count} rules");
     }
 
-    private static CfIngressConfig BuildTarget(TunnelSpec spec)
+    // internal for unit testing — pure transform of a TunnelSpec into the
+    // ordered Cloudflare ingress rule list.
+    internal static CfIngressConfig BuildTarget(TunnelSpec spec)
     {
         var rules = new List<CfIngressRule>();
         foreach (var h in spec.Hostnames)
         {
-            rules.Add(new CfIngressRule { Hostname = h.Hostname, Service = h.Service });
+            // Path emitted only when set (CfIngressRule omits null paths), so a
+            // bare-hostname rule stays bare and a path rule narrows to it.
+            rules.Add(new CfIngressRule { Hostname = h.Hostname, Path = h.Path, Service = h.Service });
         }
         // Catch-all MUST be last. Cloudflare evaluates top-down.
         rules.Add(new CfIngressRule { Service = spec.Catchall });
