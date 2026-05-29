@@ -1,6 +1,6 @@
 # 28. Keycloak as the identity provider for human login
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-05-29
 - Deciders: Chris
 
@@ -89,13 +89,30 @@ the same realm import, so `dotnet run --project src/Hosting/Erp.Hosting.AppHost`
 brings up a working IdP. A dev realm seeds a test user so the login flow works
 offline. (The Steam bridge is prod/opt-in — local dev uses username/password.)
 
-### 7. Fate of `Erp.Presentation.Web.Auth` (the 5c4 scaffold)
+### 7. `Erp.Presentation.Web.Auth` stays — our thin auth landing over a pluggable backend
 
-Keycloak provides the login + account-console UI, so the scaffolded auth web
-app does **not** reimplement those. It is retained only as a thin
-**post-login landing + agent-management** surface (agent tokens are *our*
-domain, not Keycloak's) — or dropped entirely if Keycloak's account console +
-the game frontends' own settings pages cover it. **Open question — see below.**
+The 5c4 scaffold is **kept** as our own thin auth landing + account/agent
+surface. It does not reimplement credential storage or social brokering — it
+delegates to a configurable backend behind an `IAuthBackend`-style seam:
+
+- **Keycloak (default for real deployments)** — the landing performs the OIDC
+  flow against Keycloak; login/social/Steam all happen there.
+- **Hardcoded username/password (toggle for dev / minimal setups)** — Keycloak
+  can be switched off entirely and the landing accepts a configured local
+  credential, so the app runs without standing up an IdP.
+
+This keeps a single, branded front door we control while Keycloak does the
+heavy lifting when enabled — and keeps the app runnable with zero IdP infra.
+
+### 8. Keycloak standup is a deferred TODO
+
+Keycloak is a **standalone container alongside the app**; the initial realm +
+client + provider setup is real one-time work. Per the decision, that standup
+(the containers from §5, the realm export, social/Steam config, and the OIDC
+wiring in §3) is **tracked as a follow-up TODO and tackled later** — it is not
+part of the current rollout. The `IAuthBackend` seam (§7) lands first with the
+hardcoded-credential backend so the app stays runnable; the Keycloak backend
++ containers slot in when the TODO is picked up.
 
 ## Scope boundary (explicitly unchanged)
 
@@ -145,12 +162,12 @@ the game frontends' own settings pages cover it. **Open question — see below.*
 - Social brokers (Google/MS/Apple) + the Steam bridge config.
 - Decide §7 (Auth Web fate).
 
-## Open questions for review
+## Resolved (was: open questions)
 
-1. **§7 — `Erp.Presentation.Web.Auth`:** keep it as a thin authenticated
-   landing + agent-management shell, or drop it and move agent-management into
-   each game frontend's settings page + lean on Keycloak's account console?
-2. **Sequencing:** stand Keycloak up first behind `auth.erp-for-factory.games`
-   (replacing the auth-web slot in the 5c5 rollout), then wire the frontends —
-   or wire one frontend end-to-end against a local Aspire Keycloak first to
-   prove the flow before touching the homelab?
+1. **`Erp.Presentation.Web.Auth`** — **kept** as our thin auth landing over a
+   pluggable backend (Keycloak when enabled; hardcoded credentials when off).
+   See §7.
+2. **Sequencing** — the app-side `IAuthBackend` seam (with the hardcoded
+   backend) lands first so nothing depends on IdP infra; the Keycloak container
+   standup + OIDC backend is a deferred TODO (§8), done later. App-first, IdP
+   when we get to it.
