@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace ApiService.Tests;
+namespace Satisfactory.Presentation.Api.Tests;
 
 /// <summary>
 /// Integration tests for the agent upload + status endpoints (#199).
@@ -163,6 +163,19 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
             var tokens = scope.ServiceProvider.GetRequiredService<Erp.Application.Common.IAgentTokenRepository>();
             var hasher = scope.ServiceProvider.GetRequiredService<Erp.Application.Common.IAgentTokenHasher>();
             var clock = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+
+            // Seed the dev Player the AgentToken FKs to. The Sat API no longer runs
+            // DevPlayerBootstrap (it moved to the Auth API in ADR-0026 phase 5c2), so
+            // without this the AgentToken insert fails the Players FK constraint.
+            var players = scope.ServiceProvider.GetRequiredService<Erp.Application.Common.IPlayerRepository>();
+            var devPlayerId = new Erp.Domain.Common.PlayerId(DevPlayerId);
+            if (await players.GetAsync(devPlayerId, default) is null)
+            {
+                await players.AddAsync(
+                    new Erp.Domain.Common.Player(devPlayerId, "Test Player", clock.GetUtcNow().UtcDateTime),
+                    default);
+                await players.SaveChangesAsync(default);
+            }
 
             var plaintext = hasher.MintPlaintext();
             var hash = hasher.Hash(plaintext);

@@ -2,7 +2,7 @@ using Erp.Application.Common;
 using Erp.Domain.Common;
 using Satisfactory.Infrastructure;
 
-namespace ApiService.Tests;
+namespace Satisfactory.Presentation.Api.Tests;
 
 /// <summary>
 /// Unit tests for the GeoJSON producer's pipe-feature emission (#65). Builds

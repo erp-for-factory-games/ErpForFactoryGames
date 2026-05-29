@@ -6,7 +6,7 @@ using Erp.Domain.Common;
 using Erp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApiService.Tests;
+namespace Satisfactory.Presentation.Api.Tests;
 
 /// <summary>
 /// End-to-end tests for the catalogue re-ingest trigger (#239, ADR-0025 §7).
