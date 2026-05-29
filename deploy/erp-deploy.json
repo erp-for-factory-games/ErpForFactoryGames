@@ -7,6 +7,16 @@
         "Hostnames": [
           {
             "Hostname": "satisfactory.erp-for-factory.games",
+            "Path": "/api/me",
+            "Service": "http://erp-auth-api:8080"
+          },
+          {
+            "Hostname": "satisfactory.erp-for-factory.games",
+            "Path": "/api/.*",
+            "Service": "http://erp-api:8080"
+          },
+          {
+            "Hostname": "satisfactory.erp-for-factory.games",
             "Service": "http://erp-web:8080"
           }
         ],
