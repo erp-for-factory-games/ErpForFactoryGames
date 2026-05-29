@@ -111,7 +111,7 @@ try {
 catch {
     Write-Host ""
     Write-Host "Could not reach $CatalogUrl." -ForegroundColor Red
-    Write-Host "Start the AppHost first: dotnet run --project src/AppHost" -ForegroundColor Red
+    Write-Host "Start the AppHost first: dotnet run --project src/Hosting/Erp.Hosting.AppHost" -ForegroundColor Red
     Write-Host "Then re-run this script." -ForegroundColor Red
     exit 1
 }

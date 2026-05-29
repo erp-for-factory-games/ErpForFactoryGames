@@ -1,4 +1,4 @@
-namespace Erp.Infrastructure;
+namespace Erp.Application.Common;
 
 /// <summary>
 /// Bound from the <c>Catalogue:Satisfactory</c> configuration section.

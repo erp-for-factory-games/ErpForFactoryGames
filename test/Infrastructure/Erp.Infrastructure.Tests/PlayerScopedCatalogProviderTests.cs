@@ -4,6 +4,7 @@ using Erp.Domain.Common;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Satisfactory.Infrastructure;
 
 namespace Erp.Infrastructure.Tests;
 

@@ -24,7 +24,7 @@
          internals to the per-game projects so they can keep registering by
          type without our needing to promote every class to public. -->
     <InternalsVisibleTo Include="erp-agent" />
-    <InternalsVisibleTo Include="Agent.Tests" />
+    <InternalsVisibleTo Include="Erp.Presentation.Agent.Common.Tests" />
   </ItemGroup>
 
 </Project>

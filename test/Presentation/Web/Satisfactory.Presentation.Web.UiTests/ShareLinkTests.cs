@@ -10,7 +10,7 @@ namespace Satisfactory.Presentation.Web.UiTests;
 /// <para>
 /// This test only verifies the page renders without errors and that the
 /// share button is reachable — the round-trip token semantics are covered by
-/// <c>ApiService.Tests.PlanShareEndpointsTests</c>. Driving a full click +
+/// <c>Satisfactory.Presentation.Api.Tests.PlanShareEndpointsTests</c>. Driving a full click +
 /// clipboard read needs a loaded catalogue, which the fixture intentionally
 /// doesn't provision.
 /// </para>

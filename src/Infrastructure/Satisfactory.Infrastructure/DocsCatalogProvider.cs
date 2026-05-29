@@ -2,9 +2,8 @@ using Erp.Application.Common;
 using Erp.Domain.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Satisfactory.Infrastructure;
 
-namespace Erp.Infrastructure;
+namespace Satisfactory.Infrastructure;
 
 /// <summary>
 /// <see cref="ICatalogProvider"/> backed by the user's installed <c>Docs.json</c>.

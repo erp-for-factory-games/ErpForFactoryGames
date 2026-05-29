@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Application\Erp.Application.Common\Erp.Application.Common.csproj" />
     <ProjectReference Include="..\..\Domain\Erp.Domain.Common\Erp.Domain.Common.csproj" />
     <!--
       Consumed from the fork's GitHub Packages feed (see nuget.config). Bump
