@@ -38,6 +38,8 @@ jobs:
             dockerfile: src/Presentation/Web/Satisfactory.Presentation.Web/Dockerfile
           - image: erp-api
             dockerfile: src/Presentation/Api/Satisfactory.Presentation.Api/Dockerfile
+          - image: erp-auth-api
+            dockerfile: src/Presentation/Api/Erp.Presentation.Api.Auth/Dockerfile
 
     steps:
       - name: Checkout
