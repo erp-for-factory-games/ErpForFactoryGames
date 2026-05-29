@@ -177,6 +177,30 @@ jobs:
             echo "tag=${latest}" >>"$GITHUB_OUTPUT"
           fi
 
+      # Windows installer (#219). Packages the already-published win-x64 output
+      # with WiX v5 into erp-agent-win-x64.msi — service + ARP + machine-wide
+      # erp-agent:// handler, declaratively (build/wix/erp-agent.wxs). Reuses
+      # `publish/win-x64` from the Publish step; no second publish.
+      - name: Build MSI (Windows)
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: |
+          # MSI ProductVersion is numeric-only: strip the leading v and any
+          # prerelease / build-metadata suffix from the release tag.
+          $ver = ("${{ steps.target.outputs.tag }}" -replace '^v','') -replace '[-+].*$',''
+          $name = "erp-agent-win-x64.msi"
+          dotnet tool update --global wix --version 5.0.2
+          # Ensure the global-tools dir is on PATH for this process.
+          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+          wix extension add -g WixToolset.Util.wixext
+          wix build build/wix/erp-agent.wxs `
+              -ext WixToolset.Util.wixext `
+              -d Version=$ver `
+              -d "PublishDir=publish/win-x64" `
+              -arch x64 `
+              -o $name
+          "MSI_NAME=$name" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Attach to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -188,6 +212,10 @@ jobs:
           gh release view "$tag" >/dev/null 2>&1 \
             || gh release create "$tag" --title "$tag" --notes "See CHANGELOG / commit history. Container images on ghcr.io/${GITHUB_REPOSITORY_OWNER,,}."
           gh release upload "$tag" "${ARCHIVE_NAME}" --clobber
+          # win-x64 also ships the MSI (primary Windows install path, #219).
+          if [[ -n "${MSI_NAME:-}" ]]; then
+            gh release upload "$tag" "${MSI_NAME}" --clobber
+          fi
 
   # ---------------------------------------------------------------------------
   # winget — bump the ErpForFactoryGames.Agent manifest in winget-pkgs.
@@ -225,7 +253,7 @@ jobs:
           tag="${GITHUB_REF_NAME}"
           version="${tag#v}"
           echo "version=${version}" >>"$GITHUB_OUTPUT"
-          echo "url=https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/erp-agent-win-x64.zip" >>"$GITHUB_OUTPUT"
+          echo "url=https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/erp-agent-win-x64.msi" >>"$GITHUB_OUTPUT"
 
       - name: Submit manifest update to winget-pkgs
         env:

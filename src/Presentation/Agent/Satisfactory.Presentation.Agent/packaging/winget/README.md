@@ -4,13 +4,12 @@ Bootstrap manifest for `ErpForFactoryGames.Agent`. Lets Windows users install
 the agent with `winget install ErpForFactoryGames.Agent` and pick up new
 releases via `winget upgrade`.
 
-Today this is a **portable** manifest that wraps the release `erp-agent-win-x64.zip`.
-Winget puts `erp-agent.exe` on the user's PATH; the user runs
-`erp-agent --install` from an elevated shell to register the Windows service.
-When [#219](https://github.com/ChrisonSimtian/ErpForFactoryGames/issues/219)
-lands and we ship a real MSI, this manifest flips to `InstallerType: wix` and
-service registration happens at install time — the user-facing
-`winget install ...` command stays the same.
+This is a **WiX MSI** manifest (`InstallerType: wix`) wrapping the release
+`erp-agent-win-x64.msi` (#219). The MSI registers the Windows service, the
+machine-wide `erp-agent://` handler, and an Add/Remove Programs entry at
+install time, so `winget install` needs no follow-up elevated
+`erp-agent --install` step. The MSI is built by the `Build MSI (Windows)` step
+in `release-images.yml` from `build/wix/erp-agent.wxs`.
 
 ## Files
 

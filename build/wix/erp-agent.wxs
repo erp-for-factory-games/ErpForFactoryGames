@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  WiX v5 source for the ERP Agent Windows MSI (#219).
+
+  Design (agreed on #219, 2026-05-29):
+    * Declarative only — ZERO custom actions. A deferred custom action would
+      run as SYSTEM, so anything that resolves the *user's* profile (e.g. the
+      save-folder seed in ServiceRegistrar.SeedAgentJsonWindowsAsync) would
+      point at SYSTEM's profile and write a garbage path. So the MSI lays down
+      files + service + ARP + the protocol handler, and leaves save-folder
+      detection / agent.json / pairing to the deep-link flow that runs as the
+      user (the agent-first onboarding shipped in #297).
+    * Protocol handler in HKLM (machine-wide), not the HKCU that the CLI
+      `--install` path uses — fits the per-machine MSI model and works for
+      every user on the box.
+
+  Build (Windows only):
+    wix extension add -g WixToolset.Util.wixext
+    wix build build/wix/erp-agent.wxs -ext WixToolset.Util.wixext \
+        -d Version=<x.y.z> -d PublishDir=<published-win-x64-dir> \
+        -arch x64 -o erp-agent-win-x64.msi
+
+  The Fallout `BuildMsi` target and the release-images.yml win-x64 leg both
+  drive exactly this invocation.
+-->
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <Package
+      Name="ERP for Factory Games — Agent"
+      Manufacturer="ErpForFactoryGames"
+      Version="$(var.Version)"
+      Scope="perMachine"
+      Compressed="yes"
+      UpgradeCode="E2F1A6C4-9B3D-4D8E-A1F5-2C7B9E0D4A11">
+
+    <!-- UpgradeCode above is STABLE FOREVER — never change it, or upgrades
+         from older builds stop being detected. ProductCode is auto (*) per
+         build so each version is a distinct product that MajorUpgrade
+         supersedes. -->
+    <MajorUpgrade
+        DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- C:\Program Files\ErpForFactoryGames\Agent\ -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="ErpForFactoryGames">
+        <Directory Id="AGENTFOLDER" Name="Agent" />
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Main binary + the Windows service it backs. The single-file,
+         self-contained publish means this exe is the whole runtime. -->
+    <Component Id="AgentExe" Directory="AGENTFOLDER" Guid="*">
+      <File Id="AgentExeFile" Source="$(var.PublishDir)\erp-agent.exe" KeyPath="yes" />
+
+      <!-- Register + start the service. start=auto + DelayedAutoStart below
+           gives the "Automatic (Delayed Start)" the CLI path sets via
+           `sc … start= delayed-auto`. LocalSystem because the watcher reads a
+           machine-wide save folder; agent.json lives under %ProgramData% so
+           LocalSystem and the user resolve to the same file. -->
+      <ServiceInstall
+          Id="AgentService"
+          Name="erp-agent"
+          DisplayName="ERP for Factory Games — Agent"
+          Description="Watches the game save folder and uploads saves to the ERP planner web app. See https://github.com/ChrisonSimtian/ErpForFactoryGames"
+          Type="ownProcess"
+          Start="auto"
+          Account="LocalSystem"
+          ErrorControl="normal"
+          Vital="yes">
+        <!-- MsiServiceConfig: flips the start type to delayed-auto. -->
+        <ServiceConfig DelayedAutoStart="yes" OnInstall="yes" OnReinstall="yes" />
+        <!-- Failure actions: restart twice (60s apart), then give up — parity
+             with ServiceRegistrar's `sc failure … restart/60000/restart/60000`.
+             Requires the Util extension (-ext WixToolset.Util.wixext). -->
+        <util:ServiceConfig
+            FirstFailureActionType="restart"
+            SecondFailureActionType="restart"
+            ThirdFailureActionType="none"
+            RestartServiceDelayInSeconds="60"
+            ResetPeriodInDays="1" />
+      </ServiceInstall>
+
+      <!-- Start on install, stop on uninstall/upgrade, delete on uninstall. -->
+      <ServiceControl
+          Id="AgentServiceControl"
+          Name="erp-agent"
+          Start="install"
+          Stop="both"
+          Remove="uninstall"
+          Wait="yes" />
+    </Component>
+
+    <!-- erp-agent:// protocol handler, machine-wide (HKLM). Mirrors the HKCU
+         shape ServiceRegistrar.RegisterProtocolHandlerWindows writes, so the
+         Web UI "Open in agent" deep-link launches `erp-agent --pair "<url>"`.
+         [#AgentExeFile] binds to the installed exe's full path at build time. -->
+    <Component Id="ProtocolHandler" Directory="AGENTFOLDER" Guid="*">
+      <RegistryKey Root="HKLM" Key="Software\Classes\erp-agent">
+        <RegistryValue Type="string" Value="URL:ERP Agent Protocol" />
+        <RegistryValue Name="URL Protocol" Type="string" Value="" />
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="&quot;[#AgentExeFile]&quot;,0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#AgentExeFile]&quot; --pair &quot;%1&quot;" />
+        </RegistryKey>
+      </RegistryKey>
+    </Component>
+
+    <!-- Everything else the publish dropped next to the exe — appsettings.json,
+         INSTALL.md, agent.json.example. Auto-harvested so we don't enumerate
+         each one; the exe is excluded because it's its own component above.
+         TODO(#219 follow-up): add a dedicated ARPPRODUCTICON once the agent
+         csproj ships an embedded <ApplicationIcon>; today the exe has none. -->
+    <ComponentGroup Id="AgentContent" Directory="AGENTFOLDER">
+      <Files Include="$(var.PublishDir)\**" Exclude="$(var.PublishDir)\erp-agent.exe" />
+    </ComponentGroup>
+
+    <Feature Id="Main" Title="ERP for Factory Games — Agent" Level="1">
+      <ComponentRef Id="AgentExe" />
+      <ComponentRef Id="ProtocolHandler" />
+      <ComponentGroupRef Id="AgentContent" />
+    </Feature>
+
+  </Package>
+</Wix>
