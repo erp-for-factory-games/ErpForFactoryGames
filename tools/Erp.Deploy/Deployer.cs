@@ -86,7 +86,11 @@ public sealed class Deployer
         {
             $"cd '{remote.StackDir}' && docker compose --env-file stack.env pull",
             $"cd '{remote.StackDir}' && docker compose --env-file stack.env up -d",
-            $"docker ps --filter name=erp- --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'",
+            // Plain (non-interpolated) string: Docker's Go template needs literal
+            // double braces ({{.Names}}). In a C# $"" interpolated string `{{`
+            // collapses to a single `{`, so the remote `docker ps` printed the
+            // raw template instead of values. No interpolation needed here.
+            "docker ps --filter name=erp- --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'",
         };
 
         foreach (var cmd in commands)
