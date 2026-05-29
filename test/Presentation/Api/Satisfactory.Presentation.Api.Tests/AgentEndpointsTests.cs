@@ -159,23 +159,12 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
             // After ADR-0026 phase 5c2 the mint endpoint lives on Auth API,
             // not on the Sat API binary this fixture spins up. Bypass HTTP
             // and mint via DI so this test fixture keeps targeting Sat.
+            await EnsureDevPlayerAsync();
+
             using var scope = Services.CreateScope();
             var tokens = scope.ServiceProvider.GetRequiredService<Erp.Application.Common.IAgentTokenRepository>();
             var hasher = scope.ServiceProvider.GetRequiredService<Erp.Application.Common.IAgentTokenHasher>();
             var clock = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-
-            // Seed the dev Player the AgentToken FKs to. The Sat API no longer runs
-            // DevPlayerBootstrap (it moved to the Auth API in ADR-0026 phase 5c2), so
-            // without this the AgentToken insert fails the Players FK constraint.
-            var players = scope.ServiceProvider.GetRequiredService<Erp.Application.Common.IPlayerRepository>();
-            var devPlayerId = new Erp.Domain.Common.PlayerId(DevPlayerId);
-            if (await players.GetAsync(devPlayerId, default) is null)
-            {
-                await players.AddAsync(
-                    new Erp.Domain.Common.Player(devPlayerId, "Test Player", clock.GetUtcNow().UtcDateTime),
-                    default);
-                await players.SaveChangesAsync(default);
-            }
 
             var plaintext = hasher.MintPlaintext();
             var hash = hasher.Hash(plaintext);
@@ -188,6 +177,28 @@ public sealed class AgentEndpointsTests : IClassFixture<AgentEndpointsTests.Agen
             await tokens.AddAsync(token, default);
             await tokens.SaveChangesAsync(default);
             return plaintext;
+        }
+
+        /// <summary>
+        /// Seeds the dev <see cref="Erp.Domain.Common.Player"/> row. The Sat API no
+        /// longer runs DevPlayerBootstrap (it moved to the Auth API in ADR-0026
+        /// phase 5c2), so anything that references the dev player — minting a token
+        /// (FK), or a /players/{id}/… endpoint that 404s for unknown players — has
+        /// to seed it first. Idempotent.
+        /// </summary>
+        public async Task EnsureDevPlayerAsync()
+        {
+            using var scope = Services.CreateScope();
+            var players = scope.ServiceProvider.GetRequiredService<Erp.Application.Common.IPlayerRepository>();
+            var clock = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+            var devPlayerId = new Erp.Domain.Common.PlayerId(DevPlayerId);
+            if (await players.GetAsync(devPlayerId, default) is null)
+            {
+                await players.AddAsync(
+                    new Erp.Domain.Common.Player(devPlayerId, "Test Player", clock.GetUtcNow().UtcDateTime),
+                    default);
+                await players.SaveChangesAsync(default);
+            }
         }
 
         protected override void Dispose(bool disposing)

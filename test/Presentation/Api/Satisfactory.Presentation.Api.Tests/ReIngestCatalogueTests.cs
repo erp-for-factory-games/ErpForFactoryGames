@@ -97,6 +97,11 @@ public sealed class ReIngestCatalogueTests : IClassFixture<AgentEndpointsTests.A
         await using var fresh = new AgentEndpointsTests.AgentApiFactory();
         var client = fresh.CreateClient();
 
+        // The dev player must exist — /players/{id}/catalogue/* 404s for unknown
+        // players (see Re_ingest_for_unknown_player_returns_404), and the Sat API
+        // no longer seeds it (DevPlayerBootstrap moved to the Auth API in 5c2).
+        await fresh.EnsureDevPlayerAsync();
+
         var status = await client.GetFromJsonAsync<CatalogueStatusEnvelope>(
             $"/players/{fresh.DevPlayerId}/catalogue/satisfactory");
 
