@@ -11,3 +11,45 @@ code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.9em;
 }
+
+/* Plain-HTML sign-in form (native POST to /auth/login). MudBlazor inputs are
+   interactive components that don't post in a native form, so the credential
+   form uses plain elements styled to sit reasonably inside the MudPaper. */
+.erp-label {
+    display: block;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+    opacity: 0.8;
+}
+
+.erp-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font-size: 1rem;
+}
+
+.erp-submit {
+    padding: 0.6rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    background: #594ae2; /* MudBlazor default primary */
+    color: #fff;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.erp-submit:hover { background: #4133c9; }
+
+.erp-link-button {
+    border: none;
+    background: none;
+    color: #f64e62;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.95rem;
+}
