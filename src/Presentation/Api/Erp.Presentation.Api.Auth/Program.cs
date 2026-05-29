@@ -19,12 +19,9 @@ builder.AddServiceDefaults();
 builder.Services.AddErpInfrastructure(builder.Configuration);
 builder.Services.AddErpPersistence(builder.Configuration);
 
-// AgentTokenAuthenticator + DevPlayerBootstrap (the auth-side scope).
-builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
-builder.Services.Configure<AgentTokenAuthenticatorOptions>(
-    builder.Configuration.GetSection(AgentTokenAuthenticatorOptions.SectionName));
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<IAgentTokenAuthenticator, AgentTokenAuthenticator>();
+// Agent-token auth pipeline (ADR-0027 / 5c3): hybrid JWT-or-legacy
+// authenticator + the AgentTokenJwt signer the mint endpoint uses.
+builder.Services.AddAgentTokenAuth(builder.Configuration);
 builder.Services.AddHostedService<DevPlayerBootstrap>();
 
 // ICurrentPlayer + ICatalogueStorage are needed transitively by
@@ -106,6 +103,7 @@ app.MapPost("/players/{id:guid}/agent-tokens", async (
     IPlayerRepository players,
     IAgentTokenRepository tokens,
     IAgentTokenHasher hasher,
+    AgentTokenJwt jwtSigner,
     TimeProvider clock,
     CancellationToken ct) =>
 {
@@ -117,21 +115,26 @@ app.MapPost("/players/{id:guid}/agent-tokens", async (
         ? $"Agent {DateTime.UtcNow:yyyy-MM-dd}"
         : request!.Label!.Trim();
 
-    var plaintext = hasher.MintPlaintext();
-    var hash = hasher.Hash(plaintext);
+    // ADR-0027: mint a JWT carrying sub=playerId, jti=tokenId. The AgentToken
+    // row still exists for revocation + audit (and the legacy hybrid path);
+    // its hash column holds the hash of the JWT so the row stays consistent,
+    // but game APIs verify the JWT by signature, not by that hash.
+    var now = clock.GetUtcNow().UtcDateTime;
+    var tokenId = AgentTokenId.New();
+    var jwt = jwtSigner.Sign(playerId, tokenId, now);
     var token = new AgentToken(
-        AgentTokenId.New(),
+        tokenId,
         playerId,
         label,
-        hash,
-        clock.GetUtcNow().UtcDateTime);
+        hasher.Hash(jwt),
+        now);
     await tokens.AddAsync(token, ct).ConfigureAwait(false);
     await tokens.SaveChangesAsync(ct).ConfigureAwait(false);
 
     return Results.Json(new
     {
         id = token.Id.Value,
-        plaintext,
+        plaintext = jwt,
         label = token.Label,
         createdUtc = token.CreatedUtc,
     }, statusCode: 201);

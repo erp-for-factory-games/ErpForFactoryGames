@@ -1,15 +1,24 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+// Shared HMAC signing key for agent JWTs (ADR-0027 / 5c3). The Auth API mints
+// with it; the game APIs verify locally with the same value (no DB hit). In
+// prod this is a Fallout [Secret] baked into stack.env on every API container;
+// here we inject one fixed dev key so all binaries agree under `dotnet run`.
+// NOT a production secret — overridden by Auth__JwtSigningKey from stack.env.
+const string devJwtSigningKey = "erp-for-factory-games-local-apphost-hs256-dev-key-0123456789ab";
+
 // Auth API owns player + agent-token aggregate per ADR-0026. Phase 5c2
-// landed the /players/* + /api/me endpoints + DevPlayerBootstrap here.
+// landed the /players/* + /api/me endpoints + DevPlayerBootstrap here; 5c3
+// added JWT minting (it signs with the shared key above).
 var authApi = builder.AddProject<Projects.Erp_Presentation_Api_Auth>("auth-api")
+    .WithEnvironment("Auth__JwtSigningKey", devJwtSigningKey)
     .WithHttpHealthCheck("/health");
 
 // Sat API waits for Auth to be healthy first — both binaries hit the same
 // SQLite file via EF migrations at startup; concurrent migrate races would
-// lock the DB. Phase 5c3 splits the DbContext so each binary owns its own
-// schema and the ordering goes away.
+// lock the DB. It verifies agent JWTs locally with the same shared key.
 var apiService = builder.AddProject<Projects.Satisfactory_Presentation_Api>("apiservice")
+    .WithEnvironment("Auth__JwtSigningKey", devJwtSigningKey)
     .WithHttpHealthCheck("/health")
     .WaitFor(authApi);
 

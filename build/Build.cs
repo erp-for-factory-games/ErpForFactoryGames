@@ -55,6 +55,16 @@ class Build : FalloutBuild
     [Parameter("Image tag for erp-web + erp-api. Default: latest.")]
     readonly string ImageTag = "latest";
 
+    // Shared HMAC key the Auth API signs agent JWTs with and the game APIs
+    // verify against (ADR-0027 / 5c3). [Secret] → Fallout prompts masked when
+    // not supplied via env (AUTH_JWT_SIGNING_KEY) / CI secret. Baked into
+    // stack.env as Auth__JwtSigningKey on every API container. Empty is allowed
+    // (the APIs fall back to their dev key + log a warning) but production
+    // deployments must set a real ≥256-bit secret.
+    [Parameter("Shared HMAC-SHA256 key for agent JWTs (ADR-0027). Set a ≥256-bit secret in production.")]
+    [Secret]
+    readonly string AuthJwtSigningKey = "";
+
     // Populated by Provision when it applies; read by Up. Empty when Provision
     // ran in dry-run, in which case Up uses a placeholder token for its own
     // dry-run output and refuses to proceed if asked to apply for real.
@@ -413,7 +423,8 @@ class Build : FalloutBuild
                 ConnectorToken:   token,
                 ImageTag:         ImageTag,
                 ComposeSourceDir: composeSource,
-                DryRun:           DryRun));
+                DryRun:           DryRun,
+                JwtSigningKey:    AuthJwtSigningKey));
 
             if (result.ExitCode != 0)
             {

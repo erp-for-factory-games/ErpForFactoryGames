@@ -11,7 +11,8 @@ public sealed record DeployRequest(
     string ConnectorToken,
     string ImageTag,
     string ComposeSourceDir,
-    bool DryRun);
+    bool DryRun,
+    string JwtSigningKey = "");
 
 public sealed record DeployResult(int ExitCode);
 
@@ -53,7 +54,7 @@ public sealed class Deployer
     {
         var remote = req.Options.Remote;
         var conn = _resolver.Resolve(remote);
-        var stackEnv = StackEnvBuilder.Build(req.ConnectorToken, req.ImageTag);
+        var stackEnv = StackEnvBuilder.Build(req.ConnectorToken, req.ImageTag, req.JwtSigningKey);
         var uploads = BuildUploads(req.ComposeSourceDir, remote.StackDir, stackEnv);
 
         // Pre-flight: complain about missing source files before touching SSH.

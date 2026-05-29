@@ -18,6 +18,10 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
+    <!-- HS256 agent JWT mint/verify (ADR-0027 / 5c3). JsonWebTokenHandler +
+         SymmetricSecurityKey/SigningCredentials (via transitive
+         Microsoft.IdentityModel.Tokens). Not in the ASP.NET shared framework. -->
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.3.1" />
   </ItemGroup>
 
   <ItemGroup>
