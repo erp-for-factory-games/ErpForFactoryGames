@@ -37,6 +37,11 @@ public class SmokeTests(AspireAppFixture fixture) : IClassFixture<AspireAppFixtu
 
         await Expect(page.Locator("#blazor-error-ui")).ToBeHiddenAsync();
 
+        // Let the interactive Server circuit finish its SSR→interactive re-render
+        // before clicking — otherwise Playwright can resolve the picker, then have
+        // it detached mid-click when the circuit swaps the DOM.
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
         await pickers.First.ClickAsync();
         await Expect(page.Locator("#blazor-error-ui")).ToBeHiddenAsync();
 
