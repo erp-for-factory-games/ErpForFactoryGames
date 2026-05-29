@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>Satisfactory.Save.Tests</RootNamespace>
+    <RootNamespace>Satisfactory.Infrastructure.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +24,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Catalogue fixtures (Docs.json parser tests) live flat in Fixtures/. -->
+    <None Update="Fixtures\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- Save fixtures (.sav parity tests) live under Fixtures/v1_x/ — folded in
+         from the former Satisfactory.Save.Tests when the two merged (#282). -->
     <None Include="Fixtures\**\*.sav" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

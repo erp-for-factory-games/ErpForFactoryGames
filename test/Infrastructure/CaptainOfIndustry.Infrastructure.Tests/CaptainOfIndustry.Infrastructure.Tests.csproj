@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>Satisfactory.Catalog.Tests</RootNamespace>
+    <RootNamespace>CaptainOfIndustry.Infrastructure.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,13 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Infrastructure\Satisfactory.Infrastructure\Satisfactory.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Fixtures\*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\..\..\src\Infrastructure\CaptainOfIndustry.Infrastructure\CaptainOfIndustry.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

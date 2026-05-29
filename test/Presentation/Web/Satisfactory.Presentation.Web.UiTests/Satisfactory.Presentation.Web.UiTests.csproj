@@ -26,14 +26,14 @@
       a host reference (for DistributedApplicationTestingBuilder<Projects.AppHost>),
       not a child resource the host should orchestrate.
     -->
-    <ProjectReference Include="..\..\..\src\Hosting\Erp.Hosting.AppHost\Erp.Hosting.AppHost.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\..\src\Hosting\Erp.Hosting.AppHost\Erp.Hosting.AppHost.csproj" IsAspireProjectResource="false" />
     <!--
       Direct reference to Web so non-UI unit tests in this project (e.g.
       PlannerGraphLayoutTests for #89) can call into pure helpers without
       booting Aspire. Playwright-driven tests still use the AppHost
       reference above to drive a real browser session.
     -->
-    <ProjectReference Include="..\..\..\src\Presentation\Web\Satisfactory.Presentation.Web\Satisfactory.Presentation.Web.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Presentation\Web\Satisfactory.Presentation.Web\Satisfactory.Presentation.Web.csproj" />
   </ItemGroup>
 
 </Project>

@@ -76,33 +76,29 @@
     <Project Path="test/Agent.Tests/Agent.Tests.csproj" />
   </Folder>
   <Folder Name="/test/ApiService.Tests/" />
-  <Folder Name="/test/ERP/" />
-  <Folder Name="/test/ERP/Application.Tests/">
-    <Project Path="test/ERP/Application.Tests/ERP.Application.Tests.csproj" />
+  <Folder Name="/test/Application/" />
+  <Folder Name="/test/Application/Erp.Application.Common.Tests/">
+    <Project Path="test/Application/Erp.Application.Common.Tests/Erp.Application.Common.Tests.csproj" />
   </Folder>
-  <Folder Name="/test/ERP/Domain.Tests/">
-    <Project Path="test/ERP/Domain.Tests/ERP.Domain.Tests.csproj" />
+  <Folder Name="/test/Domain/" />
+  <Folder Name="/test/Domain/Erp.Domain.Common.Tests/">
+    <Project Path="test/Domain/Erp.Domain.Common.Tests/Erp.Domain.Common.Tests.csproj" />
   </Folder>
-  <Folder Name="/test/ERP/Infrastructure.Tests/">
-    <Project Path="test/ERP/Infrastructure.Tests/ERP.Infrastructure.Tests.csproj" />
+  <Folder Name="/test/Infrastructure/" />
+  <Folder Name="/test/Infrastructure/Erp.Infrastructure.Tests/">
+    <Project Path="test/Infrastructure/Erp.Infrastructure.Tests/Erp.Infrastructure.Tests.csproj" />
   </Folder>
-  <Folder Name="/test/ERP/Persistence.Tests/">
-    <Project Path="test/ERP/Persistence.Tests/ERP.Infrastructure.Persistence.Tests.csproj" />
+  <Folder Name="/test/Infrastructure/Satisfactory.Infrastructure.Tests/">
+    <Project Path="test/Infrastructure/Satisfactory.Infrastructure.Tests/Satisfactory.Infrastructure.Tests.csproj" />
   </Folder>
-  <Folder Name="/test/Satisfactory/" />
-  <Folder Name="/test/Satisfactory/Catalog.Tests/">
-    <Project Path="test/Satisfactory/Catalog.Tests/Satisfactory.Catalog.Tests.csproj" />
+  <Folder Name="/test/Infrastructure/CaptainOfIndustry.Infrastructure.Tests/">
+    <Project Path="test/Infrastructure/CaptainOfIndustry.Infrastructure.Tests/CaptainOfIndustry.Infrastructure.Tests.csproj" />
   </Folder>
-  <Folder Name="/test/Satisfactory/Save.Tests/">
-    <Project Path="test/Satisfactory/Save.Tests/Satisfactory.Save.Tests.csproj" />
+  <Folder Name="/test/Infrastructure/Persistence/Erp.Infrastructure.Persistence.Tests/">
+    <Project Path="test/Infrastructure/Persistence/Erp.Infrastructure.Persistence.Tests/Erp.Infrastructure.Persistence.Tests.csproj" />
   </Folder>
-  <Folder Name="/test/CaptainOfIndustry/" />
-  <Folder Name="/test/CaptainOfIndustry/Catalog.Tests/">
-    <Project Path="test/CaptainOfIndustry/Catalog.Tests/CaptainOfIndustry.Catalog.Tests.csproj" />
-  </Folder>
-  <Folder Name="/test/Web/" />
-  <Folder Name="/test/Web/Web.UiTests/">
-    <Project Path="test/Web/Web.UiTests/Web.UiTests.csproj" />
+  <Folder Name="/test/Presentation/Web/Satisfactory.Presentation.Web.UiTests/">
+    <Project Path="test/Presentation/Web/Satisfactory.Presentation.Web.UiTests/Satisfactory.Presentation.Web.UiTests.csproj" />
   </Folder>
   <Folder Name="/test/Deploy/" />
   <Folder Name="/test/Deploy/Erp.Deploy.Tests/">
