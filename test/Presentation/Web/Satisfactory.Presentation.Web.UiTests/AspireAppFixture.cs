@@ -27,13 +27,6 @@ public sealed class AspireAppFixture : IAsyncLifetime
             throw new InvalidOperationException($"Playwright chromium install failed with exit code {exitCode}.");
         }
 
-        // Boot only the Satisfactory slice (auth-api + apiservice + webfrontend).
-        // The CoI + auth-web resources aren't exercised here and cold-starting them
-        // alongside starves the constrained CI runner, destabilising the Blazor
-        // Server circuit during the test (MudAutocomplete "element is not stable"
-        // click flake). AppHost reads this env var via its configuration.
-        Environment.SetEnvironmentVariable("ERP_UITEST_MINIMAL", "1");
-
         var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Erp_Hosting_AppHost>();
         App = await builder.BuildAsync();
         await App.StartAsync();
