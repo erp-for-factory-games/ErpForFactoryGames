@@ -32,4 +32,28 @@ public sealed class AgentManagementOptions
     /// </para>
     /// </summary>
     public string PairingApiBaseUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether the catalogue is sourced from a paired agent (hosted topology)
+    /// rather than a path on the API server's own filesystem (dev / self-host).
+    ///
+    /// <para>
+    /// When <c>true</c> (the hosted default) the setup wizard leads with an
+    /// agent install + pair step and the catalogue step waits for the agent's
+    /// <c>Docs.json</c> upload — the server-local filesystem picker is hidden
+    /// because, in the hosted shape, browsing the API host's filesystem
+    /// enumerates the LXC, not the user's machine (issues #268 / #270).
+    /// </para>
+    ///
+    /// <para>
+    /// When <c>false</c> (set in <c>appsettings.Development.json</c> for the
+    /// AppHost-driven local run, where <c>Catalogue:AllowServerLocalFallback</c>
+    /// is on) the legacy filesystem-picker flow is kept — the API and the
+    /// browser are the same machine, so picking a local <c>Docs.json</c> works.
+    /// </para>
+    ///
+    /// Tracks the deployment-model decision in #267; flip to a server-reported
+    /// capability once that lands.
+    /// </summary>
+    public bool CatalogueViaAgent { get; set; } = true;
 }

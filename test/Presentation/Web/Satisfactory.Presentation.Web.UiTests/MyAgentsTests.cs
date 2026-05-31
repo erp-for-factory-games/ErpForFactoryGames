@@ -31,10 +31,12 @@ public class MyAgentsTests(AspireAppFixture fixture) : IClassFixture<AspireAppFi
         Assert.Empty(consoleErrors);
     }
 
-    // Skipped pending #260 — the Add-agent button drops clicks during the
-    // Blazor interactive-hydration window. The test reproduces a real UX
-    // race; it should be re-enabled once #260 is fixed in the component.
-    [Fact(Skip = "Blocked on #260 (Blazor interactive-hydration race) — see issue.")]
+    // #260 fixed: the Add-agent button now stays disabled until the
+    // InteractiveServer circuit attaches (OnAfterRender firstRender flips
+    // _interactive), so an early click can't be dropped. Playwright's
+    // actionability check waits for the button to become enabled before
+    // clicking, so this test no longer needs an artificial delay.
+    [Fact]
     public async Task Mint_flow_displays_plaintext_token_once()
     {
         var context = await fixture.NewContextAsync();
@@ -42,12 +44,17 @@ public class MyAgentsTests(AspireAppFixture fixture) : IClassFixture<AspireAppFi
 
         await page.GotoAsync($"{fixture.WebFrontendUrl.TrimEnd('/')}/settings/agents");
 
+        // ToBeEnabledAsync (not just ToBeVisibleAsync) — the button is
+        // visible during prerender but disabled until the InteractiveServer
+        // circuit attaches and OnAfterRender flips _interactive (#260). On a
+        // cold CI runner the circuit attach can take well over 15s, so wait
+        // generously: this is exactly the post-hydration window the fix gates.
         var addButton = page.Locator("[data-testid='add-agent-button']");
-        await Expect(addButton).ToBeVisibleAsync(new() { Timeout = 15_000 });
+        await Expect(addButton).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await addButton.ClickAsync();
 
         var mintButton = page.Locator("[data-testid='mint-button']");
-        await Expect(mintButton).ToBeVisibleAsync();
+        await Expect(mintButton).ToBeVisibleAsync(new() { Timeout = 15_000 });
         await mintButton.ClickAsync();
 
         // The reveal phase's "Save this token now" warning is the cheapest
@@ -58,13 +65,17 @@ public class MyAgentsTests(AspireAppFixture fixture) : IClassFixture<AspireAppFi
         var revealWarning = page.GetByText("Save this token now", new() { Exact = false });
         await Expect(revealWarning).ToBeVisibleAsync(new() { Timeout = 10_000 });
 
+        // ADR-0027: minting now returns a signed JWT (base64url header starts
+        // "eyJ"), not the legacy opaque eafg_ token. The auth API still accepts
+        // eafg_ during the deprecation window, but the dialog shows the JWT.
         var tokenTextarea = page.Locator("textarea")
-            .Filter(new() { HasTextRegex = new System.Text.RegularExpressions.Regex("^eafg_") });
+            .Filter(new() { HasTextRegex = new System.Text.RegularExpressions.Regex("^eyJ") });
         await Expect(tokenTextarea).ToBeVisibleAsync(new() { Timeout = 5_000 });
 
         // Close the dialog; the table should now include the new row.
         await page.Locator("[data-testid='close-button']").ClickAsync();
-        await Expect(page.Locator("[data-testid='agent-tokens-table'] tbody tr")).ToHaveCountAsync(1);
+        await Expect(page.Locator("[data-testid='agent-tokens-table'] tbody tr"))
+            .ToHaveCountAsync(1, new() { Timeout = 15_000 });
     }
 
     [Fact]

@@ -5,6 +5,7 @@
 @inject NavigationManager Nav
 @inject SetupState SetupState
 @inject IDialogService DialogService
+@inject Microsoft.Extensions.Options.IOptions<AgentManagementOptions> Options
 @using Satisfactory.Presentation.Web.Components.Shared
 
 <PageTitle>Settings</PageTitle>
@@ -50,34 +51,49 @@ else
     }
 }
 
-<div class="mt-4">
-    <MudTextField @bind-Value="pathInput"
-                  Label="Path to the Satisfactory Docs directory or a specific locale file"
-                  Placeholder="@DocsPathPlaceholder"
-                  Variant="Variant.Outlined"
-                  Margin="Margin.Dense"
-                  HelperTextOnFocus="false"
-                  ReadOnly="true"
-                  Adornment="Adornment.End"
-                  AdornmentIcon="@Icons.Material.Filled.FolderOpen"
-                  AdornmentAriaLabel="Browse for Docs folder"
-                  OnAdornmentClick="BrowseCataloguePath"
-                  Class="mb-1" />
-    <MudText Typo="Typo.caption" Class="d-block mb-2">
-        Either point at the <code>Docs</code> folder (we'll pick <code>en-US.json</code> automatically) or pass a specific
-        <code>&lt;locale&gt;.json</code> file. Resolution order at startup:
-        <code>ERP_SATISFACTORY_DOCS_PATH</code> env var → user-saved (this form) → <code>appsettings.json</code> →
-        Steam auto-detect.
-    </MudText>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply"
-               Disabled="@(string.IsNullOrWhiteSpace(pathInput) || isApplying)">
-        @(isApplying ? "Applying..." : "Apply")
-    </MudButton>
-    @if (!string.IsNullOrEmpty(message))
-    {
-        <MudText HtmlTag="span" Color="@(messageIsError ? Color.Error : Color.Success)" Class="ms-3">@message</MudText>
-    }
-</div>
+@if (UseAgent)
+{
+    <div class="mt-4">
+        <MudText Typo="Typo.body2">
+            In this deployment the catalogue is uploaded by your <strong>agent</strong> — it finds
+            <code>Docs.json</code> in your game install and sends it automatically. There's nothing to
+            configure here. Pair or check your agent on the
+            <MudLink Href="/settings/agents">My Agents</MudLink> page, or trigger a re-upload with
+            <strong>Re-ingest catalogue</strong> there.
+        </MudText>
+    </div>
+}
+else
+{
+    <div class="mt-4">
+        <MudTextField @bind-Value="pathInput"
+                      Label="Path to the Satisfactory Docs directory or a specific locale file"
+                      Placeholder="@DocsPathPlaceholder"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      HelperTextOnFocus="false"
+                      ReadOnly="true"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                      AdornmentAriaLabel="Browse for Docs folder"
+                      OnAdornmentClick="BrowseCataloguePath"
+                      Class="mb-1" />
+        <MudText Typo="Typo.caption" Class="d-block mb-2">
+            Either point at the <code>Docs</code> folder (we'll pick <code>en-US.json</code> automatically) or pass a specific
+            <code>&lt;locale&gt;.json</code> file. Resolution order at startup:
+            <code>ERP_SATISFACTORY_DOCS_PATH</code> env var → user-saved (this form) → <code>appsettings.json</code> →
+            Steam auto-detect.
+        </MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply"
+                   Disabled="@(string.IsNullOrWhiteSpace(pathInput) || isApplying)">
+            @(isApplying ? "Applying..." : "Apply")
+        </MudButton>
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <MudText HtmlTag="span" Color="@(messageIsError ? Color.Error : Color.Success)" Class="ms-3">@message</MudText>
+        }
+    </div>
+}
 
 <h2 class="mt-5">Setup wizard</h2>
 <div class="mt-3">
@@ -126,12 +142,14 @@ else
     private string mapBackdrop = "terrain";
     private string? mapMessage;
 
-    // Resolved server-side, so the hint reflects the OS hosting the app — which is
-    // the same machine the user is browsing from when they run it locally.
+    private bool UseAgent => Options.Value.CatalogueViaAgent;
+
+    // #269: only shown in dev/self-host (filesystem-picker) mode. Default to the
+    // Windows install path (largest user share) — the old OperatingSystem.IsMacOS()
+    // check ran server-side and reflected the *host* OS, which is meaningless once
+    // the browser and the API aren't the same machine.
     private static string DocsPathPlaceholder =>
-        OperatingSystem.IsMacOS()
-            ? "~/Library/Application Support/CrossOver/Bottles/Steam/drive_c/Program Files (x86)/Steam/steamapps/common/Satisfactory/CommunityResources/Docs"
-            : @"C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources\Docs";
+        @"C:\Program Files (x86)\Steam\steamapps\common\Satisfactory\CommunityResources\Docs";
 
     private Severity StatusSeverity => status is null
         ? Severity.Info
