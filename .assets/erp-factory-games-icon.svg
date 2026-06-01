@@ -1,0 +1,25 @@
+<svg viewBox="0 0 512 512" width="512" height="512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ERP for Factory Games mark">
+  <defs>
+    <linearGradient id="gearGrad" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FFC15E"/>
+      <stop offset="0.5" stop-color="#F79321"/>
+      <stop offset="1" stop-color="#E2780B"/>
+    </linearGradient>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE3AE"/>
+      <stop offset="1" stop-color="#C9670A"/>
+    </linearGradient>
+    <linearGradient id="barGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#14B8A6"/>
+      <stop offset="1" stop-color="#5EEAD4"/>
+    </linearGradient>
+  </defs>
+  <path d="M437.27,239.71 L437.27,272.29 L402.74,287.12 L393.00,317.07 L412.22,349.37 L393.08,375.72 L356.42,367.43 L330.94,385.94 L327.50,423.37 L296.53,433.43 L271.75,405.17 L240.25,405.17 L215.47,433.43 L184.50,423.37 L181.06,385.94 L155.58,367.43 L118.92,375.72 L99.78,349.37 L119.00,317.07 L109.26,287.12 L74.73,272.29 L74.73,239.71 L109.26,224.88 L119.00,194.93 L99.78,162.63 L118.92,136.28 L155.58,144.57 L181.06,126.06 L184.50,88.63 L215.47,78.57 L240.25,106.83 L271.75,106.83 L296.53,78.57 L327.50,88.63 L330.94,126.06 L356.42,144.57 L393.08,136.28 L412.22,162.63 L393.00,194.93 L402.74,224.88 Z" fill="url(#gearGrad)" stroke="#7A3D02" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M437.27,239.71 L437.27,272.29 L402.74,287.12 L393.00,317.07 L412.22,349.37 L393.08,375.72 L356.42,367.43 L330.94,385.94 L327.50,423.37 L296.53,433.43 L271.75,405.17 L240.25,405.17 L215.47,433.43 L184.50,423.37 L181.06,385.94 L155.58,367.43 L118.92,375.72 L99.78,349.37 L119.00,317.07 L109.26,287.12 L74.73,272.29 L74.73,239.71 L109.26,224.88 L119.00,194.93 L99.78,162.63 L118.92,136.28 L155.58,144.57 L181.06,126.06 L184.50,88.63 L215.47,78.57 L240.25,106.83 L271.75,106.83 L296.53,78.57 L327.50,88.63 L330.94,126.06 L356.42,144.57 L393.08,136.28 L412.22,162.63 L393.00,194.93 L402.74,224.88 Z" fill="none" stroke="url(#ringGrad)" stroke-width="2.5" opacity="0.7" stroke-linejoin="round"/>
+  <circle cx="256" cy="256" r="104" fill="#10171F"/>
+  <circle cx="256" cy="256" r="116" fill="none" stroke="#0E141B" stroke-width="14"/>
+  <rect x="206" y="270.0" width="28" height="52.0" rx="7" fill="url(#barGrad)"/>
+        <rect x="242" y="230.0" width="28" height="92.0" rx="7" fill="url(#barGrad)"/>
+        <rect x="278" y="188.0" width="28" height="134.0" rx="7" fill="url(#barGrad)"/>
+  <rect x="198" y="324" width="120" height="5" rx="2.5" fill="#5EEAD4" opacity="0.85"/>
+</svg>
