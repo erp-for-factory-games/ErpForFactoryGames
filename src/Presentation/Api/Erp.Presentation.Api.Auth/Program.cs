@@ -57,6 +57,14 @@ app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// FU1: gate user-facing endpoints ONLY under the keycloak backend. Under dev
+// no auth scheme is registered, so RequireAuthorization would 401 everything
+// and break the dev-player fallback path. The agent endpoints (/api/me,
+// /players/{id}/agent-tokens) validate X-Agent-Token (or have no caller auth
+// in v2) and are never gated.
+var usesKeycloak = (builder.Configuration.GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions()).UsesKeycloak;
+RouteHandlerBuilder Gate(RouteHandlerBuilder b) => usesKeycloak ? b.RequireAuthorization() : b;
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -83,7 +91,7 @@ app.MapGet("/", () => "Auth API. Player + agent-token endpoints under /players/*
 // Production deployment must hide them behind the homelab's Web UI gate.
 // ---------------------------------------------------------------------------
 
-app.MapGet("/players/current", async (
+Gate(app.MapGet("/players/current", async (
     HttpContext http,
     IOptions<AuthOptions> authOptions,
     IPlayerRepository players,
@@ -142,7 +150,7 @@ app.MapGet("/players/current", async (
         displayName = player.DisplayName,
         createdUtc = player.CreatedUtc,
     });
-});
+}));
 
 app.MapPost("/players/{id:guid}/agent-tokens", async (
     Guid id,

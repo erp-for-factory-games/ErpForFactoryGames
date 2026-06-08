@@ -96,6 +96,15 @@ app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// FU1: gate user-facing endpoints behind authentication, but ONLY under the
+// keycloak backend. Under the dev backend no auth scheme is registered, so
+// RequireAuthorization would 401 every request and break dev runs + the test
+// suite — there the dev-player fallback (CurrentPlayerFromAuthOptions) stands
+// in. Agent (/api/agent/*), health and the public share link are never gated:
+// they authenticate via X-Agent-Token or are intentionally anonymous.
+var usesKeycloak = (builder.Configuration.GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions()).UsesKeycloak;
+RouteHandlerBuilder Gate(RouteHandlerBuilder b) => usesKeycloak ? b.RequireAuthorization() : b;
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -103,12 +112,12 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "API service is running. See /catalog/items, /plan, /factory/state.");
 
-app.MapGet("/catalog/items", (ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
+Gate(app.MapGet("/catalog/items", (ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
     NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Ok(catalog.Items
         .OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase)
-        .Select(i => new ItemDto(i.Id.Value, i.Name))));
+        .Select(i => new ItemDto(i.Id.Value, i.Name)))));
 
-app.MapGet("/catalog/recipes", (ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
+Gate(app.MapGet("/catalog/recipes", (ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
 {
     if (NoCatalogueProblem.IfMissing(catalog, catOpts) is { } missing) return missing;
     // Per-minute amounts mirror what /plan returns and what the planner UI displays —
@@ -138,11 +147,11 @@ app.MapGet("/catalog/recipes", (ICatalogProvider catalog, IOptions<CatalogueOpti
                 r.Inputs.Select(i => ToPerMinute(i, r.Duration)).ToList(),
                 r.Outputs.Select(o => ToPerMinute(o, r.Duration)).ToList());
         }));
-});
+}));
 
-app.MapGet("/catalogue/status", (ICatalogProvider catalog) => catalog.GetStatus());
+Gate(app.MapGet("/catalogue/status", (ICatalogProvider catalog) => catalog.GetStatus()));
 
-app.MapPost("/catalogue/configure", (ConfigureCatalogueRequest request, ICatalogProvider catalog) =>
+Gate(app.MapPost("/catalogue/configure", (ConfigureCatalogueRequest request, ICatalogProvider catalog) =>
 {
     if (string.IsNullOrWhiteSpace(request.DocsPath))
         return Results.BadRequest(new { error = "DocsPath is required." });
@@ -160,33 +169,33 @@ app.MapPost("/catalogue/configure", (ConfigureCatalogueRequest request, ICatalog
     {
         return Results.Problem(title: "Failed to load catalogue", detail: ex.Message, statusCode: 422);
     }
-});
+}));
 
-app.MapGet("/factory/state", (IFactoryStateProvider provider, ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
-    NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Ok(FactoryStateView.From(provider, catalog)));
+Gate(app.MapGet("/factory/state", (IFactoryStateProvider provider, ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts) =>
+    NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Ok(FactoryStateView.From(provider, catalog))));
 
-app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider, ICatalogProvider catalog, Satisfactory.Infrastructure.KnownFlora flora, IOptions<CatalogueOptions> catOpts) =>
-    NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Json(FactoryStateGeoJson.From(provider, catalog, flora), contentType: "application/geo+json"));
+Gate(app.MapGet("/factory/state.geojson", (IFactoryStateProvider provider, ICatalogProvider catalog, Satisfactory.Infrastructure.KnownFlora flora, IOptions<CatalogueOptions> catOpts) =>
+    NoCatalogueProblem.IfMissing(catalog, catOpts) ?? Results.Json(FactoryStateGeoJson.From(provider, catalog, flora), contentType: "application/geo+json")));
 
-app.MapGet("/factory/saves", () =>
+Gate(app.MapGet("/factory/saves", () =>
     SaveFileResolver.EnumerateDetectedSaves()
         .Select(f => new DetectedSaveView(f.FullName, f.Name, f.LastWriteTimeUtc, f.Length))
-        .ToList());
+        .ToList()));
 
 // Active factory bottleneck alerts (#116). Read by the ADA agent so she leads
 // with active alerts on each user turn. Empty list when nothing's flagged.
 // Writes happen post-ingest via the analysis service.
-app.MapGet("/factory/alerts", async (IFactoryAlertRepository repo, CancellationToken ct) =>
+Gate(app.MapGet("/factory/alerts", async (IFactoryAlertRepository repo, CancellationToken ct) =>
 {
     var alerts = await repo.ListActiveAsync(ct);
     return Results.Ok(alerts.Select(FactoryAlertView.From).ToList());
-});
+}));
 
 // Manual dismissal (#116, phase C). Marks an alert as dismissed; subsequent
 // analysis passes that re-detect the same condition will create a *new* alert
 // rather than re-fire the dismissed one. Idempotent — re-dismissing an
 // already-dismissed alert is a 204, not an error.
-app.MapPost("/factory/alerts/{id:guid}/dismiss", async (
+Gate(app.MapPost("/factory/alerts/{id:guid}/dismiss", async (
     Guid id, IFactoryAlertRepository repo, TimeProvider clock, CancellationToken ct) =>
 {
     var alert = await repo.GetAsync(id, ct);
@@ -195,7 +204,7 @@ app.MapPost("/factory/alerts/{id:guid}/dismiss", async (
     alert.Dismiss(clock.GetUtcNow().UtcDateTime);
     await repo.SaveChangesAsync(ct);
     return Results.NoContent();
-});
+}));
 
 // Backing endpoint for the in-app filesystem picker (issue #84). Lists the
 // directory at `path` so the Blazor `PathPickerDialog` can render breadcrumbs +
@@ -207,7 +216,7 @@ app.MapPost("/factory/alerts/{id:guid}/dismiss", async (
 // smart starting directory when the caller hasn't given an explicit `path` —
 // the picker can land the user inside Satisfactory's Docs/SaveGames folder
 // instead of making them click through ~/Library/... by hand.
-app.MapGet("/fs/browse", (string? path, string? filter, string? purpose) =>
+Gate(app.MapGet("/fs/browse", (string? path, string? filter, string? purpose) =>
 {
     var startPath = ResolveStartPath(path, purpose);
 
@@ -361,9 +370,9 @@ app.MapGet("/fs/browse", (string? path, string? filter, string? purpose) =>
             .Select(e => e.StartsWith('.') ? e : "." + e)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
-});
+}));
 
-app.MapPost("/factory/ingest", async (
+Gate(app.MapPost("/factory/ingest", async (
     IngestSaveRequest request, IMessageBus bus, IFactoryStateProvider provider,
     ICatalogProvider catalog, FactoryAlertAnalysisService alertAnalysis,
     IOptions<CatalogueOptions> catOpts,
@@ -405,7 +414,7 @@ app.MapPost("/factory/ingest", async (
     {
         return Results.Problem(title: "Failed to parse save", detail: ex.Message, statusCode: 422);
     }
-});
+}));
 
 // ----- Manual node overrides (#42 Option B) ---------------------------------
 // User-curated resource + purity for individual BP_ResourceNode_C actors.
@@ -416,7 +425,7 @@ app.MapPost("/factory/ingest", async (
 // override survives across saves of the same world), and refreshes parsed
 // state so callers see the change immediately.
 
-app.MapPut("/factory/node-override", (
+Gate(app.MapPut("/factory/node-override", (
     NodeOverrideRequest request,
     Satisfactory.Infrastructure.ManualNodeOverrides overrides,
     IFactoryStateProvider provider) =>
@@ -436,9 +445,9 @@ app.MapPut("/factory/node-override", (
     overrides.Upsert(node.Position, request.Resource, purity);
     provider.Refresh();
     return Results.NoContent();
-});
+}));
 
-app.MapDelete("/factory/node-override", (
+Gate(app.MapDelete("/factory/node-override", (
     string reference,
     Satisfactory.Infrastructure.ManualNodeOverrides overrides,
     IFactoryStateProvider provider) =>
@@ -454,9 +463,9 @@ app.MapDelete("/factory/node-override", (
     var removed = overrides.Delete(node.Position);
     if (removed) provider.Refresh();
     return Results.NoContent();
-});
+}));
 
-app.MapPost("/plan", async (PlanRequest request, IMessageBus bus, ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts, ILoggerFactory loggerFactory) =>
+Gate(app.MapPost("/plan", async (PlanRequest request, IMessageBus bus, ICatalogProvider catalog, IOptions<CatalogueOptions> catOpts, ILoggerFactory loggerFactory) =>
 {
     if (NoCatalogueProblem.IfMissing(catalog, catOpts) is { } missing) return missing;
 
@@ -481,7 +490,7 @@ app.MapPost("/plan", async (PlanRequest request, IMessageBus bus, ICatalogProvid
         query.Targets.Count, plan.Steps.Count, plan.MissingInputs.Count, sw.ElapsedMilliseconds);
 
     return Results.Ok(PlanDto.From(plan, catalog));
-});
+}));
 
 // ---- Saved plans (ADR-0018, issue #77) -------------------------------------
 // Persist the user's planner inputs (targets + available resources) so they
@@ -489,19 +498,19 @@ app.MapPost("/plan", async (PlanRequest request, IMessageBus bus, ICatalogProvid
 // function of (catalogue, targets, available) and re-running the planner on
 // load keeps results valid across catalogue updates.
 
-app.MapGet("/plans", async (IPlanRepository repo, CancellationToken ct) =>
+Gate(app.MapGet("/plans", async (IPlanRepository repo, CancellationToken ct) =>
 {
     var plans = await repo.ListAsync(ct);
     return Results.Ok(plans.Select(SavedPlanSummaryDto.From).ToList());
-});
+}));
 
-app.MapGet("/plans/{id:guid}", async (Guid id, IPlanRepository repo, CancellationToken ct) =>
+Gate(app.MapGet("/plans/{id:guid}", async (Guid id, IPlanRepository repo, CancellationToken ct) =>
 {
     var plan = await repo.GetAsync(id, ct);
     return plan is null ? Results.NotFound() : Results.Ok(SavedPlanDto.From(plan));
-});
+}));
 
-app.MapPost("/plans", async (SavePlanRequest request, IPlanRepository repo, TimeProvider clock, CancellationToken ct) =>
+Gate(app.MapPost("/plans", async (SavePlanRequest request, IPlanRepository repo, TimeProvider clock, CancellationToken ct) =>
 {
     if (string.IsNullOrWhiteSpace(request.Name))
         return Results.BadRequest(new { error = "Name is required." });
@@ -518,9 +527,9 @@ app.MapPost("/plans", async (SavePlanRequest request, IPlanRepository repo, Time
     await repo.AddAsync(plan, ct);
     await repo.SaveChangesAsync(ct);
     return Results.Created($"/plans/{plan.Id}", SavedPlanDto.From(plan));
-});
+}));
 
-app.MapPut("/plans/{id:guid}", async (Guid id, SavePlanRequest request, IPlanRepository repo, TimeProvider clock, CancellationToken ct) =>
+Gate(app.MapPut("/plans/{id:guid}", async (Guid id, SavePlanRequest request, IPlanRepository repo, TimeProvider clock, CancellationToken ct) =>
 {
     if (string.IsNullOrWhiteSpace(request.Name))
         return Results.BadRequest(new { error = "Name is required." });
@@ -538,19 +547,19 @@ app.MapPut("/plans/{id:guid}", async (Guid id, SavePlanRequest request, IPlanRep
     await repo.UpdateAsync(existing, ct);
     await repo.SaveChangesAsync(ct);
     return Results.Ok(SavedPlanDto.From(existing));
-});
+}));
 
-app.MapDelete("/plans/{id:guid}", async (Guid id, IPlanRepository repo, CancellationToken ct) =>
+Gate(app.MapDelete("/plans/{id:guid}", async (Guid id, IPlanRepository repo, CancellationToken ct) =>
 {
     var removed = await repo.DeleteAsync(id, ct);
     if (!removed) return Results.NotFound();
     await repo.SaveChangesAsync(ct);
     return Results.NoContent();
-});
+}));
 
 // ----- Share links (#80) ----------------------------------------------------
 
-app.MapPost("/plans/{id:guid}/share", async (
+Gate(app.MapPost("/plans/{id:guid}/share", async (
     Guid id,
     IPlanRepository plans,
     IPlanShareRepository shares,
@@ -568,9 +577,9 @@ app.MapPost("/plans/{id:guid}/share", async (
 
     var baseUrl = $"{http.Scheme}://{http.Host}";
     return Results.Ok(new ShareTokenView(token, $"{baseUrl}/plans/shared/{token}", entity.CreatedUtc, entity.ExpiresUtc));
-});
+}));
 
-app.MapDelete("/plans/{id:guid}/share/{token}", async (
+Gate(app.MapDelete("/plans/{id:guid}/share/{token}", async (
     Guid id,
     string token,
     IPlanShareRepository shares,
@@ -583,8 +592,10 @@ app.MapDelete("/plans/{id:guid}/share/{token}", async (
     entity.Revoke(clock.GetUtcNow().UtcDateTime);
     await shares.SaveChangesAsync(ct);
     return Results.NoContent();
-});
+}));
 
+// Public share link (#80): intentionally ANONYMOUS — anyone with the opaque
+// token can read the shared plan, even under the keycloak backend. NOT gated.
 app.MapGet("/plans/shared/{token}", async (
     string token,
     IPlanRepository plans,
@@ -986,7 +997,7 @@ app.MapPost("/api/agent/catalogue/satisfactory", async (
 // endpoints — gated by the Web UI being on the homelab-internal LAN).
 // ---------------------------------------------------------------------------
 
-app.MapPost("/players/{id:guid}/re-ingest-catalogue", async (
+Gate(app.MapPost("/players/{id:guid}/re-ingest-catalogue", async (
     Guid id,
     IPlayerRepository players,
     TimeProvider clock,
@@ -1003,9 +1014,9 @@ app.MapPost("/players/{id:guid}/re-ingest-catalogue", async (
         reIngestRequested = true,
         reIngestRequestedUtc = player.ReIngestRequestedUtc,
     });
-});
+}));
 
-app.MapGet("/players/{id:guid}/catalogue/satisfactory", async (
+Gate(app.MapGet("/players/{id:guid}/catalogue/satisfactory", async (
     Guid id,
     IPlayerRepository players,
     IPlayerCatalogueRepository catalogues,
@@ -1029,7 +1040,7 @@ app.MapGet("/players/{id:guid}/catalogue/satisfactory", async (
             uploadedUtc = row.UploadedUtc,
         },
     });
-});
+}));
 
 app.MapDefaultEndpoints();
 
