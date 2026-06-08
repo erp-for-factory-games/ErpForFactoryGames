@@ -1,27 +1,47 @@
 using System.Net.Http.Json;
+using Satisfactory.Presentation.Web.Auth;
 
 namespace Satisfactory.Presentation.Web;
 
-public class PlannerApiClient(HttpClient httpClient)
+/// <summary>
+/// Typed HTTP client for the Satisfactory planner API. Under
+/// <c>Auth:Backend=keycloak</c> (#292) every call forwards the signed-in user's
+/// Keycloak access token (via <see cref="UserAccessTokenAccessor"/>) so the API
+/// scopes the catalogue + plans to the right player; under the dev backend the
+/// accessor yields no token and behaviour is unchanged. <c>ApplyAsync</c> is
+/// idempotent per circuit, so calling it at the top of each method is cheap.
+/// </summary>
+public class PlannerApiClient(HttpClient httpClient, UserAccessTokenAccessor tokens)
 {
-    public async Task<CatalogItem[]> GetItemsAsync(CancellationToken ct = default) =>
-        await httpClient.GetFromJsonAsync<CatalogItem[]>("/catalog/items", ct) ?? [];
+    public async Task<CatalogItem[]> GetItemsAsync(CancellationToken ct = default)
+    {
+        await tokens.ApplyAsync(httpClient);
+        return await httpClient.GetFromJsonAsync<CatalogItem[]>("/catalog/items", ct) ?? [];
+    }
 
-    public async Task<RecipeView[]> GetRecipesAsync(CancellationToken ct = default) =>
-        await httpClient.GetFromJsonAsync<RecipeView[]>("/catalog/recipes", ct) ?? [];
+    public async Task<RecipeView[]> GetRecipesAsync(CancellationToken ct = default)
+    {
+        await tokens.ApplyAsync(httpClient);
+        return await httpClient.GetFromJsonAsync<RecipeView[]>("/catalog/recipes", ct) ?? [];
+    }
 
     public async Task<PlanResponse?> ComputePlanAsync(PlanRequest request, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PostAsJsonAsync("/plan", request, ct);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<PlanResponse>(ct);
     }
 
-    public async Task<CatalogueStatusView?> GetCatalogueStatusAsync(CancellationToken ct = default) =>
-        await httpClient.GetFromJsonAsync<CatalogueStatusView>("/catalogue/status", ct);
+    public async Task<CatalogueStatusView?> GetCatalogueStatusAsync(CancellationToken ct = default)
+    {
+        await tokens.ApplyAsync(httpClient);
+        return await httpClient.GetFromJsonAsync<CatalogueStatusView>("/catalogue/status", ct);
+    }
 
     public async Task<CatalogueConfigureResult> ConfigureCatalogueAsync(string docsPath, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PostAsJsonAsync("/catalogue/configure", new { docsPath }, ct);
         if (response.IsSuccessStatusCode)
         {
@@ -32,11 +52,17 @@ public class PlannerApiClient(HttpClient httpClient)
         return new CatalogueConfigureResult(false, null, error);
     }
 
-    public Task<FactoryStateViewModel?> GetFactoryStateAsync(CancellationToken ct = default) =>
-        httpClient.GetFromJsonAsync<FactoryStateViewModel>("/factory/state", ct);
+    public async Task<FactoryStateViewModel?> GetFactoryStateAsync(CancellationToken ct = default)
+    {
+        await tokens.ApplyAsync(httpClient);
+        return await httpClient.GetFromJsonAsync<FactoryStateViewModel>("/factory/state", ct);
+    }
 
-    public async Task<DetectedSaveViewModel[]> GetDetectedSavesAsync(CancellationToken ct = default) =>
-        await httpClient.GetFromJsonAsync<DetectedSaveViewModel[]>("/factory/saves", ct) ?? [];
+    public async Task<DetectedSaveViewModel[]> GetDetectedSavesAsync(CancellationToken ct = default)
+    {
+        await tokens.ApplyAsync(httpClient);
+        return await httpClient.GetFromJsonAsync<DetectedSaveViewModel[]>("/factory/saves", ct) ?? [];
+    }
 
     /// <summary>
     /// Raw GeoJSON FeatureCollection for the map page. JS consumes it
@@ -45,6 +71,7 @@ public class PlannerApiClient(HttpClient httpClient)
     /// </summary>
     public async Task<System.Text.Json.JsonElement?> GetFactoryStateGeoJsonAsync(CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.GetAsync("/factory/state.geojson", ct);
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(ct);
@@ -52,6 +79,7 @@ public class PlannerApiClient(HttpClient httpClient)
 
     public async Task<FactoryIngestResult> IngestSaveAsync(string savePath, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PostAsJsonAsync("/factory/ingest", new { savePath }, ct);
         if (response.IsSuccessStatusCode)
         {
@@ -64,8 +92,11 @@ public class PlannerApiClient(HttpClient httpClient)
 
     // ----- Factory alerts (#116, surfaced on the dashboard via #131) -----------
 
-    public async Task<FactoryAlertView[]> GetFactoryAlertsAsync(CancellationToken ct = default) =>
-        await httpClient.GetFromJsonAsync<FactoryAlertView[]>("/factory/alerts", ct) ?? [];
+    public async Task<FactoryAlertView[]> GetFactoryAlertsAsync(CancellationToken ct = default)
+    {
+        await tokens.ApplyAsync(httpClient);
+        return await httpClient.GetFromJsonAsync<FactoryAlertView[]>("/factory/alerts", ct) ?? [];
+    }
 
     /// <summary>
     /// Marks an alert dismissed. Server is idempotent on the dismiss path —
@@ -73,6 +104,7 @@ public class PlannerApiClient(HttpClient httpClient)
     /// </summary>
     public async Task<bool> DismissAlertAsync(Guid id, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PostAsync($"/factory/alerts/{id}/dismiss", content: null, ct);
         return response.IsSuccessStatusCode;
     }
@@ -85,6 +117,7 @@ public class PlannerApiClient(HttpClient httpClient)
     /// </summary>
     public async Task<NodeOverrideResult> SetNodeOverrideAsync(string reference, string resource, string purity, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PutAsJsonAsync(
             "/factory/node-override",
             new { reference, resource, purity },
@@ -96,6 +129,7 @@ public class PlannerApiClient(HttpClient httpClient)
 
     public async Task<NodeOverrideResult> ClearNodeOverrideAsync(string reference, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.DeleteAsync(
             $"/factory/node-override?reference={Uri.EscapeDataString(reference)}",
             ct);
@@ -108,14 +142,21 @@ public class PlannerApiClient(HttpClient httpClient)
     // CRUD around the EF-backed /plans endpoints. Stores only the planner
     // inputs (targets + available); the computed plan is recomputed on load.
 
-    public async Task<SavedPlanSummary[]> ListSavedPlansAsync(CancellationToken ct = default) =>
-        await httpClient.GetFromJsonAsync<SavedPlanSummary[]>("/plans", ct) ?? [];
+    public async Task<SavedPlanSummary[]> ListSavedPlansAsync(CancellationToken ct = default)
+    {
+        await tokens.ApplyAsync(httpClient);
+        return await httpClient.GetFromJsonAsync<SavedPlanSummary[]>("/plans", ct) ?? [];
+    }
 
-    public Task<SavedPlanDetail?> GetSavedPlanAsync(Guid id, CancellationToken ct = default) =>
-        httpClient.GetFromJsonAsync<SavedPlanDetail>($"/plans/{id}", ct);
+    public async Task<SavedPlanDetail?> GetSavedPlanAsync(Guid id, CancellationToken ct = default)
+    {
+        await tokens.ApplyAsync(httpClient);
+        return await httpClient.GetFromJsonAsync<SavedPlanDetail>($"/plans/{id}", ct);
+    }
 
     public async Task<SavedPlanDetail?> CreateSavedPlanAsync(SavePlanInput input, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PostAsJsonAsync("/plans", input, ct);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<SavedPlanDetail>(ct);
@@ -123,6 +164,7 @@ public class PlannerApiClient(HttpClient httpClient)
 
     public async Task<SavedPlanDetail?> UpdateSavedPlanAsync(Guid id, SavePlanInput input, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PutAsJsonAsync($"/plans/{id}", input, ct);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<SavedPlanDetail>(ct);
@@ -130,6 +172,7 @@ public class PlannerApiClient(HttpClient httpClient)
 
     public async Task<bool> DeleteSavedPlanAsync(Guid id, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.DeleteAsync($"/plans/{id}", ct);
         return response.IsSuccessStatusCode;
     }
@@ -148,6 +191,7 @@ public class PlannerApiClient(HttpClient httpClient)
         if (!string.IsNullOrWhiteSpace(purpose)) query.Add($"purpose={Uri.EscapeDataString(purpose)}");
         var url = "/fs/browse" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
 
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.GetAsync(url, ct);
         if (response.IsSuccessStatusCode)
         {
@@ -162,6 +206,7 @@ public class PlannerApiClient(HttpClient httpClient)
 
     public async Task<SavedPlanResponse?> SavePlanAsync(SavePlanInput body, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PostAsJsonAsync("/plans", body, ct);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<SavedPlanResponse>(ct);
@@ -169,6 +214,7 @@ public class PlannerApiClient(HttpClient httpClient)
 
     public async Task<SavedPlanResponse?> GetSharedPlanAsync(string token, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.GetAsync($"/plans/shared/{Uri.EscapeDataString(token)}", ct);
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
         response.EnsureSuccessStatusCode();
@@ -177,6 +223,7 @@ public class PlannerApiClient(HttpClient httpClient)
 
     public async Task<ShareTokenResponse?> CreateShareTokenAsync(Guid planId, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PostAsync($"/plans/{planId}/share", content: null, ct);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<ShareTokenResponse>(ct);
@@ -184,6 +231,7 @@ public class PlannerApiClient(HttpClient httpClient)
 
     public async Task<bool> RevokeShareTokenAsync(Guid planId, string token, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.DeleteAsync($"/plans/{planId}/share/{Uri.EscapeDataString(token)}", ct);
         return response.IsSuccessStatusCode;
     }
@@ -192,11 +240,15 @@ public class PlannerApiClient(HttpClient httpClient)
 
     // ---- Player catalogue (ADR-0025 §7) -----------------------------------
 
-    public Task<PlayerCatalogueStatusView?> GetPlayerCatalogueAsync(Guid playerId, CancellationToken ct = default) =>
-        httpClient.GetFromJsonAsync<PlayerCatalogueStatusView>($"/players/{playerId}/catalogue/satisfactory", ct);
+    public async Task<PlayerCatalogueStatusView?> GetPlayerCatalogueAsync(Guid playerId, CancellationToken ct = default)
+    {
+        await tokens.ApplyAsync(httpClient);
+        return await httpClient.GetFromJsonAsync<PlayerCatalogueStatusView>($"/players/{playerId}/catalogue/satisfactory", ct);
+    }
 
     public async Task<bool> TriggerReIngestAsync(Guid playerId, CancellationToken ct = default)
     {
+        await tokens.ApplyAsync(httpClient);
         var response = await httpClient.PostAsync($"/players/{playerId}/re-ingest-catalogue", content: null, ct);
         return response.IsSuccessStatusCode;
     }

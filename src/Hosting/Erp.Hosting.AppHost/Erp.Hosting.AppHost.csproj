@@ -11,6 +11,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Keycloak IdP hosting integration (ADR-0028 §6, #292). Brings up Keycloak
+         locally with realm import. Version tracks the Aspire AppHost SDK. -->
+    <PackageReference Include="Aspire.Hosting.Keycloak" Version="13.2.4-preview.1.26224.4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Presentation\Api\Satisfactory.Presentation.Api\Satisfactory.Presentation.Api.csproj" />
     <ProjectReference Include="..\..\Presentation\Api\Erp.Presentation.Api.Auth\Erp.Presentation.Api.Auth.csproj" />
     <ProjectReference Include="..\..\Presentation\Api\CaptainOfIndustry.Presentation.Api\CaptainOfIndustry.Presentation.Api.csproj" />

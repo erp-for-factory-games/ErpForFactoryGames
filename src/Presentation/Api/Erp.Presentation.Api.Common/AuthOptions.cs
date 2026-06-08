@@ -21,6 +21,38 @@ public sealed class AuthOptions
     /// <summary>Display name used when seeding the dev player.</summary>
     public string DevPlayerDisplayName { get; set; } = "Dev Player";
 
+    // ---- Human login backend (ADR-0028, issue #292) -------------------------
+
+    /// <summary>
+    /// Selects how the "current player" is resolved for user-facing surfaces:
+    /// <c>dev</c> (default — <see cref="DevPlayerId"/>, zero IdP infra) or
+    /// <c>keycloak</c> (resolve from the validated OIDC <c>sub</c>, JIT-provision
+    /// the player). The agent-token path (ADR-0027) is unaffected either way.
+    /// </summary>
+    public string Backend { get; set; } = "dev";
+
+    /// <summary>True when <see cref="Backend"/> selects Keycloak OIDC.</summary>
+    public bool UsesKeycloak => string.Equals(Backend, "keycloak", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Keycloak validation settings (used only when <see cref="UsesKeycloak"/>).</summary>
+    public KeycloakOptions Keycloak { get; set; } = new();
+
+    /// <summary>
+    /// Settings the game APIs need to validate Keycloak access tokens (ADR-0028 §3).
+    /// </summary>
+    public sealed class KeycloakOptions
+    {
+        /// <summary>Aspire service name of the Keycloak resource (service discovery).</summary>
+        public string ServiceName { get; set; } = "keycloak";
+
+        /// <summary>Realm the tokens are issued from.</summary>
+        public string Realm { get; set; } = "erp";
+
+        /// <summary>Expected <c>aud</c> claim. Empty disables audience validation
+        /// (the dev realm doesn't add an audience mapper — prod hardening does).</summary>
+        public string Audience { get; set; } = "";
+    }
+
     // ---- JWT/HMAC agent-token auth (ADR-0027 / phase 5c3) -------------------
 
     /// <summary>

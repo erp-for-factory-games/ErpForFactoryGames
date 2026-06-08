@@ -51,10 +51,12 @@ builder.Services.AddAgentTokenAuth(builder.Configuration);
 // DevPlayerBootstrap stays on the Auth API (phase 5c2) — the Player + AgentToken
 // aggregate is owned there.
 
-// Current-player accessor (ADR-0025 §2). v2 returns Auth:DevPlayerId; the
-// future authenticated adapter swaps this registration for an HttpContext-
-// backed implementation and the rest of the graph picks it up unchanged.
-builder.Services.AddScoped<ICurrentPlayer, CurrentPlayerFromAuthOptions>();
+// Current-player accessor (ADR-0025 §2 / ADR-0028 §3). Auth:Backend selects the
+// adapter: dev -> Auth:DevPlayerId; keycloak -> the validated OIDC sub from the
+// forwarded Keycloak access token (and registers the JWT-bearer scheme). The
+// rest of the graph (PlayerScopedCatalogProvider) picks up ICurrentPlayer
+// unchanged. The agent X-Agent-Token path is independent and untouched.
+builder.Services.AddErpUserAuth(builder.Configuration);
 
 // Catalogue storage (ADR-0025 §4-§5). Bytes land on the filesystem; the
 // PlayerCatalogue EF row carries the metadata + dedup hash.
@@ -85,6 +87,14 @@ await AutoIngestStartup.EnsureCronRegistrationAsync(app.Services);
 app.UseTickerQ();
 
 app.UseExceptionHandler();
+
+// User-facing auth (ADR-0028 #292). No-op when Auth:Backend=dev; under keycloak
+// it populates HttpContext.User from the forwarded Keycloak access token so
+// PlayerScopedCatalogProvider scopes the catalogue to the signed-in player.
+// The agent /api/agent/* endpoints validate X-Agent-Token themselves and are
+// unaffected (they carry no [Authorize] metadata, so nothing is gated here).
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {

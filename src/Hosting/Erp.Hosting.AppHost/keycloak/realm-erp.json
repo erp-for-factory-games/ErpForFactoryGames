@@ -1,0 +1,48 @@
+{
+  "realm": "erp",
+  "enabled": true,
+  "displayName": "ERP for Factory Games",
+  "loginWithEmailAllowed": true,
+  "registrationAllowed": false,
+  "sslRequired": "none",
+
+  "accessTokenLifespan": 36000,
+  "ssoSessionIdleTimeout": 36000,
+  "ssoSessionMaxLifespan": 86400,
+
+  "clients": [
+    {
+      "clientId": "satisfactory-web",
+      "name": "Satisfactory Web (planner UI)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "erp-for-factory-games-local-apphost-satisfactory-web-dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "username": "chris",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "chris@erp-for-factory.games",
+      "firstName": "Chris",
+      "lastName": "Dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "chris",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
