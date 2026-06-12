@@ -15,6 +15,11 @@
 
   <ItemGroup>
     <PackageReference Include="MudBlazor" Version="9.4.0" />
+    <!-- Keycloak OIDC front-door (ADR-0028 §7, FU3 / #292): when Auth:Backend=keycloak
+         the auth-web landing becomes the branded OIDC front door. AddKeycloakOpenIdConnect
+         resolves the realm authority via Aspire service discovery. Version tracks the
+         AppHost's Aspire SDK (13.2.4), matching Satisfactory.Presentation.Web. -->
+    <PackageReference Include="Aspire.Keycloak.Authentication" Version="13.2.4-preview.1.26224.4" />
   </ItemGroup>
 
 </Project>

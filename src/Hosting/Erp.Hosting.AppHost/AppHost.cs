@@ -7,14 +7,12 @@ var builder = DistributedApplication.CreateBuilder(args);
 // NOT a production secret — overridden by Auth__JwtSigningKey from stack.env.
 const string devJwtSigningKey = "erp-for-factory-games-local-apphost-hs256-dev-key-0123456789ab";
 
-// Keycloak human-login standup for LOCAL DEV (ADR-0028 / #292). Brings up a
-// Keycloak container with the `erp` realm imported from ./keycloak (confidential
-// `satisfactory-web` client + a seeded dev user). The prod containers ride #281.
-//
-// Fixed dev client secret so the web frontend and the realm agree under
-// `dotnet run`. NOT a production secret — prod injects Auth__Keycloak__ClientSecret
-// from stack.env. Mirrors the devJwtSigningKey shortcut above.
+// Fixed dev client secrets so each web frontend and the realm agree under
+// `dotnet run`. NOT production secrets — prod injects Auth__Keycloak__ClientSecret
+// from stack.env per app. Mirrors the devJwtSigningKey shortcut above.
 const string devKeycloakClientSecret = "erp-for-factory-games-local-apphost-satisfactory-web-dev-secret";
+const string devCoiWebClientSecret = "erp-for-factory-games-local-apphost-coi-web-dev-secret";
+const string devAuthWebClientSecret = "erp-for-factory-games-local-apphost-auth-web-dev-secret";
 const string keycloakRealm = "erp";
 
 // Auth backend selection (ADR-0028 / #292). Defaults to `keycloak` so a plain
@@ -71,7 +69,15 @@ if (keycloak is not null)
 // endpoints + operational rollout (CNAME, compose, CI image) are deferred to
 // the full phase-5c5 work (#281); this just makes the binary symmetric.
 var coiApi = builder.AddProject<Projects.CaptainOfIndustry_Presentation_Api>("coi-api")
+    .WithEnvironment("Auth__Backend", authBackend)
     .WithHttpHealthCheck("/health");
+if (keycloak is not null)
+{
+    coiApi
+        .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
+        .WithReference(keycloak)
+        .WaitFor(keycloak);
+}
 
 // ---- Optional Postgres for plan storage (ADR-0018) -------------------------
 // SQLite is the default and needs no orchestration. Uncomment the block below
@@ -101,18 +107,38 @@ if (keycloak is not null)
 // Captain of Industry presentation app — runs independently of the Satisfactory
 // frontend per ADR-0022 (isolated apps, one per supported game). Reads its
 // catalogue in-process from the extractor's JSON; no ApiService dependency in v1.
-builder.AddProject<Projects.CaptainOfIndustry_Presentation_Web>("coi-webfrontend")
-    .WithExternalHttpEndpoints()
-    .WithHttpHealthCheck("/health");
-
-// Central auth web frontend (ADR-0026 phase 5c4) — the identity punch-out the
-// game frontends redirect to for sign-in + account/agent management. Talks to
-// auth-api; deploys behind auth.erp-for-factory.games (CNAME wired in 5c5).
-// Scaffold only for now: no OAuth flow, no live Auth-API calls yet.
-builder.AddProject<Projects.Erp_Presentation_Web_Auth>("auth-webfrontend")
+var coiWebfrontend = builder.AddProject<Projects.CaptainOfIndustry_Presentation_Web>("coi-webfrontend")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
+    .WithEnvironment("Auth__Backend", authBackend);
+if (keycloak is not null)
+{
+    coiWebfrontend
+        .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
+        .WithEnvironment("Auth__Keycloak__ClientId", "coi-web")
+        .WithEnvironment("Auth__Keycloak__ClientSecret", devCoiWebClientSecret)
+        .WithReference(keycloak)
+        .WaitFor(keycloak);
+}
+
+// Central auth web frontend (ADR-0026 phase 5c4 / ADR-0028 §7) — the identity
+// front door. Under the keycloak backend it runs the OIDC flow itself (its own
+// `auth-web` client); the hardcoded backend stays available for zero-IdP setups.
+// Talks to auth-api; deploys behind auth.erp-for-factory.games (CNAME wired in 5c5).
+var authWebfrontend = builder.AddProject<Projects.Erp_Presentation_Web_Auth>("auth-webfrontend")
+    .WithExternalHttpEndpoints()
+    .WithHttpHealthCheck("/health")
+    .WithEnvironment("Auth__Backend", authBackend)
     .WithReference(authApi)
     .WaitFor(authApi);
+if (keycloak is not null)
+{
+    authWebfrontend
+        .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
+        .WithEnvironment("Auth__Keycloak__ClientId", "auth-web")
+        .WithEnvironment("Auth__Keycloak__ClientSecret", devAuthWebClientSecret)
+        .WithReference(keycloak)
+        .WaitFor(keycloak);
+}
 
 builder.Build().Run();
