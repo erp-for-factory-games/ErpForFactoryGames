@@ -4,16 +4,23 @@ PackageIdentifier: ErpForFactoryGames.Agent
 PackageVersion: 0.4.45
 ReleaseDate: 2026-05-22
 
-InstallerType: zip
-NestedInstallerType: portable
-NestedInstallerFiles:
-  - RelativeFilePath: erp-agent.exe
-    PortableCommandAlias: erp-agent
+# WiX MSI (#219) — the MSI registers the Windows service, the machine-wide
+# erp-agent:// handler, and an Add/Remove Programs entry at install time, so
+# winget install needs no follow-up elevated `erp-agent --install` step.
+# Silent + interactive install both come for free from the MSI engine.
+InstallerType: wix
+InstallerSuccessCodes:
+  - 0
+  - 3010   # ERROR_SUCCESS_REBOOT_REQUIRED — harmless for a service install
+UpgradeBehavior: install   # MajorUpgrade in the .wxs supersedes the old build
 
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/ChrisonSimtian/ErpForFactoryGames/releases/download/v0.4.45/erp-agent-win-x64.zip
-    InstallerSha256: E28806764D851A1B0623DD31EECA30B750294D8B65F01E819CFFE7EBF6BE5715
+    # PackageVersion / InstallerUrl / InstallerSha256 are refreshed at
+    # submission time — the manual bootstrap (#298) and the publish-winget CI
+    # job both recompute the SHA against the released .msi.
+    InstallerUrl: https://github.com/ChrisonSimtian/ErpForFactoryGames/releases/download/v0.4.45/erp-agent-win-x64.msi
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
 
 ManifestType: installer
 ManifestVersion: 1.10.0

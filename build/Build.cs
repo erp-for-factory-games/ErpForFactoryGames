@@ -433,6 +433,55 @@ class Build : FalloutBuild
             Log.Information("Up complete (ImageTag={ImageTag}, DryRun={DryRun}).", ImageTag, DryRun);
         });
 
+    // -------------------------------------------------------------------------
+    // Agent Windows MSI (#219). Publishes the agent self-contained for win-x64,
+    // then packages it with WiX v5 into erp-agent-win-x64.msi — service + ARP +
+    // the machine-wide erp-agent:// handler, all declaratively (see
+    // build/wix/erp-agent.wxs). Windows-only: the WiX toolset emits MSIs only
+    // on Windows, so the target is skipped elsewhere.
+    // -------------------------------------------------------------------------
+    const string WixVersion = "5.0.2";
+
+    Target BuildMsi => _ => _
+        .Description("Builds the Agent Windows installer (erp-agent-win-x64.msi) via WiX. Windows-only.")
+        .OnlyWhenStatic(() => OperatingSystem.IsWindows())
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            var agentProject = RootDirectory / "src" / "Presentation" / "Agent"
+                / "Satisfactory.Presentation.Agent" / "Satisfactory.Presentation.Agent.csproj";
+            var publishDir = ArtifactsDirectory / "agent" / "win-x64";
+            var wxs = RootDirectory / "build" / "wix" / "erp-agent.wxs";
+            var msiOut = ArtifactsDirectory / "erp-agent-win-x64.msi";
+
+            // MSI ProductVersion must be purely numeric (major.minor.build) —
+            // SimpleVersion drops any prerelease / build-metadata suffix that
+            // SemVer2 would carry.
+            DotNet("tool restore", workingDirectory: RootDirectory, logOutput: false);
+            var version = DotNet("nbgv get-version -v SimpleVersion",
+                workingDirectory: RootDirectory, logOutput: false).Single().Text.Trim();
+
+            // Self-contained single-file publish — the flags live in the csproj;
+            // here we just pin the RID and output dir.
+            DotNet($"publish \"{agentProject}\" -c {Configuration} -r win-x64 -o \"{publishDir}\"",
+                workingDirectory: RootDirectory);
+
+            // WiX v5 as a global tool + the Util extension (service failure
+            // actions). `tool update` installs-or-updates idempotently, unlike
+            // `tool install`, which errors when wix is already present.
+            DotNet($"tool update --global wix --version {WixVersion}", logOutput: false);
+            ProcessTasks.StartProcess("wix", "extension add -g WixToolset.Util.wixext",
+                workingDirectory: RootDirectory).AssertZeroExitCode();
+
+            ProcessTasks.StartProcess("wix",
+                $"build \"{wxs}\" -ext WixToolset.Util.wixext " +
+                $"-d Version={version} -d \"PublishDir={publishDir}\" " +
+                $"-arch x64 -o \"{msiOut}\"",
+                workingDirectory: RootDirectory).AssertZeroExitCode();
+
+            Log.Information("Built MSI: {Msi} (version {Version})", msiOut, version);
+        });
+
     /// <summary>
     /// Reads the SemVer2 version from `dotnet nbgv` (a local tool restored
     /// from .config/dotnet-tools.json). Returns e.g. "0.1.5" or "0.1.5+abcd".

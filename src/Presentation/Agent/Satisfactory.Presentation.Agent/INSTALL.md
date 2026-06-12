@@ -8,23 +8,28 @@ Single-file self-contained binary — no .NET install required.
 
 ## Windows
 
-### Recommended: winget
+### Recommended: winget (MSI)
 
 ```powershell
 winget install ErpForFactoryGames.Agent
 ```
 
-Open an **elevated** PowerShell and register the service:
+That's it — no elevated `--install` step. The MSI registers the
+`erp-agent` Windows service (Automatic, delayed-start), the machine-wide
+`erp-agent://` URL protocol handler (`HKLM\Software\Classes\erp-agent`),
+and an Add/Remove Programs entry, all at install time. The service starts
+immediately; it just has nothing to upload until you pair it (next
+section).
 
-```powershell
-erp-agent --install
-```
+Prefer to double-click? Download `erp-agent-win-x64.msi` from the latest
+[GitHub Release](https://github.com/ChrisonSimtian/ErpForFactoryGames/releases)
+and run it — same result as the winget command above.
 
-`--install` seeds `%ProgramData%\ErpForFactoryGames\agent.json` with
-your save folder pre-filled, grants your user write access to that
-file, and registers the `erp-agent://` URL protocol handler under
-`HKCU\Software\Classes\erp-agent` so the web UI's deep-link button can
-launch this binary.
+The agent's config lives at `%ProgramData%\ErpForFactoryGames\agent.json`.
+The MSI does **not** pre-seed it (the installer can't reliably guess your
+save folder), so a fresh install has empty config until you pair — the
+deep-link / setup flow below writes it, and the agent auto-detects the
+default save folder.
 
 ### Pair the install
 
@@ -63,13 +68,20 @@ LocalSystem and you both resolve to the same file this way.
 The service auto-starts at boot (delayed-auto), restarts on crash, and
 uploads new saves as they appear. Logs at `%ProgramData%\ErpForFactoryGames\agent-logs\`.
 
-Future agent releases pick up with `winget upgrade ErpForFactoryGames.Agent`.
+Future agent releases pick up with `winget upgrade ErpForFactoryGames.Agent`
+(the MSI's major-upgrade supersedes the old build cleanly).
 
-To remove: `erp-agent --uninstall` (elevated), then `winget uninstall ErpForFactoryGames.Agent`.
+To remove: `winget uninstall ErpForFactoryGames.Agent`, or **Add/Remove
+Programs** → *ERP for Factory Games — Agent*. Uninstall stops and deletes
+the service and removes the protocol handler; it leaves `agent.json` and
+logs under `%ProgramData%` in place.
 
-### Fallback: download the zip
+### Fallback: portable zip (advanced)
 
-If winget isn't an option (locked-down environment, older Windows):
+If the MSI isn't an option (locked-down environment, older Windows), the
+portable `erp-agent-win-x64.zip` is still published, and the binary
+self-registers via `erp-agent --install` (this path registers the
+protocol handler per-user in `HKCU` and seeds `agent.json`):
 
 1. Download `erp-agent-win-x64.zip` from the latest [GitHub Release](https://github.com/ChrisonSimtian/ErpForFactoryGames/releases).
 2. Extract somewhere stable, e.g. `C:\Program Files\ErpForFactoryGames\`.
