@@ -27,7 +27,14 @@ public sealed class AspireAppFixture : IAsyncLifetime
             throw new InvalidOperationException($"Playwright chromium install failed with exit code {exitCode}.");
         }
 
-        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Erp_Hosting_AppHost>();
+        // Force the zero-IdP dev backend (ADR-0028 / #292). The AppHost defaults
+        // to the Keycloak backend for `dotnet run`, which gates the web app behind
+        // an OIDC login and stands up a Keycloak container — both fatal for these
+        // headless Playwright tests (every navigation would redirect to a login
+        // page). `Auth:Backend=dev` skips Keycloak entirely; the app renders the
+        // Planner against the dev player exactly as it did before #292.
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Erp_Hosting_AppHost>(
+            ["Auth:Backend=dev"]);
         App = await builder.BuildAsync();
         await App.StartAsync();
 
