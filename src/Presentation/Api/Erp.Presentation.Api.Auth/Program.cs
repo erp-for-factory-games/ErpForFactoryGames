@@ -24,12 +24,13 @@ builder.Services.AddErpPersistence(builder.Configuration);
 builder.Services.AddAgentTokenAuth(builder.Configuration);
 builder.Services.AddHostedService<DevPlayerBootstrap>();
 
-// ICurrentPlayer + ICatalogueStorage are needed transitively by
-// AddErpInfrastructure (PlayerScopedCatalogProvider). Auth API never
-// actually serves catalog requests so these registrations are satisfying
-// the DI validator more than anything. Phase 5c3 splits the service
-// registration so this dead-weight goes away.
-builder.Services.AddScoped<ICurrentPlayer, CurrentPlayerFromAuthOptions>();
+// Human-login seam (ADR-0028 §3, #292). Selects the ICurrentPlayer adapter
+// from Auth:Backend (dev -> DevPlayerId; keycloak -> the validated OIDC sub)
+// and, under keycloak, registers the JWT-bearer scheme that validates Keycloak
+// access tokens. ICurrentPlayer is also needed transitively by
+// AddErpInfrastructure (PlayerScopedCatalogProvider) even though the Auth API
+// never serves catalog requests.
+builder.Services.AddErpUserAuth(builder.Configuration);
 builder.Services.Configure<CatalogueStorageOptions>(
     builder.Configuration.GetSection(CatalogueStorageOptions.SectionName));
 builder.Services.AddSingleton<ICatalogueStorage, FileSystemCatalogueStorage>();
@@ -48,6 +49,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseExceptionHandler();
+
+// User-facing auth (ADR-0028 #292). No-op when Auth:Backend=dev (no scheme
+// registered); under keycloak this populates HttpContext.User from the
+// forwarded Keycloak access token. The agent path does its own X-Agent-Token
+// validation and is unaffected.
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -76,10 +84,49 @@ app.MapGet("/", () => "Auth API. Player + agent-token endpoints under /players/*
 // ---------------------------------------------------------------------------
 
 app.MapGet("/players/current", async (
+    HttpContext http,
     IOptions<AuthOptions> authOptions,
     IPlayerRepository players,
+    TimeProvider clock,
     CancellationToken ct) =>
 {
+    // Keycloak backend (ADR-0028 §1): resolve the player from the validated
+    // OIDC sub and just-in-time provision the row on first login. This is the
+    // hook that retires DevPlayerBootstrap for real deployments.
+    if (authOptions.Value.UsesKeycloak)
+    {
+        var user = http.User;
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            return Results.Json(new { error = "Not authenticated." }, statusCode: 401);
+        }
+        if (!CurrentPlayerFromHttpContext.TryGetSubject(user, out var subjectId))
+        {
+            return Results.Json(new { error = "Access token is missing a valid 'sub' claim." }, statusCode: 401);
+        }
+
+        var keycloakPlayerId = new PlayerId(subjectId);
+        var existing = await players.GetAsync(keycloakPlayerId, ct).ConfigureAwait(false);
+        if (existing is null)
+        {
+            var displayName = user.FindFirst("name")?.Value
+                ?? user.FindFirst("preferred_username")?.Value
+                ?? user.FindFirst("email")?.Value
+                ?? "Player";
+            existing = new Player(keycloakPlayerId, displayName, clock.GetUtcNow().UtcDateTime);
+            await players.AddAsync(existing, ct).ConfigureAwait(false);
+            await players.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+
+        return Results.Ok(new
+        {
+            playerId = existing.Id.Value,
+            displayName = existing.DisplayName,
+            createdUtc = existing.CreatedUtc,
+        });
+    }
+
+    // Dev backend (ADR-0025): the configured dev player, seeded by DevPlayerBootstrap.
     var playerId = new PlayerId(authOptions.Value.DevPlayerId);
     var player = await players.GetAsync(playerId, ct).ConfigureAwait(false);
     if (player is null)

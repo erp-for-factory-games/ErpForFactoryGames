@@ -30,6 +30,10 @@
   <ItemGroup>
     <PackageReference Include="MudBlazor" Version="9.4.0" />
     <PackageReference Include="WolverineFx" Version="5.36.2" />
+    <!-- Keycloak OIDC login (ADR-0028 §3, #292): AddKeycloakOpenIdConnect resolves
+         the realm authority via Aspire service discovery. Version tracks the
+         AppHost's Aspire SDK (13.2.4). -->
+    <PackageReference Include="Aspire.Keycloak.Authentication" Version="13.2.4-preview.1.26224.4" />
   </ItemGroup>
 
 </Project>
