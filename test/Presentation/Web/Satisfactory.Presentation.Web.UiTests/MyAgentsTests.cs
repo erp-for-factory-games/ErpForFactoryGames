@@ -19,6 +19,11 @@ public class MyAgentsTests(AspireAppFixture fixture) : IClassFixture<AspireAppFi
         var consoleErrors = new List<string>();
         page.Console += (_, msg) => { if (msg.Type == "error") consoleErrors.Add(msg.Text); };
 
+        // Skip the first-load setup redirect (see Mint_flow for the rationale)
+        // so the page settles on /settings/agents instead of bouncing to /setup.
+        await context.AddInitScriptAsync(
+            "window.localStorage.setItem('erp-setup-dismissed', 'true');");
+
         var response = await page.GotoAsync($"{fixture.WebFrontendUrl.TrimEnd('/')}/settings/agents");
 
         Assert.NotNull(response);
@@ -41,6 +46,13 @@ public class MyAgentsTests(AspireAppFixture fixture) : IClassFixture<AspireAppFi
     {
         var context = await fixture.NewContextAsync();
         var page = await context.NewPageAsync();
+
+        // Skip the first-load setup redirect — MainLayout sends unconfigured
+        // users to /setup before the circuit settles, which detaches this page's
+        // controls mid-test (the agent step lives in the wizard). A returning
+        // user who has dismissed the wizard is the right precondition here.
+        await context.AddInitScriptAsync(
+            "window.localStorage.setItem('erp-setup-dismissed', 'true');");
 
         await page.GotoAsync($"{fixture.WebFrontendUrl.TrimEnd('/')}/settings/agents");
 

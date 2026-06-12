@@ -111,6 +111,11 @@
   "allOf": [
     {
       "properties": {
+        "AuthJwtSigningKey": {
+          "type": "string",
+          "description": "Shared HMAC-SHA256 key for agent JWTs (ADR-0027). Set a ≥256-bit secret in production",
+          "default": "Secrets must be entered via 'nuke :secrets [profile]'"
+        },
         "CloudflareApiToken": {
           "type": "string",
           "description": "Cloudflare API token. Scopes: Account · Cloudflare Tunnel · Edit; Zone · DNS · Edit; Account · Account Settings · Read",
