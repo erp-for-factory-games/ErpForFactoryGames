@@ -23,6 +23,14 @@ const string keycloakRealm = "erp";
 // internal container-network address — so it has to be a fixed, known value.
 const int keycloakHostPort = 8088;
 
+// Browser-facing Keycloak authority, pinned to the fixed HTTP host port so the
+// origin the web frontends redirect the browser to is deterministic (#303).
+// Aspire's `keycloak` service reference otherwise resolves Keycloak's dynamic
+// HTTPS endpoint, and the Steam broker callback Keycloak derives from that
+// origin never matches the steam-oidc bridge's pinned redirect_uri allow-list.
+// The web apps apply this via Auth:Keycloak:Authority when present.
+var keycloakBrowserAuthority = $"http://localhost:{keycloakHostPort}/realms/{keycloakRealm}";
+
 // Steam sign-in (ADR-0028 §4 / #303). Opt-in: only when a Steam Web API key is
 // supplied via the STEAM_API_KEY env var do we stand up the byo-software
 // Steam→OIDC bridge that Keycloak brokers. Keyless `dotnet run` is unchanged —
@@ -89,6 +97,7 @@ if (keycloak is not null)
 {
     authApi
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -105,6 +114,7 @@ if (keycloak is not null)
 {
     apiService
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -121,6 +131,7 @@ if (keycloak is not null)
 {
     coiApi
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -146,6 +157,7 @@ if (keycloak is not null)
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
         .WithEnvironment("Auth__Keycloak__ClientId", "satisfactory-web")
         .WithEnvironment("Auth__Keycloak__ClientSecret", devKeycloakClientSecret)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -163,6 +175,7 @@ if (keycloak is not null)
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
         .WithEnvironment("Auth__Keycloak__ClientId", "coi-web")
         .WithEnvironment("Auth__Keycloak__ClientSecret", devCoiWebClientSecret)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -183,6 +196,7 @@ if (keycloak is not null)
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
         .WithEnvironment("Auth__Keycloak__ClientId", "auth-web")
         .WithEnvironment("Auth__Keycloak__ClientSecret", devAuthWebClientSecret)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }

@@ -64,6 +64,20 @@ if (useKeycloak)
             // Keycloak runs behind plain HTTP locally (Aspire / compose network).
             oidc.RequireHttpsMetadata = false;
 
+            // Local-dev determinism (#303): when the AppHost pins a browser-facing
+            // authority (http://localhost:8088), use it for both metadata discovery
+            // and the browser redirects so Keycloak emits that fixed origin
+            // everywhere — including the Steam broker callback the steam-oidc bridge
+            // validates against its pinned allow-list. Without this, the Aspire
+            // service reference resolves Keycloak's dynamic HTTPS endpoint and the
+            // broker redirect_uri never matches the bridge.
+            var pinnedAuthority = builder.Configuration["Auth:Keycloak:Authority"];
+            if (!string.IsNullOrWhiteSpace(pinnedAuthority))
+            {
+                oidc.Authority = pinnedAuthority;
+                oidc.MetadataAddress = $"{pinnedAuthority.TrimEnd('/')}/.well-known/openid-configuration";
+            }
+
             // Capture the access token server-side at login, keyed by sub, so the
             // circuit can forward it later (UserAccessTokenAccessor). HttpContext
             // is guaranteed in this callback.

@@ -54,6 +54,20 @@ public static class ErpUserAuthExtensions
                 options.MapInboundClaims = false;
                 options.TokenValidationParameters.NameClaimType = "preferred_username";
 
+                // Local-dev determinism (#303): when a fixed authority is pinned
+                // (http://localhost:8088/realms/erp), validate tokens against it
+                // instead of the service-discovery-resolved endpoint. Tokens are
+                // minted under that fixed browser-facing origin, so their `iss`
+                // is http://localhost:8088/...; without this the API trusts
+                // Keycloak's dynamic HTTPS issuer and every user token 401s.
+                if (!string.IsNullOrWhiteSpace(auth.Keycloak.Authority))
+                {
+                    var authority = auth.Keycloak.Authority.TrimEnd('/');
+                    options.Authority = authority;
+                    options.MetadataAddress = $"{authority}/.well-known/openid-configuration";
+                    options.TokenValidationParameters.ValidIssuer = authority;
+                }
+
                 if (string.IsNullOrWhiteSpace(auth.Keycloak.Audience))
                 {
                     // The dev realm doesn't attach an audience mapper; prod

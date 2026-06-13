@@ -48,6 +48,16 @@ public sealed class AuthOptions
         /// <summary>Realm the tokens are issued from.</summary>
         public string Realm { get; set; } = "erp";
 
+        /// <summary>Optional fixed token issuer/authority (e.g.
+        /// <c>http://localhost:8088/realms/erp</c>). When set, it overrides the
+        /// service-discovery-resolved authority for both metadata discovery and
+        /// issuer validation. Local dev pins this (via the AppHost) so the issuer
+        /// the APIs trust matches the fixed browser-facing origin tokens are
+        /// minted under — otherwise service discovery resolves Keycloak's dynamic
+        /// HTTPS endpoint and every Keycloak access token fails issuer validation
+        /// (#303). Empty keeps today's service-discovery behaviour.</summary>
+        public string Authority { get; set; } = "";
+
         /// <summary>Expected <c>aud</c> claim. Empty disables audience validation
         /// (the dev realm doesn't add an audience mapper — prod hardening does).</summary>
         public string Audience { get; set; } = "";
