@@ -58,6 +58,31 @@
     }
   ],
 
+  "identityProviders": [
+    {
+      "alias": "steam",
+      "displayName": "Steam",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "linkOnly": false,
+      "config": {
+        "clientId": "steam-broker",
+        "clientSecret": "erp-for-factory-games-local-apphost-steam-broker-dev-secret",
+        "clientAuthMethod": "client_secret_post",
+        "issuer": "http://localhost:8099",
+        "authorizationUrl": "http://localhost:8099/connect/authorize",
+        "tokenUrl": "http://steam-oidc:8080/connect/token",
+        "jwksUrl": "http://steam-oidc:8080/.well-known/openid-configuration/jwks",
+        "userInfoUrl": "http://steam-oidc:8080/connect/userinfo",
+        "useJwksUrl": "true",
+        "defaultScope": "openid profile",
+        "syncMode": "IMPORT"
+      }
+    }
+  ],
+
   "users": [
     {
       "username": "chris",
