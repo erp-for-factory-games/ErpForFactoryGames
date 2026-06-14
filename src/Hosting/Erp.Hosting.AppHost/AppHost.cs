@@ -13,7 +13,30 @@ const string devJwtSigningKey = "erp-for-factory-games-local-apphost-hs256-dev-k
 const string devKeycloakClientSecret = "erp-for-factory-games-local-apphost-satisfactory-web-dev-secret";
 const string devCoiWebClientSecret = "erp-for-factory-games-local-apphost-coi-web-dev-secret";
 const string devAuthWebClientSecret = "erp-for-factory-games-local-apphost-auth-web-dev-secret";
+// Shared between the steam-oidc bridge's OpenId__ClientSecret and the realm's
+// `steam` broker config (realm-erp.json). NOT a production secret.
+const string devSteamBrokerClientSecret = "erp-for-factory-games-local-apphost-steam-broker-dev-secret";
 const string keycloakRealm = "erp";
+// Pinned Keycloak host port so the browser-facing login URL is deterministic.
+// The Steam bridge must allow Keycloak's broker callback as a redirect_uri, and
+// that callback is browser-derived (http://localhost:<this>/...), NOT the
+// internal container-network address — so it has to be a fixed, known value.
+const int keycloakHostPort = 8088;
+
+// Browser-facing Keycloak authority, pinned to the fixed HTTP host port so the
+// origin the web frontends redirect the browser to is deterministic (#303).
+// Aspire's `keycloak` service reference otherwise resolves Keycloak's dynamic
+// HTTPS endpoint, and the Steam broker callback Keycloak derives from that
+// origin never matches the steam-oidc bridge's pinned redirect_uri allow-list.
+// The web apps apply this via Auth:Keycloak:Authority when present.
+var keycloakBrowserAuthority = $"http://localhost:{keycloakHostPort}/realms/{keycloakRealm}";
+
+// Steam sign-in (ADR-0028 §4 / #303). Opt-in: only when a Steam Web API key is
+// supplied via the STEAM_API_KEY env var do we stand up the byo-software
+// Steam→OIDC bridge that Keycloak brokers. Keyless `dotnet run` is unchanged —
+// the realm still advertises a "Sign in with Steam" button, but it only works
+// once the bridge is running (Steam is prod/opt-in per ADR-0028).
+var steamApiKey = builder.Configuration["STEAM_API_KEY"];
 
 // Auth backend selection (ADR-0028 / #292). Defaults to `keycloak` so a plain
 // `dotnet run` gives the full human-login experience (Keycloak container + OIDC
@@ -28,9 +51,49 @@ var useKeycloak = string.Equals(authBackend, "keycloak", StringComparison.Ordina
 // Keycloak container with the `erp` realm imported from ./keycloak (confidential
 // `satisfactory-web` client + a seeded dev user). The prod containers ride #281.
 // Only stood up under the keycloak backend — null on the dev path.
+//
+// WithDataBindMount persists Keycloak's DB to ./keycloak-data (gitignored) so
+// brokered identities (e.g. a Steam-linked user) survive a restart — handy when
+// iterating on the Steam login round-trip (#303) without re-doing first-broker
+// -login each time. Trade-off: the realm is imported only when it doesn't yet
+// exist, so edits to realm-erp.json won't apply while the volume persists —
+// delete ./keycloak-data to force a clean re-import.
 IResourceBuilder<KeycloakResource>? keycloak = useKeycloak
-    ? builder.AddKeycloak("keycloak").WithRealmImport("./keycloak")
+    ? builder.AddKeycloak("keycloak", port: keycloakHostPort)
+        .WithRealmImport("./keycloak")
+        .WithDataBindMount("./keycloak-data")
     : null;
+
+// Steam→OIDC bridge (ADR-0028 §4 / #303). Steam speaks legacy OpenID 2.0 which
+// Keycloak dropped, so this small .NET container presents Steam as a standard
+// OIDC provider and Keycloak brokers it (the `steam` IdP in realm-erp.json).
+//
+// Dual URL on purpose: the browser reaches the bridge at the pinned host port
+// (http://localhost:8099 — used for the authorization redirect + Steam return,
+// and baked into the realm's authorizationUrl/issuer), while Keycloak reaches it
+// server-side over the Aspire container network as http://steam-oidc:8080 (the
+// realm's tokenUrl/jwksUrl). OpenId__RedirectUri points back at Keycloak's own
+// broker endpoint, tracked via an endpoint reference so it follows Keycloak's
+// dynamic host port. No keycloak.WaitFor here — the bridge is only needed when a
+// human clicks "Sign in with Steam", long after startup; coupling Keycloak's
+// boot to it would needlessly gate username/password login too.
+if (keycloak is not null && !string.IsNullOrWhiteSpace(steamApiKey))
+{
+    // Plain string (not a ReferenceExpression) — the browser-derived callback URL.
+    var steamBrokerRedirectUri = $"http://localhost:{keycloakHostPort}/realms/{keycloakRealm}/broker/steam/endpoint";
+    builder.AddContainer("steam-oidc", "ghcr.io/byo-software/steam-openid-connect-provider")
+        .WithHttpEndpoint(port: 8099, targetPort: 8080, name: "http")
+        .WithEnvironment("ASPNETCORE_URLS", "http://+:8080")
+        .WithEnvironment("Steam__ApplicationKey", steamApiKey)
+        .WithEnvironment("OpenId__ClientId", "steam-broker")
+        .WithEnvironment("OpenId__ClientSecret", devSteamBrokerClientSecret)
+        .WithEnvironment("OpenId__ClientName", "ERP Keycloak")
+        .WithEnvironment("Hosting__PublicOrigin", "http://localhost:8099")
+        // Browser-facing Keycloak broker callback (NOT the internal container URL):
+        // IdentityServer4 validates this against the redirect_uri Keycloak sends,
+        // which the browser derives from the pinned host port above.
+        .WithEnvironment("OpenId__RedirectUri", steamBrokerRedirectUri);
+}
 
 // Auth API owns player + agent-token aggregate per ADR-0026. Phase 5c2
 // landed the /players/* + /api/me endpoints + DevPlayerBootstrap here; 5c3
@@ -43,6 +106,7 @@ if (keycloak is not null)
 {
     authApi
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -59,6 +123,7 @@ if (keycloak is not null)
 {
     apiService
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -75,6 +140,7 @@ if (keycloak is not null)
 {
     coiApi
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -100,6 +166,7 @@ if (keycloak is not null)
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
         .WithEnvironment("Auth__Keycloak__ClientId", "satisfactory-web")
         .WithEnvironment("Auth__Keycloak__ClientSecret", devKeycloakClientSecret)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -117,6 +184,7 @@ if (keycloak is not null)
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
         .WithEnvironment("Auth__Keycloak__ClientId", "coi-web")
         .WithEnvironment("Auth__Keycloak__ClientSecret", devCoiWebClientSecret)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
@@ -137,6 +205,7 @@ if (keycloak is not null)
         .WithEnvironment("Auth__Keycloak__Realm", keycloakRealm)
         .WithEnvironment("Auth__Keycloak__ClientId", "auth-web")
         .WithEnvironment("Auth__Keycloak__ClientSecret", devAuthWebClientSecret)
+        .WithEnvironment("Auth__Keycloak__Authority", keycloakBrowserAuthority)
         .WithReference(keycloak)
         .WaitFor(keycloak);
 }
