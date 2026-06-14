@@ -51,8 +51,17 @@ var useKeycloak = string.Equals(authBackend, "keycloak", StringComparison.Ordina
 // Keycloak container with the `erp` realm imported from ./keycloak (confidential
 // `satisfactory-web` client + a seeded dev user). The prod containers ride #281.
 // Only stood up under the keycloak backend — null on the dev path.
+//
+// WithDataBindMount persists Keycloak's DB to ./keycloak-data (gitignored) so
+// brokered identities (e.g. a Steam-linked user) survive a restart — handy when
+// iterating on the Steam login round-trip (#303) without re-doing first-broker
+// -login each time. Trade-off: the realm is imported only when it doesn't yet
+// exist, so edits to realm-erp.json won't apply while the volume persists —
+// delete ./keycloak-data to force a clean re-import.
 IResourceBuilder<KeycloakResource>? keycloak = useKeycloak
-    ? builder.AddKeycloak("keycloak", port: keycloakHostPort).WithRealmImport("./keycloak")
+    ? builder.AddKeycloak("keycloak", port: keycloakHostPort)
+        .WithRealmImport("./keycloak")
+        .WithDataBindMount("./keycloak-data")
     : null;
 
 // Steam→OIDC bridge (ADR-0028 §4 / #303). Steam speaks legacy OpenID 2.0 which

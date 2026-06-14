@@ -63,6 +63,10 @@ test/ui-tests/
 *.db-shm
 *.db-wal
 
+# Keycloak persisted DB (AppHost WithDataBindMount, #303) — local-dev state,
+# holds brokered identities across restarts; never committed
+keycloak-data/
+
 # Planner scratch snapshot (Steam ID + local save path inside) — dev-only
 factory_state.json
 
